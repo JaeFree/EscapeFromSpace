@@ -1,55 +1,65 @@
 # 진행 기록
 
-다음 세션은 이 파일과 `docs/PLAN.md`를 읽고 시작한다.
+다음 세션은 이 파일과 `docs/PLAN.md`를 읽고 시작한다. 대화 기록은 PC 사이에 이어지지 않는다.
 
-## 2026-11-15
+## 지금 상태 (2026-11-15 기준)
 
-### 오늘 한 일
+- GDD 일정의 11/13·11/14 작업(`docs/PLAN.md` 1부, 1~5단계)을 모두 끝내고 커밋·push했다.
+- 다음은 11/15 작업(`docs/PLAN.md` 2부)이다. 계획과 질문 17개를 정리해 두었고, **사용자가 질문에 답하기 전에는 구현하지 않는다.**
 
-- `docs/PLAN.md` 작성: 결정 사항 16개, 폴더 구조, 에셋 생성 방식, 작업 순서 5단계
-- 1단계 구현
-  - Active Input Handling을 "Input System Package"만으로 변경
-  - `Assets/Input/GameInput.inputactions` (Move, Aim, Fire, Roll)
-  - `PlayerData` SO, `PlayerInputReader`, `PlayerController`(이동·조준), `CameraFollow`
-  - Editor 메뉴 `EscapeFromSpace > 에셋 생성·갱신` (`ProjectSetup`, `StationLayout`)
-  - 생성된 에셋: 스프라이트 2개, 타일 2개, `PlayerData.asset`, `Player.prefab`, `Station.unity`(60×40 벽 맵)
-  - Unity 배치 모드로 컴파일 에러 없음과 에셋 생성을 확인
-  - 수정: 첫 생성 때 타일맵이 빈 채로 저장되어 맵이 보이지 않았다. 씬을 연 뒤에 타일 에셋을 다시 불러와 칠하도록 고쳤고, 배치 모드 렌더링으로 맵이 보이는 것을 확인했다.
+## 다음에 할 일
 
-  - 수정: 벽을 통과했다. 배치 모드에서 칠한 타일이 충돌체에 반영되지 않아 합쳐진 충돌체가 빈 채로 저장된 것이 원인. `ProjectSetup`이 저장 전에 충돌체를 직접 만들도록 고쳤다. 씬에 반영했다.
-  - 수정: 플레이어 충돌체에 마찰 0 재질(`Assets/Physics/NoFriction`)을 붙였다. 기본 마찰 때문에 벽에 비스듬히 붙어 움직이면 속도가 40% 줄었다.
-  - 검증: 임시 플레이 모드 테스트(키 입력 시뮬레이션)로 이동 5칸/초, 벽에서 정지, 벽 따라 미끄러지기 3.54칸/초를 확인했다. 테스트 파일은 지웠다.
-- 1단계 커밋 완료 (`360d241`, push 안 함). 사용자가 Unity에서 이동·벽 충돌·Inspector 조정을 확인했다.
-- 2단계 구르기 커밋 완료 (`91ccb71`, push 안 함)
-  - `PlayerRoll` 추가. 쿨타임은 구르기를 시작한 순간부터 센다.
-  - 이동 중 구르기는 걷기보다 1.5배 빨라질 뿐이라 눈에 잘 안 띈다. 사용자가 나중에 구르기 애니메이션을 넣을 예정이라 표시는 추가하지 않기로 했다.
-- 3단계 사격 커밋 완료 (`e785904`, push 안 함)
-  - `WeaponData` SO(기획서 4.2 표 항목 전체), `LaserPistol.asset`, `PlayerShooter`, `TimedDestroy`
-  - `HitMarker` 프리팹(명중점 동그라미, 0.1초), `TestTarget` 프리팹, 씬에 표적 3개, Enemy 레이어
-- 4단계 HP·방어력 커밋 완료 (`d4862f0`, push 안 함)
-  - `CombatConfig` SO(방어력 계수 0.04, 상한 12), `DamageCalculator`, `Health`, `TestTarget`(HP 60, 0이 되면 사라짐)
-  - `Health`의 Armor 칸은 방어구가 생기는 11/17까지 공식을 확인하는 임시 칸이다
-  - 플레이어 피격은 Health 컴포넌트 우클릭 메뉴 "테스트: 공격 피해 20 받기"로 확인한다
-- 5단계 피격 효과 커밋 완료 (push 안 함). 사용자가 Unity에서 확인했다. 이것으로 11/13·11/14 범위가 끝났다.
-  - 플레이어: `HitFlash`(하얗게 0.1초), `BloodSplatter`(혈흔, 상한은 `PlayerData`), 경직 0.2초(`PlayerController.CanAct`, 조준은 가능)
-  - 표적: `SparkOnHit`과 `Spark` 프리팹(파티클 불꽃). 벽에 맞으면 불꽃 없음
-  - 임시 플레이 모드 테스트와 화면 캡처로 확인: 번쩍임, 혈흔 누적과 상한, 경직 약 0.2초, 표적 불꽃
+1. 사용자에게 `docs/PLAN.md` 2부의 질문 1~17에 대한 답을 받는다. 답을 받으면 2부에 "결정 사항" 표로 정리한다.
+2. 2부 작업 순서대로 6단계(탄창·재장전)부터 구현한다. 한 단계씩 하고, 단계마다 컴파일·테스트 → 사용자 확인 → OK 후 한국어 커밋. push는 사용자가 시킬 때만 한다.
 
-### 다음에 할 일
-
-- push는 사용자가 시킬 때 한다 (1~5단계 커밋이 로컬에만 있다).
-- 다음은 11/15 작업: 반동·탄퍼짐·재장전, 샷건 펠릿, 광선검 범위 판정, 무기 5종 수치 입력. 시작 전에 `docs/PLAN.md`에 계획과 질문을 먼저 정리한다.
-
-### 막힌 점
+## 막힌 점
 
 - 없음
 
-### 참고
+## 2026-11-15에 한 일
 
-- 동작 검증은 임시 PlayMode 테스트(`-runTests -testPlatform PlayMode`, Input System으로 키 입력을 큐에 넣고 Rigidbody 위치를 기록)로 한다. 게임 코드에 asmdef가 없어 테스트는 게임 타입을 참조하지 못하므로 `GameObject.Find`와 물리 값만 쓴다. 테스트 파일은 확인 후 지운다.
-- 배치 모드에서 타일을 칠한 뒤에는 벽 충돌체를 직접 만들어야 한다 (`ProjectSetup.EnsureWallColliders`).
-- 컴파일 확인은 Unity 에디터를 닫은 상태에서 배치 모드로 한다:
+| 단계 | 커밋 | 내용 |
+| --- | --- | --- |
+| 1 | `360d241` | 프로젝트 세팅, Input System, 60×40 벽 맵(`Station.unity`), 이동·조준, 카메라 추적 |
+| 2 | `91ccb71` | 구르기 (`PlayerRoll`) |
+| 3 | `e785904` | 레이캐스트 사격, `WeaponData`, 레이저 피스톨, 명중점 표시, `TestTarget` 3개 |
+| 4 | `d4862f0` | `Health`, 피해·방어력 공식(`CombatConfig`, `DamageCalculator`), 구르기 무적, HP 0에서 조작 정지 |
+| 5 | `57c2a14` | 피격 효과: 번쩍임, 혈흔, 경직(플레이어), 불꽃(표적) |
+
+## 코드 구조 요약
+
+- **플레이어**: `PlayerInputReader`(입력) → `PlayerController`(이동·조준·경직, 속도를 쓰는 유일한 곳) / `PlayerRoll`(구르기·무적) / `PlayerShooter`(사격). `PlayerController.CanAct`가 false면 이동·사격·구르기가 막힌다.
+- **전투**: `Health`가 `Damaged`, `Died` 이벤트를 내고 `HitFlash`, `BloodSplatter`, `SparkOnHit`, `PlayerController`가 구독한다.
+- **데이터**: `Assets/Data`의 `PlayerData`, `CombatConfig`, `Weapons/LaserPistol`. 기획서 수치는 모두 여기에 있다.
+- **에셋 생성**: Unity 메뉴 `EscapeFromSpace > 에셋 생성·갱신`(`Scripts/Editor/ProjectSetup.cs`). 없는 에셋·컴포넌트·빈 참조만 채우고, 이미 있는 값은 건드리지 않는다. 새 컴포넌트나 프리팹을 추가할 때는 이 스크립트에 "없으면 만들기"를 더한다.
+
+## 사용자가 조정한 값 (되돌리지 말 것)
+
+- `LaserPistol.asset`의 Fire Rate: 3 → 2
+
+## 작업 방식에서 알게 된 것
+
+- **사용자에게 확인을 부탁하기 전에 직접 돌려서 확인한다.** 1단계에서 컴파일만 확인하고 넘겼다가 맵이 안 보이고 벽을 통과하는 문제가 사용자에게 넘어갔다. 그 뒤로는 Unity 배치 모드에서 임시 플레이 모드 테스트를 돌린다.
+- **배치 모드는 Unity 에디터가 닫혀 있어야 돈다.** 열려 있으면 사용자에게 닫아 달라고 한다. 닫기 전에 Inspector에서 바꾼 값은 `Ctrl+S`로 저장해야 파일에 반영된다.
+- **컴파일과 에셋 생성**:
   `Unity.exe -batchmode -quit -projectPath <저장소> -executeMethod EscapeFromSpace.EditorTools.ProjectSetup.Run -logFile <로그>`
-  Unity 설치 경로는 PC마다 다르므로 저장소에 적지 않는다.
+  로그에서 `error CS`와 `Exception`을 찾는다. Unity 설치 경로는 PC마다 다르므로 저장소에 적지 않는다.
+- **임시 플레이 모드 테스트**: `Assets/TempTests/`에 asmdef와 테스트 파일을 두고
+  `Unity.exe -batchmode -projectPath <저장소> -runTests -testPlatform PlayMode -testResults <xml> -logFile <로그>`로 돌린 뒤 폴더를 지운다 (커밋하지 않는다).
+  - asmdef: `references`에 `UnityEngine.TestRunner`, `UnityEditor.TestRunner`, `Unity.InputSystem`, `precompiledReferences`에 `nunit.framework.dll`, `overrideReferences` true, `defineConstraints`에 `UNITY_INCLUDE_TESTS`.
+  - 게임 코드에 asmdef가 없어 테스트는 게임 타입을 직접 참조하지 못한다. `GameObject.Find`, `GetComponent("Health")`, 리플렉션, `SendMessage`를 쓴다.
+  - 입력은 `InputSystem.QueueStateEvent`로 `KeyboardState`, `MouseState`를 넣는다. 배치 모드에서는 `InputSystem.settings.backgroundBehavior = IgnoreFocus`와 `editorInputBehaviorInPlayMode = AllDeviceInputAlwaysGoesToGameView`를 먼저 설정해야 입력이 들어간다.
+  - 화면 확인은 `Camera.main`을 RenderTexture로 렌더링해 PNG로 저장한다. 캡처는 프레임을 길게 멈추므로 시간 측정 구간에 넣지 않는다.
+  - 컴파일 에러가 있으면 `-runTests`가 끝나지 않으므로 타임아웃을 건다.
+- **배치 모드에서 씬을 열면 그 전에 잡아 둔 에셋 참조가 무효가 된다.** 씬을 연 뒤에 `AssetDatabase.LoadAssetAtPath`로 다시 불러온다.
+- **배치 모드에서 타일을 칠한 뒤에는 벽 충돌체를 직접 만들어야 한다** (`ProjectSetup.EnsureWallColliders`). 안 하면 합쳐진 충돌체가 빈 채로 저장되어 벽을 통과한다.
+- **속도는 한 스크립트에서만 쓴다.** 두 스크립트가 각자 `linearVelocity`를 쓰면 실행 순서에 따라 한 틱이 덮인다 (구르기가 2.85칸만 가던 원인).
+- **플레이어 충돌체에는 마찰 0 재질을 쓴다** (`Assets/Physics/NoFriction`). 기본 마찰이면 벽에 비스듬히 붙어 움직일 때 느려진다.
+
+## 남아 있는 것
+
 - 템플릿 기본 파일 `Assets/InputSystem_Actions.inputactions`와 `Assets/Scenes/SampleScene.unity`는 쓰지 않지만 지우지 않았다.
 - `ProjectSettings`의 productName이 아직 `TempProject`다.
+- `docs/PROMPT_DAY1.md`는 사용자의 파일이라 커밋하지 않았다 (추적되지 않는 상태).
+- 이동 중 구르기는 걷기보다 1.5배 빨라질 뿐이라 눈에 잘 안 띈다. 사용자가 나중에 구르기 애니메이션을 넣을 예정이라 표시는 추가하지 않기로 했다.
+- `Health`의 Armor 칸과 우클릭 메뉴 "테스트: 공격 피해 20 받기"는 방어구(11/17)와 로봇(11/16)이 생기면 정리한다.
