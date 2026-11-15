@@ -13,11 +13,13 @@ namespace EscapeFromSpace
 
         private Rigidbody2D _rigidbody;
         private Camera _camera;
+        private float _stunTimeLeft;
 
         public Vector2 AimDirection { get; private set; } = Vector2.right;
 
-        // 이동·사격·구르기를 할 수 있는 상태인지. HP가 0이면 조작만 멈춘다 (사망 처리는 11/18).
-        public bool CanAct => !_health.IsDead;
+        // 이동·사격·구르기를 할 수 있는 상태인지. 피격 경직 중이거나 HP가 0이면 막는다 (사망 처리는 11/18).
+        // 조준 회전은 경직 중에도 된다.
+        public bool CanAct => !_health.IsDead && _stunTimeLeft <= 0f;
 
         private void Awake()
         {
@@ -26,8 +28,20 @@ namespace EscapeFromSpace
             _health.Initialize(_data.MaxHp);
         }
 
+        private void OnEnable()
+        {
+            _health.Damaged += OnDamaged;
+        }
+
+        private void OnDisable()
+        {
+            _health.Damaged -= OnDamaged;
+        }
+
         private void Update()
         {
+            _stunTimeLeft = Mathf.Max(0f, _stunTimeLeft - Time.deltaTime);
+
             if (_health.IsDead)
             {
                 return;
@@ -45,6 +59,11 @@ namespace EscapeFromSpace
             }
 
             _rigidbody.linearVelocity = CanAct ? _input.Move * _data.MoveSpeed : Vector2.zero;
+        }
+
+        private void OnDamaged(float damage, Vector2 hitPoint)
+        {
+            _stunTimeLeft = _data.HitStunDuration;
         }
 
         private void UpdateAim()

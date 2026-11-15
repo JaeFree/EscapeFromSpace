@@ -25,6 +25,8 @@ namespace EscapeFromSpace.EditorTools
         private const string LaserPistolPath = "Assets/Data/Weapons/LaserPistol.asset";
         private const string CombatConfigPath = "Assets/Data/CombatConfig.asset";
         private const string HitMarkerPrefabPath = "Assets/Prefabs/HitMarker.prefab";
+        private const string BloodDecalPrefabPath = "Assets/Prefabs/BloodDecal.prefab";
+        private const string SparkPrefabPath = "Assets/Prefabs/Spark.prefab";
         private const string TestTargetPrefabPath = "Assets/Prefabs/TestTarget.prefab";
 
         // 사격 확인용 표적 위치. 도킹 구역 안 2개, 문 너머 화물칸 1개.
@@ -66,6 +68,8 @@ namespace EscapeFromSpace.EditorTools
             WeaponData laserPistol = EnsureLaserPistol();
             CombatConfig combatConfig = EnsureCombatConfig();
             EnsureHitMarkerPrefab(circle);
+            EnsureBloodDecalPrefab(circle);
+            EnsureSparkPrefab();
             EnsureTestTargetPrefab(combatConfig, square, enemyLayer);
             EnsurePlayerPrefab(playerData, laserPistol, combatConfig, square, circle, playerLayer, wallLayer, enemyLayer);
             AssetDatabase.SaveAssets();
@@ -256,6 +260,68 @@ namespace EscapeFromSpace.EditorTools
 
         // ---------- 프리팹 ----------
 
+        private static void EnsureBloodDecalPrefab(Sprite circle)
+        {
+            if (File.Exists(BloodDecalPrefabPath))
+            {
+                return;
+            }
+
+            var root = new GameObject("BloodDecal");
+            root.transform.localScale = new Vector3(0.6f, 0.45f, 1f);
+            var renderer = root.AddComponent<SpriteRenderer>();
+            renderer.sprite = circle;
+            renderer.color = new Color(0.55f, 0.05f, 0.08f);
+
+            // 바닥과 벽 위, 캐릭터 아래
+            renderer.sortingOrder = -1;
+            PrefabUtility.SaveAsPrefabAsset(root, BloodDecalPrefabPath);
+            Object.DestroyImmediate(root);
+        }
+
+        private static void EnsureSparkPrefab()
+        {
+            if (File.Exists(SparkPrefabPath))
+            {
+                return;
+            }
+
+            var root = new GameObject("Spark");
+            var particles = root.AddComponent<ParticleSystem>();
+
+            ParticleSystem.MainModule main = particles.main;
+            main.duration = 0.3f;
+            main.loop = false;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.15f, 0.3f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(2f, 5f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.06f, 0.12f);
+            main.startColor = new Color(1f, 0.8f, 0.2f);
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+
+            // 다 튀고 나면 스스로 사라진다.
+            main.stopAction = ParticleSystemStopAction.Destroy;
+
+            ParticleSystem.EmissionModule emission = particles.emission;
+            emission.rateOverTime = 0f;
+            emission.SetBursts(new[] { new ParticleSystem.Burst(0f, 10) });
+
+            ParticleSystem.ShapeModule shape = particles.shape;
+            shape.shapeType = ParticleSystemShapeType.Circle;
+            shape.radius = 0.05f;
+
+            // 파티클 기본 재질은 2D URP에서 분홍색으로 나오므로 스프라이트 기본 재질을 쓴다.
+            var probe = new GameObject("MaterialProbe");
+            Material spriteMaterial = probe.AddComponent<SpriteRenderer>().sharedMaterial;
+            Object.DestroyImmediate(probe);
+
+            var particleRenderer = root.GetComponent<ParticleSystemRenderer>();
+            particleRenderer.sharedMaterial = spriteMaterial;
+            particleRenderer.sortingOrder = 10;
+
+            PrefabUtility.SaveAsPrefabAsset(root, SparkPrefabPath);
+            Object.DestroyImmediate(root);
+        }
+
         private static void EnsureHitMarkerPrefab(Sprite circle)
         {
             if (File.Exists(HitMarkerPrefabPath))
@@ -299,6 +365,10 @@ namespace EscapeFromSpace.EditorTools
             }
 
             SetReferenceIfEmpty(testTarget, "_health", targetHealth);
+
+            EnsureComponent(root, out SparkOnHit spark);
+            SetReferenceIfEmpty(spark, "_health", targetHealth);
+            SetReferenceIfEmpty(spark, "_sparkPrefab", AssetDatabase.LoadAssetAtPath<GameObject>(SparkPrefabPath));
 
             PrefabUtility.SaveAsPrefabAsset(root, TestTargetPrefabPath);
 
@@ -380,6 +450,16 @@ namespace EscapeFromSpace.EditorTools
             SetReferenceIfEmpty(health, "_config", combatConfig);
             SetReferenceIfEmpty(controller, "_health", health);
             SetReferenceIfEmpty(roll, "_health", health);
+
+            EnsureComponent(root, out HitFlash flash);
+            SetReferenceIfEmpty(flash, "_health", health);
+            SetReferenceIfEmpty(flash, "_renderer", bodyVisual.GetComponent<SpriteRenderer>());
+            SetReferenceIfEmpty(flash, "_data", playerData);
+
+            EnsureComponent(root, out BloodSplatter blood);
+            SetReferenceIfEmpty(blood, "_health", health);
+            SetReferenceIfEmpty(blood, "_data", playerData);
+            SetReferenceIfEmpty(blood, "_decalPrefab", AssetDatabase.LoadAssetAtPath<GameObject>(BloodDecalPrefabPath));
 
             // 총구 위치. 총 막대의 끝.
             if (EnsureChild(aimPivot, "Muzzle", out Transform muzzle))

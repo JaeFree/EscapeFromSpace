@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6568679506819254320}
   - component: {fileID: 4622418016380505874}
   - component: {fileID: 9148892183955905242}
+  - component: {fileID: 5841871807903880652}
   m_Layer: 8
   m_Name: TestTarget
   m_TagString: Untagged
@@ -165,3 +166,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _health: {fileID: 4622418016380505874}
   _maxHp: 60
+--- !u!114 &5841871807903880652
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8434903438624151813}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70439f9d79ec83544b585d3683eecb61, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _health: {fileID: 4622418016380505874}
+  _sparkPrefab: {fileID: 8007909423915206841, guid: d094186983ef3b54180d93b3cdfa14b7, type: 3}

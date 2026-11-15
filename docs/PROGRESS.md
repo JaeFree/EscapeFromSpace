@@ -26,17 +26,19 @@
 - 3단계 사격 커밋 완료 (`e785904`, push 안 함)
   - `WeaponData` SO(기획서 4.2 표 항목 전체), `LaserPistol.asset`, `PlayerShooter`, `TimedDestroy`
   - `HitMarker` 프리팹(명중점 동그라미, 0.1초), `TestTarget` 프리팹, 씬에 표적 3개, Enemy 레이어
-- 4단계 HP·방어력 구현 (사용자 확인 대기 중, 아직 커밋하지 않음)
+- 4단계 HP·방어력 커밋 완료 (`d4862f0`, push 안 함)
   - `CombatConfig` SO(방어력 계수 0.04, 상한 12), `DamageCalculator`, `Health`, `TestTarget`(HP 60, 0이 되면 사라짐)
   - `Health`의 Armor 칸은 방어구가 생기는 11/17까지 공식을 확인하는 임시 칸이다
   - 플레이어 피격은 Health 컴포넌트 우클릭 메뉴 "테스트: 공격 피해 20 받기"로 확인한다
-  - 구르기 무적은 `PlayerRoll`이 `Health.IsInvincible`을 켜고 끈다. HP 0이면 `PlayerController.CanAct`가 false가 되어 이동·조준·사격·구르기가 멈춘다
-  - 임시 플레이 모드 테스트로 확인: 표적 4발에 파괴, 방어력 0/6/12 초과에서 피해 20/15.2/10.4, 구르기 중 무적, HP 0에서 조작 정지
+- 5단계 피격 효과 커밋 완료 (push 안 함). 사용자가 Unity에서 확인했다. 이것으로 11/13·11/14 범위가 끝났다.
+  - 플레이어: `HitFlash`(하얗게 0.1초), `BloodSplatter`(혈흔, 상한은 `PlayerData`), 경직 0.2초(`PlayerController.CanAct`, 조준은 가능)
+  - 표적: `SparkOnHit`과 `Spark` 프리팹(파티클 불꽃). 벽에 맞으면 불꽃 없음
+  - 임시 플레이 모드 테스트와 화면 캡처로 확인: 번쩍임, 혈흔 누적과 상한, 경직 약 0.2초, 표적 불꽃
 
 ### 다음에 할 일
 
-- 사용자가 4단계를 Unity에서 확인하고 OK하면 커밋 (push는 사용자가 시킬 때만)
-- 5단계 피격 효과: 번쩍임·혈흔·경직(플레이어), 불꽃(표적)
+- push는 사용자가 시킬 때 한다 (1~5단계 커밋이 로컬에만 있다).
+- 다음은 11/15 작업: 반동·탄퍼짐·재장전, 샷건 펠릿, 광선검 범위 판정, 무기 5종 수치 입력. 시작 전에 `docs/PLAN.md`에 계획과 질문을 먼저 정리한다.
 
 ### 막힌 점
 
