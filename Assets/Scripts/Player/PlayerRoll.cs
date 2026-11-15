@@ -7,21 +7,22 @@ namespace EscapeFromSpace
         [SerializeField] private PlayerData _data;
         [SerializeField] private PlayerInputReader _input;
         [SerializeField] private PlayerController _controller;
+        [SerializeField] private Health _health;
 
         private Vector2 _direction;
         private float _remainingDistance;
         private float _invincibleTimeLeft;
 
         public bool IsRolling { get; private set; }
-        public bool IsInvincible => _invincibleTimeLeft > 0f;
         public float CooldownRemaining { get; private set; }
 
         private void Update()
         {
             CooldownRemaining = Mathf.Max(0f, CooldownRemaining - Time.deltaTime);
             _invincibleTimeLeft = Mathf.Max(0f, _invincibleTimeLeft - Time.deltaTime);
+            _health.IsInvincible = _invincibleTimeLeft > 0f;
 
-            if (_input.RollPressedThisFrame && !IsRolling && CooldownRemaining <= 0f)
+            if (_input.RollPressedThisFrame && _controller.CanAct && !IsRolling && CooldownRemaining <= 0f)
             {
                 StartRoll();
             }
@@ -51,6 +52,7 @@ namespace EscapeFromSpace
             _direction = move.sqrMagnitude > 0.01f ? move.normalized : _controller.AimDirection;
             _remainingDistance = _data.RollDistance;
             _invincibleTimeLeft = _data.RollInvincibleDuration;
+            _health.IsInvincible = true;
             CooldownRemaining = _data.RollCooldown;
             IsRolling = true;
         }

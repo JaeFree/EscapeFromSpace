@@ -23,6 +23,7 @@ namespace EscapeFromSpace.EditorTools
         private const string ScenePath = "Assets/Scenes/Station.unity";
         private const string NoFrictionPath = "Assets/Physics/NoFriction.physicsMaterial2D";
         private const string LaserPistolPath = "Assets/Data/Weapons/LaserPistol.asset";
+        private const string CombatConfigPath = "Assets/Data/CombatConfig.asset";
         private const string HitMarkerPrefabPath = "Assets/Prefabs/HitMarker.prefab";
         private const string TestTargetPrefabPath = "Assets/Prefabs/TestTarget.prefab";
 
@@ -63,9 +64,10 @@ namespace EscapeFromSpace.EditorTools
 
             PlayerData playerData = EnsurePlayerData();
             WeaponData laserPistol = EnsureLaserPistol();
+            CombatConfig combatConfig = EnsureCombatConfig();
             EnsureHitMarkerPrefab(circle);
-            EnsureTestTargetPrefab(square, enemyLayer);
-            EnsurePlayerPrefab(playerData, laserPistol, square, circle, playerLayer, wallLayer, enemyLayer);
+            EnsureTestTargetPrefab(combatConfig, square, enemyLayer);
+            EnsurePlayerPrefab(playerData, laserPistol, combatConfig, square, circle, playerLayer, wallLayer, enemyLayer);
             AssetDatabase.SaveAssets();
 
             EnsureScene(wallLayer);
@@ -207,6 +209,24 @@ namespace EscapeFromSpace.EditorTools
             return material;
         }
 
+        private static CombatConfig EnsureCombatConfig()
+        {
+            var config = AssetDatabase.LoadAssetAtPath<CombatConfig>(CombatConfigPath);
+            if (config != null)
+            {
+                return config;
+            }
+
+            // 기획서 4.1의 방어력 초기값. 에셋을 처음 만들 때만 넣는다.
+            config = ScriptableObject.CreateInstance<CombatConfig>();
+            var so = new SerializedObject(config);
+            so.FindProperty("_armorReductionPerPoint").floatValue = 0.04f;
+            so.FindProperty("_maxArmor").intValue = 12;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            AssetDatabase.CreateAsset(config, CombatConfigPath);
+            return config;
+        }
+
         private static WeaponData EnsureLaserPistol()
         {
             var data = AssetDatabase.LoadAssetAtPath<WeaponData>(LaserPistolPath);
@@ -254,7 +274,7 @@ namespace EscapeFromSpace.EditorTools
             Object.DestroyImmediate(root);
         }
 
-        private static void EnsureTestTargetPrefab(Sprite square, int enemyLayer)
+        private static void EnsureTestTargetPrefab(CombatConfig combatConfig, Sprite square, int enemyLayer)
         {
             bool exists = File.Exists(TestTargetPrefabPath);
             GameObject root = exists ? PrefabUtility.LoadPrefabContents(TestTargetPrefabPath) : new GameObject("TestTarget");
@@ -268,6 +288,17 @@ namespace EscapeFromSpace.EditorTools
             }
 
             EnsureComponent(root, out BoxCollider2D _);
+            EnsureComponent(root, out Health targetHealth);
+            SetReferenceIfEmpty(targetHealth, "_config", combatConfig);
+
+            if (EnsureComponent(root, out TestTarget testTarget))
+            {
+                var targetObject = new SerializedObject(testTarget);
+                targetObject.FindProperty("_maxHp").floatValue = 60f;
+                targetObject.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            SetReferenceIfEmpty(testTarget, "_health", targetHealth);
 
             PrefabUtility.SaveAsPrefabAsset(root, TestTargetPrefabPath);
 
@@ -282,7 +313,8 @@ namespace EscapeFromSpace.EditorTools
         }
 
         private static void EnsurePlayerPrefab(
-            PlayerData playerData, WeaponData weapon, Sprite square, Sprite circle, int playerLayer, int wallLayer, int enemyLayer)
+            PlayerData playerData, WeaponData weapon, CombatConfig combatConfig, Sprite square, Sprite circle,
+            int playerLayer, int wallLayer, int enemyLayer)
         {
             bool exists = File.Exists(PlayerPrefabPath);
             GameObject root = exists ? PrefabUtility.LoadPrefabContents(PlayerPrefabPath) : new GameObject("Player");
@@ -343,6 +375,11 @@ namespace EscapeFromSpace.EditorTools
             SetReferenceIfEmpty(roll, "_data", playerData);
             SetReferenceIfEmpty(roll, "_input", input);
             SetReferenceIfEmpty(roll, "_controller", controller);
+
+            EnsureComponent(root, out Health health);
+            SetReferenceIfEmpty(health, "_config", combatConfig);
+            SetReferenceIfEmpty(controller, "_health", health);
+            SetReferenceIfEmpty(roll, "_health", health);
 
             // 총구 위치. 총 막대의 끝.
             if (EnsureChild(aimPivot, "Muzzle", out Transform muzzle))

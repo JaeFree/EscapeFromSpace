@@ -16,7 +16,7 @@ MonoBehaviour:
   _category: 1
   _damage: 15
   _pelletCount: 1
-  _fireRate: 3
+  _fireRate: 2
   _range: 12
   _magazineSize: 12
   _reloadTime: 1.2

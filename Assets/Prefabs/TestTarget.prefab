@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 6428939392617997805}
   - component: {fileID: 5246841219404418980}
   - component: {fileID: 6568679506819254320}
+  - component: {fileID: 4622418016380505874}
+  - component: {fileID: 9148892183955905242}
   m_Layer: 8
   m_Name: TestTarget
   m_TagString: Untagged
@@ -134,3 +136,32 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &4622418016380505874
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8434903438624151813}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03c3673ef1d82b444ac3252979977913, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _config: {fileID: 11400000, guid: 618fd9c4861d865429a444fc826d1c88, type: 2}
+  _armor: 0
+  _currentHp: 0
+--- !u!114 &9148892183955905242
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8434903438624151813}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0cbc47c21802e9a4baa081f3b0a4d024, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _health: {fileID: 4622418016380505874}
+  _maxHp: 60

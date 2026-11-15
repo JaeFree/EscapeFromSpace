@@ -18,7 +18,7 @@ namespace EscapeFromSpace
 
         private void Update()
         {
-            if (_weapon == null || !_input.FireHeld || _roll.IsRolling || Time.time < _nextFireTime)
+            if (_weapon == null || !_input.FireHeld || !_controller.CanAct || _roll.IsRolling || Time.time < _nextFireTime)
             {
                 return;
             }
@@ -45,6 +45,12 @@ namespace EscapeFromSpace
             }
 
             Instantiate(_hitMarkerPrefab, hit.point, Quaternion.identity);
+
+            var health = hit.collider.GetComponentInParent<Health>();
+            if (health != null)
+            {
+                health.TakeDamage(_weapon.Damage, hit.point);
+            }
         }
     }
 }

@@ -220,6 +220,7 @@ GameObject:
   - component: {fileID: 3746254566514887690}
   - component: {fileID: 1751094079760387129}
   - component: {fileID: 6759398714086557480}
+  - component: {fileID: 722836350339408983}
   m_Layer: 6
   m_Name: Player
   m_TagString: Untagged
@@ -335,6 +336,7 @@ MonoBehaviour:
   _data: {fileID: 11400000, guid: fa97fd80059a0ae4ea8b9be42ca10036, type: 2}
   _input: {fileID: 5598884973092948156}
   _roll: {fileID: 1751094079760387129}
+  _health: {fileID: 722836350339408983}
   _aimPivot: {fileID: 460640815210042848}
 --- !u!114 &1751094079760387129
 MonoBehaviour:
@@ -351,6 +353,7 @@ MonoBehaviour:
   _data: {fileID: 11400000, guid: fa97fd80059a0ae4ea8b9be42ca10036, type: 2}
   _input: {fileID: 5598884973092948156}
   _controller: {fileID: 3746254566514887690}
+  _health: {fileID: 722836350339408983}
 --- !u!114 &6759398714086557480
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -375,6 +378,21 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   _hitMarkerPrefab: {fileID: 616239616664432743, guid: 48949187975de3d48b2a7dcf7efc11f0, type: 3}
+--- !u!114 &722836350339408983
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6849949938922056842}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03c3673ef1d82b444ac3252979977913, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _config: {fileID: 11400000, guid: 618fd9c4861d865429a444fc826d1c88, type: 2}
+  _armor: 0
+  _currentHp: 0
 --- !u!1 &7698571191336183577
 GameObject:
   m_ObjectHideFlags: 0
