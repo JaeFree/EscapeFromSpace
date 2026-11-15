@@ -30,6 +30,10 @@
 - 기획서의 수치는 모두 초기값이다. ScriptableObject 에셋에 초기값을 넣어 두고, 최종 값은 사용자가 Unity Inspector에서 직접 플레이하며 조정한다.
 - 사용자가 Inspector에서 바꾼 에셋 값을 코드나 기획서 값으로 되돌리지 않는다.
 
+## 작업 기록 규칙
+
+- 작업을 마칠 때마다 `docs/PROGRESS.md`에 오늘 한 일, 다음에 할 일, 막힌 점을 갱신한다. 학교 PC와 집 PC에서 대화 기록이 이어지지 않으므로, 다음 세션은 이 파일과 `docs/PLAN.md`를 읽고 시작한다.
+
 ## 스킬 사용 규칙
 
 1. <https://github.com/Donchitos/Claude-Code-Game-Studios> 의 스킬·에이전트·규칙을 읽는다. GitHub 등에서 Unity 2D 슈터 제작에 필요하거나 도움이 될 스킬도 추가로 찾는다.
