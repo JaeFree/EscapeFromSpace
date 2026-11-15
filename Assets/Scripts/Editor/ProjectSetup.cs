@@ -247,11 +247,16 @@ namespace EscapeFromSpace.EditorTools
 
             EnsureComponent(root, out PlayerInputReader input);
             EnsureComponent(root, out PlayerController controller);
+            EnsureComponent(root, out PlayerRoll roll);
 
             SetReferenceIfEmpty(input, "_actions", AssetDatabase.LoadAssetAtPath<InputActionAsset>(InputPath));
             SetReferenceIfEmpty(controller, "_data", playerData);
             SetReferenceIfEmpty(controller, "_input", input);
             SetReferenceIfEmpty(controller, "_aimPivot", aimPivot);
+            SetReferenceIfEmpty(controller, "_roll", roll);
+            SetReferenceIfEmpty(roll, "_data", playerData);
+            SetReferenceIfEmpty(roll, "_input", input);
+            SetReferenceIfEmpty(roll, "_controller", controller);
 
             PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefabPath);
 

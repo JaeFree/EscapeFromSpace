@@ -11,15 +11,18 @@ namespace EscapeFromSpace
         private InputActionMap _playerMap;
         private InputAction _move;
         private InputAction _aim;
+        private InputAction _roll;
 
         public Vector2 Move => _move.ReadValue<Vector2>();
         public Vector2 AimScreenPosition => _aim.ReadValue<Vector2>();
+        public bool RollPressedThisFrame => _roll.WasPressedThisFrame();
 
         private void Awake()
         {
             _playerMap = _actions.FindActionMap("Player", true);
             _move = _playerMap.FindAction("Move", true);
             _aim = _playerMap.FindAction("Aim", true);
+            _roll = _playerMap.FindAction("Roll", true);
         }
 
         private void OnEnable()

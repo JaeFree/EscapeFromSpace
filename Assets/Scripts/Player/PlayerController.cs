@@ -7,6 +7,7 @@ namespace EscapeFromSpace
     {
         [SerializeField] private PlayerData _data;
         [SerializeField] private PlayerInputReader _input;
+        [SerializeField] private PlayerRoll _roll;
         [SerializeField] private Transform _aimPivot;
 
         private Rigidbody2D _rigidbody;
@@ -27,7 +28,9 @@ namespace EscapeFromSpace
 
         private void FixedUpdate()
         {
-            _rigidbody.linearVelocity = _input.Move * _data.MoveSpeed;
+            _rigidbody.linearVelocity = _roll.IsRolling
+                ? _roll.TakeStepVelocity()
+                : _input.Move * _data.MoveSpeed;
         }
 
         private void UpdateAim()

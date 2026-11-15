@@ -187,6 +187,7 @@ GameObject:
   - component: {fileID: 6565656548947765148}
   - component: {fileID: 5598884973092948156}
   - component: {fileID: 3746254566514887690}
+  - component: {fileID: 1751094079760387129}
   m_Layer: 6
   m_Name: Player
   m_TagString: Untagged
@@ -301,7 +302,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _data: {fileID: 11400000, guid: fa97fd80059a0ae4ea8b9be42ca10036, type: 2}
   _input: {fileID: 5598884973092948156}
+  _roll: {fileID: 1751094079760387129}
   _aimPivot: {fileID: 460640815210042848}
+--- !u!114 &1751094079760387129
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6849949938922056842}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 368b13d1ed3fde34e92a6815fcc8191c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _data: {fileID: 11400000, guid: fa97fd80059a0ae4ea8b9be42ca10036, type: 2}
+  _input: {fileID: 5598884973092948156}
+  _controller: {fileID: 3746254566514887690}
 --- !u!1 &7698571191336183577
 GameObject:
   m_ObjectHideFlags: 0
