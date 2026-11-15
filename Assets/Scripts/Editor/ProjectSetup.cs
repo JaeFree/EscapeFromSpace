@@ -22,6 +22,15 @@ namespace EscapeFromSpace.EditorTools
         private const string PlayerPrefabPath = "Assets/Prefabs/Player.prefab";
         private const string ScenePath = "Assets/Scenes/Station.unity";
         private const string NoFrictionPath = "Assets/Physics/NoFriction.physicsMaterial2D";
+        private const string LaserPistolPath = "Assets/Data/Weapons/LaserPistol.asset";
+        private const string HitMarkerPrefabPath = "Assets/Prefabs/HitMarker.prefab";
+        private const string TestTargetPrefabPath = "Assets/Prefabs/TestTarget.prefab";
+
+        // 사격 확인용 표적 위치. 도킹 구역 안 2개, 문 너머 화물칸 1개.
+        private static readonly Vector2[] TestTargetPositions =
+        {
+            new Vector2(24.5f, 5.5f), new Vector2(36.5f, 3.5f), new Vector2(29.5f, 13.5f),
+        };
 
         private static readonly string[] Folders =
         {
@@ -45,6 +54,7 @@ namespace EscapeFromSpace.EditorTools
 
             int playerLayer = EnsureLayer("Player");
             int wallLayer = EnsureLayer("Wall");
+            int enemyLayer = EnsureLayer("Enemy");
 
             Sprite square = EnsureSprite(SquarePath, 32, false);
             Sprite circle = EnsureSprite(CirclePath, 64, true);
@@ -52,7 +62,10 @@ namespace EscapeFromSpace.EditorTools
             EnsureTile(FloorTilePath, square, new Color(0.16f, 0.17f, 0.2f), Tile.ColliderType.None);
 
             PlayerData playerData = EnsurePlayerData();
-            EnsurePlayerPrefab(playerData, square, circle, playerLayer);
+            WeaponData laserPistol = EnsureLaserPistol();
+            EnsureHitMarkerPrefab(circle);
+            EnsureTestTargetPrefab(square, enemyLayer);
+            EnsurePlayerPrefab(playerData, laserPistol, square, circle, playerLayer, wallLayer, enemyLayer);
             AssetDatabase.SaveAssets();
 
             EnsureScene(wallLayer);
@@ -194,9 +207,82 @@ namespace EscapeFromSpace.EditorTools
             return material;
         }
 
+        private static WeaponData EnsureLaserPistol()
+        {
+            var data = AssetDatabase.LoadAssetAtPath<WeaponData>(LaserPistolPath);
+            if (data != null)
+            {
+                return data;
+            }
+
+            // 기획서 4.2 표의 레이저 피스톨 초기값. 에셋을 처음 만들 때만 넣는다.
+            data = ScriptableObject.CreateInstance<WeaponData>();
+            var so = new SerializedObject(data);
+            so.FindProperty("_displayName").stringValue = "레이저 피스톨";
+            so.FindProperty("_category").enumValueIndex = (int)WeaponCategory.Pistol;
+            so.FindProperty("_damage").floatValue = 15f;
+            so.FindProperty("_pelletCount").intValue = 1;
+            so.FindProperty("_fireRate").floatValue = 3f;
+            so.FindProperty("_range").floatValue = 12f;
+            so.FindProperty("_magazineSize").intValue = 12;
+            so.FindProperty("_reloadTime").floatValue = 1.2f;
+            so.FindProperty("_spreadAngle").floatValue = 2f;
+            so.FindProperty("_recoilPerShot").floatValue = 1.5f;
+            so.FindProperty("_weight").floatValue = 1f;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            AssetDatabase.CreateAsset(data, LaserPistolPath);
+            return data;
+        }
+
         // ---------- 프리팹 ----------
 
-        private static void EnsurePlayerPrefab(PlayerData playerData, Sprite square, Sprite circle, int playerLayer)
+        private static void EnsureHitMarkerPrefab(Sprite circle)
+        {
+            if (File.Exists(HitMarkerPrefabPath))
+            {
+                return;
+            }
+
+            var root = new GameObject("HitMarker");
+            root.transform.localScale = new Vector3(0.2f, 0.2f, 1f);
+            var renderer = root.AddComponent<SpriteRenderer>();
+            renderer.sprite = circle;
+            renderer.color = new Color(1f, 0.9f, 0.3f);
+            renderer.sortingOrder = 10;
+            root.AddComponent<TimedDestroy>();
+            PrefabUtility.SaveAsPrefabAsset(root, HitMarkerPrefabPath);
+            Object.DestroyImmediate(root);
+        }
+
+        private static void EnsureTestTargetPrefab(Sprite square, int enemyLayer)
+        {
+            bool exists = File.Exists(TestTargetPrefabPath);
+            GameObject root = exists ? PrefabUtility.LoadPrefabContents(TestTargetPrefabPath) : new GameObject("TestTarget");
+
+            if (!exists)
+            {
+                root.layer = enemyLayer;
+                var renderer = root.AddComponent<SpriteRenderer>();
+                renderer.sprite = square;
+                renderer.color = new Color(0.9f, 0.35f, 0.3f);
+            }
+
+            EnsureComponent(root, out BoxCollider2D _);
+
+            PrefabUtility.SaveAsPrefabAsset(root, TestTargetPrefabPath);
+
+            if (exists)
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+            else
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        private static void EnsurePlayerPrefab(
+            PlayerData playerData, WeaponData weapon, Sprite square, Sprite circle, int playerLayer, int wallLayer, int enemyLayer)
         {
             bool exists = File.Exists(PlayerPrefabPath);
             GameObject root = exists ? PrefabUtility.LoadPrefabContents(PlayerPrefabPath) : new GameObject("Player");
@@ -257,6 +343,27 @@ namespace EscapeFromSpace.EditorTools
             SetReferenceIfEmpty(roll, "_data", playerData);
             SetReferenceIfEmpty(roll, "_input", input);
             SetReferenceIfEmpty(roll, "_controller", controller);
+
+            // 총구 위치. 총 막대의 끝.
+            if (EnsureChild(aimPivot, "Muzzle", out Transform muzzle))
+            {
+                muzzle.localPosition = new Vector3(0.7f, 0f, 0f);
+            }
+
+            if (EnsureComponent(root, out PlayerShooter shooter))
+            {
+                var shooterObject = new SerializedObject(shooter);
+                shooterObject.FindProperty("_hitMask").intValue = (1 << wallLayer) | (1 << enemyLayer);
+                shooterObject.FindProperty("_wallMask").intValue = 1 << wallLayer;
+                shooterObject.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            SetReferenceIfEmpty(shooter, "_weapon", weapon);
+            SetReferenceIfEmpty(shooter, "_input", input);
+            SetReferenceIfEmpty(shooter, "_controller", controller);
+            SetReferenceIfEmpty(shooter, "_roll", roll);
+            SetReferenceIfEmpty(shooter, "_muzzle", muzzle);
+            SetReferenceIfEmpty(shooter, "_hitMarkerPrefab", AssetDatabase.LoadAssetAtPath<GameObject>(HitMarkerPrefabPath));
 
             PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefabPath);
 
@@ -321,6 +428,17 @@ namespace EscapeFromSpace.EditorTools
             }
 
             EnsureWallColliders();
+
+            if (GameObject.Find("TestTargets") == null)
+            {
+                var targetPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(TestTargetPrefabPath);
+                var parent = new GameObject("TestTargets");
+                foreach (Vector2 position in TestTargetPositions)
+                {
+                    var target = (GameObject)PrefabUtility.InstantiatePrefab(targetPrefab, parent.transform);
+                    target.transform.position = position;
+                }
+            }
 
             GameObject player = GameObject.Find("Player");
             if (player == null)

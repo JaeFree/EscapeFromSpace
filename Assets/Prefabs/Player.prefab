@@ -87,6 +87,37 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &3080425201960179652
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5996404191028197726}
+  m_Layer: 6
+  m_Name: Muzzle
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5996404191028197726
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3080425201960179652}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.7, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 460640815210042848}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6289455719957806938
 GameObject:
   m_ObjectHideFlags: 0
@@ -188,6 +219,7 @@ GameObject:
   - component: {fileID: 5598884973092948156}
   - component: {fileID: 3746254566514887690}
   - component: {fileID: 1751094079760387129}
+  - component: {fileID: 6759398714086557480}
   m_Layer: 6
   m_Name: Player
   m_TagString: Untagged
@@ -319,6 +351,30 @@ MonoBehaviour:
   _data: {fileID: 11400000, guid: fa97fd80059a0ae4ea8b9be42ca10036, type: 2}
   _input: {fileID: 5598884973092948156}
   _controller: {fileID: 3746254566514887690}
+--- !u!114 &6759398714086557480
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6849949938922056842}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a494023976fac34c995aec7a5e968a6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _weapon: {fileID: 11400000, guid: 618fa4222df496d40b66b07f1a81746b, type: 2}
+  _input: {fileID: 5598884973092948156}
+  _controller: {fileID: 3746254566514887690}
+  _roll: {fileID: 1751094079760387129}
+  _muzzle: {fileID: 5996404191028197726}
+  _hitMask:
+    serializedVersion: 2
+    m_Bits: 384
+  _wallMask:
+    serializedVersion: 2
+    m_Bits: 128
+  _hitMarkerPrefab: {fileID: 616239616664432743, guid: 48949187975de3d48b2a7dcf7efc11f0, type: 3}
 --- !u!1 &7698571191336183577
 GameObject:
   m_ObjectHideFlags: 0
@@ -349,5 +405,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 92465364652039710}
+  - {fileID: 5996404191028197726}
   m_Father: {fileID: 280298881040690522}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
