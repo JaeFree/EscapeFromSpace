@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace EscapeFromSpace
@@ -15,6 +16,7 @@ namespace EscapeFromSpace
         [SerializeField] private LayerMask _wallMask;
         [SerializeField] private GameObject _hitMarkerPrefab;
         [SerializeField] private BulletTracer _tracerPrefab;
+        [SerializeField] private SwingArc _swingArcPrefab;
 
         [Header("탄약")]
         // 가방(11/17)이 생기면 가방의 탄약으로 바꾼다. 그때까지는 여기에 직접 넣는다.
@@ -31,6 +33,9 @@ namespace EscapeFromSpace
         private float _nextFireTime;
         private float _reloadTimeLeft;
         private CameraShake _cameraShake;
+
+        // 한 번 휘두를 때 같은 대상을 두 번 맞히지 않으려고 쓴다. 매번 새로 만들지 않게 재사용한다.
+        private readonly List<Health> _swingHits = new List<Health>();
 
         public bool IsReloading { get; private set; }
         public int AmmoInMagazine => _ammoInMagazine;
@@ -78,12 +83,6 @@ namespace EscapeFromSpace
             // 반동은 지연 없이 항상 회복한다 (연사 사이에도).
             _currentRecoil = Mathf.Max(0f, _currentRecoil - _weapon.RecoilRecovery * Time.deltaTime);
 
-            // 광선검 범위 판정은 10단계에서 만든다. 그때까지 근접 무기는 공격하지 않는다.
-            if (_weapon.Category == WeaponCategory.Melee)
-            {
-                return;
-            }
-
             if (!_input.FireHeld || !_controller.CanAct || _roll.IsRolling || IsReloading || Time.time < _nextFireTime)
             {
                 return;
@@ -100,7 +99,14 @@ namespace EscapeFromSpace
             }
 
             _nextFireTime = Time.time + 1f / _weapon.FireRate;
-            Fire();
+            if (_weapon.Category == WeaponCategory.Melee)
+            {
+                Swing();
+            }
+            else
+            {
+                Fire();
+            }
 
             // 반동은 쏜 뒤에 쌓인다. 첫 발은 기본 퍼짐만 받는다.
             _currentRecoil = Mathf.Min(_currentRecoil + _weapon.RecoilPerShot, _weapon.MaxRecoil);
@@ -161,6 +167,67 @@ namespace EscapeFromSpace
             _ammoInMagazine += loaded;
             _reserveAmmo -= loaded;
             IsReloading = false;
+        }
+
+        // 근접 무기는 플레이어 앞쪽 부채꼴 안의 대상을 모두 맞힌다. 무기의 퍼짐 값이 부채꼴 전체 각이다.
+        private void Swing()
+        {
+            Vector2 center = transform.position;
+            Vector2 aim = _controller.AimDirection;
+            float halfAngle = _weapon.SpreadAngle * 0.5f;
+
+            // 휘두른 범위 표시. 플레이어가 움직여도 따라오도록 자식으로 둔다.
+            float aimAngle = Mathf.Atan2(aim.y, aim.x) * Mathf.Rad2Deg;
+            SwingArc arc = Instantiate(_swingArcPrefab, center, Quaternion.Euler(0f, 0f, aimAngle), transform);
+            arc.Show(_weapon.Range, _weapon.SpreadAngle);
+
+            _swingHits.Clear();
+            foreach (Collider2D target in Physics2D.OverlapCircleAll(center, _weapon.Range, _hitMask & ~_wallMask))
+            {
+                var health = target.GetComponentInParent<Health>();
+                if (health == null || _swingHits.Contains(health))
+                {
+                    continue;
+                }
+
+                // 가장 가까운 점이나 중심 중 하나라도 부채꼴 안에 있고 벽에 가리지 않으면 맞은 것으로 본다.
+                Vector2 closest = target.ClosestPoint(center);
+                Vector2 middle = target.bounds.center;
+                Vector2 hitPoint;
+                if (IsInSwing(center, aim, halfAngle, closest))
+                {
+                    hitPoint = closest;
+                }
+                else if (IsInSwing(center, aim, halfAngle, middle))
+                {
+                    hitPoint = middle;
+                }
+                else
+                {
+                    continue;
+                }
+
+                _swingHits.Add(health);
+                Instantiate(_hitMarkerPrefab, hitPoint, Quaternion.identity);
+                health.TakeDamage(_weapon.Damage, hitPoint);
+            }
+        }
+
+        private bool IsInSwing(Vector2 center, Vector2 aim, float halfAngle, Vector2 point)
+        {
+            Vector2 toPoint = point - center;
+            if (toPoint.magnitude > _weapon.Range)
+            {
+                return false;
+            }
+
+            // 대상과 겹쳐 있으면 방향을 잴 수 없다. 붙어 있는 것이므로 맞은 것으로 본다.
+            if (toPoint.sqrMagnitude > 0.0001f && Vector2.Angle(aim, toPoint) > halfAngle)
+            {
+                return false;
+            }
+
+            return Physics2D.Linecast(center, point, _wallMask).collider == null;
         }
 
         private void Fire()

@@ -548,6 +548,7 @@ MonoBehaviour:
     m_Bits: 128
   _hitMarkerPrefab: {fileID: 616239616664432743, guid: 48949187975de3d48b2a7dcf7efc11f0, type: 3}
   _tracerPrefab: {fileID: 6497846089516445128, guid: d8fe86d7bdc2558498f7deb114dc6d69, type: 3}
+  _swingArcPrefab: {fileID: 4022509599150442134, guid: c63db6249c0e8cf4aa056c7e657b9460, type: 3}
   _reserveAmmo: 24
   _ammoInMagazine: 0
   _currentRecoil: 0

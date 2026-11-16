@@ -28,6 +28,7 @@ namespace EscapeFromSpace.EditorTools
         private const string Nebula7Path = "Assets/Data/Weapons/Nebula7.asset";
         private const string PlasmaScatterPath = "Assets/Data/Weapons/PlasmaScatter.asset";
         private const string TracerPrefabPath = "Assets/Prefabs/BulletTracer.prefab";
+        private const string SwingArcPrefabPath = "Assets/Prefabs/SwingArc.prefab";
         private const string CombatConfigPath = "Assets/Data/CombatConfig.asset";
         private const string HitMarkerPrefabPath = "Assets/Prefabs/HitMarker.prefab";
         private const string BloodDecalPrefabPath = "Assets/Prefabs/BloodDecal.prefab";
@@ -75,6 +76,7 @@ namespace EscapeFromSpace.EditorTools
             CombatConfig combatConfig = EnsureCombatConfig();
             EnsureHitMarkerPrefab(circle);
             EnsureTracerPrefab();
+            EnsureSwingArcPrefab();
             EnsureBloodDecalPrefab(circle);
             EnsureSparkPrefab();
             EnsureTestTargetPrefab(combatConfig, square, enemyLayer);
@@ -317,6 +319,23 @@ namespace EscapeFromSpace.EditorTools
             Object.DestroyImmediate(root);
         }
 
+        private static void EnsureSwingArcPrefab()
+        {
+            if (File.Exists(SwingArcPrefabPath))
+            {
+                return;
+            }
+
+            var root = new GameObject("SwingArc");
+            root.AddComponent<MeshFilter>();
+            var renderer = root.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = GetSpriteMaterial();
+            renderer.sortingOrder = 9;
+            root.AddComponent<SwingArc>();
+            PrefabUtility.SaveAsPrefabAsset(root, SwingArcPrefabPath);
+            Object.DestroyImmediate(root);
+        }
+
         // 선과 파티클의 기본 재질은 2D URP에서 분홍색으로 나오므로 스프라이트 기본 재질을 쓴다.
         private static Material GetSpriteMaterial()
         {
@@ -544,6 +563,7 @@ namespace EscapeFromSpace.EditorTools
             SetReferenceIfEmpty(shooter, "_muzzle", muzzle);
             SetReferenceIfEmpty(shooter, "_hitMarkerPrefab", AssetDatabase.LoadAssetAtPath<GameObject>(HitMarkerPrefabPath));
             SetReferenceIfEmpty(shooter, "_tracerPrefab", AssetDatabase.LoadAssetAtPath<BulletTracer>(TracerPrefabPath));
+            SetReferenceIfEmpty(shooter, "_swingArcPrefab", AssetDatabase.LoadAssetAtPath<SwingArc>(SwingArcPrefabPath));
             SetReferenceIfEmpty(controller, "_shooter", shooter);
 
             // 저격총 조준 원. 마우스 위치에 그리므로 플레이어를 따라 돌지 않게 뿌리 바로 아래에 둔다.
