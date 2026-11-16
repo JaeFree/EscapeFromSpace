@@ -47,12 +47,5 @@ namespace EscapeFromSpace
                 Died?.Invoke();
             }
         }
-
-        // 플레이어를 공격하는 적이 생기기 전까지 피격을 확인하는 용도. Play 중에 컴포넌트 우클릭 메뉴에서 실행한다.
-        [ContextMenu("테스트: 공격 피해 20 받기")]
-        private void ApplyTestDamage()
-        {
-            TakeDamage(20f, transform.position);
-        }
     }
 }

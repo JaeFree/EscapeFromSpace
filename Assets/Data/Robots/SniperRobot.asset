@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 487827a83d89cb14c8b9086714a5435c, type: 3}
+  m_Name: SniperRobot
+  m_EditorClassIdentifier: 
+  _displayName: "\uC800\uACA9 \uBCF4\uC548 \uB85C\uBD07"
+  _color: {r: 0.95, g: 0.3, b: 0.7, a: 1}
+  _maxHp: 50
+  _attackKind: 3
+  _damage: 40
+  _pelletCount: 1
+  _spreadAngle: 0.5
+  _range: 25
+  _windupTime: 1.5
+  _aimLockTime: 0.3
+  _burstCount: 1
+  _burstInterval: 0
+  _restTime: 1.5
+  _patrolSpeed: 0
+  _chaseSpeed: 0
+  _turnSpeed: 360
+  _sweepAngle: 45
+  _sweepSpeed: 30
+  _sightDistance: 25
+  _sightAngle: 30
+  _hearingRadius: 8
+  _alertDuration: 0.6
+  _chaseTimeout: 5

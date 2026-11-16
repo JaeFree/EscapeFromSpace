@@ -243,6 +243,9 @@ namespace EscapeFromSpace
                 return;
             }
 
+            // 총소리. 벽에 막혀 탄이 못 나간 경우와 광선검은 소리를 내지 않는다.
+            GunNoise.Emit(center);
+
             float moveScale = MoveSpreadScale;
             bool isFan = _weapon.Category == WeaponCategory.Shotgun;
 

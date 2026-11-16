@@ -20,5 +20,5 @@ MonoBehaviour:
   _rollInvincibleDuration: 0.4
   _rollCooldown: 3
   _hitFlashDuration: 0.1
-  _hitStunDuration: 0.2
+  _hitStunDuration: 0
   _maxBloodDecals: 100
