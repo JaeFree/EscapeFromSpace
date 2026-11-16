@@ -22,4 +22,6 @@ MonoBehaviour:
   _reloadTime: 1.2
   _spreadAngle: 2
   _recoilPerShot: 1.5
+  _recoilRecovery: 4
+  _maxRecoil: 10
   _weight: 1

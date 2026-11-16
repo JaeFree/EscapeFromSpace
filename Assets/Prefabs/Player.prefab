@@ -383,6 +383,7 @@ MonoBehaviour:
   _hitMarkerPrefab: {fileID: 616239616664432743, guid: 48949187975de3d48b2a7dcf7efc11f0, type: 3}
   _reserveAmmo: 24
   _ammoInMagazine: 0
+  _currentRecoil: 0
 --- !u!114 &722836350339408983
 MonoBehaviour:
   m_ObjectHideFlags: 0

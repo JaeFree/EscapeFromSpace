@@ -21,8 +21,12 @@ namespace EscapeFromSpace
         // HUD가 생기기 전까지 Inspector에서 탄창을 보려고 노출한다.
         [SerializeField] private int _ammoInMagazine;
 
+        // 쌓인 반동(도). Inspector에서 보려고 노출한다.
+        [SerializeField] private float _currentRecoil;
+
         private float _nextFireTime;
         private float _reloadTimeLeft;
+        private CameraShake _cameraShake;
 
         public bool IsReloading { get; private set; }
         public int AmmoInMagazine => _ammoInMagazine;
@@ -30,8 +34,24 @@ namespace EscapeFromSpace
 
         private bool UsesAmmo => _weapon.MagazineSize > 0;
 
+        public float CurrentRecoil => _currentRecoil;
+
+        // 이번 발에 적용되는 퍼짐(±도). 이동 중에는 기본 퍼짐과 쌓인 반동을 더한 전체가 2배가 된다.
+        public float CurrentSpread
+        {
+            get
+            {
+                float spread = _weapon.SpreadAngle + _currentRecoil;
+                return _input.Move.sqrMagnitude > 0.01f ? spread * 2f : spread;
+            }
+        }
+
         private void Awake()
         {
+            // 카메라는 씬에 있어서 프리팹에서 연결할 수 없다.
+            _cameraShake = Camera.main.GetComponent<CameraShake>();
+            _currentRecoil = 0f;
+
             if (_weapon != null)
             {
                 _ammoInMagazine = _weapon.MagazineSize;
@@ -46,6 +66,9 @@ namespace EscapeFromSpace
             }
 
             UpdateReload();
+
+            // 반동은 지연 없이 항상 회복한다 (연사 사이에도).
+            _currentRecoil = Mathf.Max(0f, _currentRecoil - _weapon.RecoilRecovery * Time.deltaTime);
 
             if (!_input.FireHeld || !_controller.CanAct || _roll.IsRolling || IsReloading || Time.time < _nextFireTime)
             {
@@ -64,6 +87,13 @@ namespace EscapeFromSpace
 
             _nextFireTime = Time.time + 1f / _weapon.FireRate;
             Fire();
+
+            // 반동은 쏜 뒤에 쌓인다. 첫 발은 기본 퍼짐만 받는다.
+            _currentRecoil = Mathf.Min(_currentRecoil + _weapon.RecoilPerShot, _weapon.MaxRecoil);
+            if (_cameraShake != null)
+            {
+                _cameraShake.AddRecoil(_weapon.RecoilPerShot);
+            }
         }
 
         private void UpdateReload()
@@ -117,7 +147,10 @@ namespace EscapeFromSpace
             RaycastHit2D hit = Physics2D.Linecast(center, muzzle, _wallMask);
             if (hit.collider == null)
             {
-                hit = Physics2D.Raycast(muzzle, _controller.AimDirection, _weapon.Range, _hitMask);
+                float spread = CurrentSpread;
+                float angle = Random.Range(-spread, spread);
+                Vector2 direction = Quaternion.Euler(0f, 0f, angle) * _controller.AimDirection;
+                hit = Physics2D.Raycast(muzzle, direction, _weapon.Range, _hitMask);
             }
 
             if (hit.collider == null)

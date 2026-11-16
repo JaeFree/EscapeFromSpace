@@ -221,6 +221,8 @@ namespace EscapeFromSpace.EditorTools
             var config = AssetDatabase.LoadAssetAtPath<CombatConfig>(CombatConfigPath);
             if (config != null)
             {
+                SetFloatIfZero(config, "_cameraShakePerRecoilDegree", 0.03f);
+                SetFloatIfZero(config, "_cameraShakeDuration", 0.1f);
                 return config;
             }
 
@@ -229,6 +231,8 @@ namespace EscapeFromSpace.EditorTools
             var so = new SerializedObject(config);
             so.FindProperty("_armorReductionPerPoint").floatValue = 0.04f;
             so.FindProperty("_maxArmor").intValue = 12;
+            so.FindProperty("_cameraShakePerRecoilDegree").floatValue = 0.03f;
+            so.FindProperty("_cameraShakeDuration").floatValue = 0.1f;
             so.ApplyModifiedPropertiesWithoutUndo();
             AssetDatabase.CreateAsset(config, CombatConfigPath);
             return config;
@@ -239,6 +243,8 @@ namespace EscapeFromSpace.EditorTools
             var data = AssetDatabase.LoadAssetAtPath<WeaponData>(LaserPistolPath);
             if (data != null)
             {
+                SetFloatIfZero(data, "_recoilRecovery", 4f);
+                SetFloatIfZero(data, "_maxRecoil", 10f);
                 return data;
             }
 
@@ -255,6 +261,8 @@ namespace EscapeFromSpace.EditorTools
             so.FindProperty("_reloadTime").floatValue = 1.2f;
             so.FindProperty("_spreadAngle").floatValue = 2f;
             so.FindProperty("_recoilPerShot").floatValue = 1.5f;
+            so.FindProperty("_recoilRecovery").floatValue = 4f;
+            so.FindProperty("_maxRecoil").floatValue = 10f;
             so.FindProperty("_weight").floatValue = 1f;
             so.ApplyModifiedPropertiesWithoutUndo();
             AssetDatabase.CreateAsset(data, LaserPistolPath);
@@ -536,6 +544,9 @@ namespace EscapeFromSpace.EditorTools
             }
 
             EnsureComponent(cameraObject, out CameraFollow follow);
+            EnsureComponent(cameraObject, out CameraShake shake);
+            SetReferenceIfEmpty(shake, "_config", AssetDatabase.LoadAssetAtPath<CombatConfig>(CombatConfigPath));
+            SetReferenceIfEmpty(follow, "_shake", shake);
 
             if (GameObject.Find("Global Light 2D") == null)
             {
