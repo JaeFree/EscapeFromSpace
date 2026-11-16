@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9805adf2d321c6b4d84f1cfc61bc2545, type: 3}
+  m_Name: PulseRifle
+  m_EditorClassIdentifier: 
+  _displayName: "\uD384\uC2A4 \uB77C\uC774\uD50C"
+  _category: 2
+  _damage: 10
+  _pelletCount: 1
+  _fireRate: 8
+  _range: 18
+  _magazineSize: 30
+  _reloadTime: 2
+  _spreadAngle: 3
+  _recoilPerShot: 0.8
+  _recoilRecovery: 4
+  _maxRecoil: 10
+  _weight: 3.5

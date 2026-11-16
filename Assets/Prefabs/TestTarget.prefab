@@ -166,6 +166,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _health: {fileID: 4622418016380505874}
   _maxHp: 60
+  _respawnDelay: 3
 --- !u!114 &5841871807903880652
 MonoBehaviour:
   m_ObjectHideFlags: 0

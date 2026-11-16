@@ -23,6 +23,11 @@ namespace EscapeFromSpace.EditorTools
         private const string ScenePath = "Assets/Scenes/Station.unity";
         private const string NoFrictionPath = "Assets/Physics/NoFriction.physicsMaterial2D";
         private const string LaserPistolPath = "Assets/Data/Weapons/LaserPistol.asset";
+        private const string LightSaberPath = "Assets/Data/Weapons/LightSaber.asset";
+        private const string PulseRiflePath = "Assets/Data/Weapons/PulseRifle.asset";
+        private const string Nebula7Path = "Assets/Data/Weapons/Nebula7.asset";
+        private const string PlasmaScatterPath = "Assets/Data/Weapons/PlasmaScatter.asset";
+        private const string TracerPrefabPath = "Assets/Prefabs/BulletTracer.prefab";
         private const string CombatConfigPath = "Assets/Data/CombatConfig.asset";
         private const string HitMarkerPrefabPath = "Assets/Prefabs/HitMarker.prefab";
         private const string BloodDecalPrefabPath = "Assets/Prefabs/BloodDecal.prefab";
@@ -65,9 +70,11 @@ namespace EscapeFromSpace.EditorTools
             EnsureTile(FloorTilePath, square, new Color(0.16f, 0.17f, 0.2f), Tile.ColliderType.None);
 
             PlayerData playerData = EnsurePlayerData();
-            WeaponData laserPistol = EnsureLaserPistol();
+            EnsureWeapons();
+            var laserPistol = AssetDatabase.LoadAssetAtPath<WeaponData>(LaserPistolPath);
             CombatConfig combatConfig = EnsureCombatConfig();
             EnsureHitMarkerPrefab(circle);
+            EnsureTracerPrefab();
             EnsureBloodDecalPrefab(circle);
             EnsureSparkPrefab();
             EnsureTestTargetPrefab(combatConfig, square, enemyLayer);
@@ -238,38 +245,83 @@ namespace EscapeFromSpace.EditorTools
             return config;
         }
 
-        private static WeaponData EnsureLaserPistol()
+        // 기획서 4.2 표의 초기값. 에셋을 처음 만들 때만 넣는다.
+        private static void EnsureWeapons()
         {
-            var data = AssetDatabase.LoadAssetAtPath<WeaponData>(LaserPistolPath);
+            EnsureWeapon(LightSaberPath, "광선검", WeaponCategory.Melee, 40f, 1, 1.25f, 1.8f, 0, 0f, 120f, 0f, 1.5f);
+            EnsureWeapon(LaserPistolPath, "레이저 피스톨", WeaponCategory.Pistol, 15f, 1, 3f, 12f, 12, 1.2f, 2f, 1.5f, 1f);
+            EnsureWeapon(PulseRiflePath, "펄스 라이플", WeaponCategory.AssaultRifle, 10f, 1, 8f, 18f, 30, 2f, 3f, 0.8f, 3.5f);
+            EnsureWeapon(Nebula7Path, "네뷸라-7", WeaponCategory.Sniper, 85f, 1, 0.6f, 30f, 5, 3f, 6f, 6f, 4.5f);
+            EnsureWeapon(PlasmaScatterPath, "플라즈마 스캐터", WeaponCategory.Shotgun, 9f, 8, 1f, 6f, 6, 2.5f, 18f, 4f, 4f);
+        }
+
+        private static void EnsureWeapon(
+            string path, string displayName, WeaponCategory category, float damage, int pelletCount, float fireRate,
+            float range, int magazineSize, float reloadTime, float spreadAngle, float recoilPerShot, float weight)
+        {
+            var data = AssetDatabase.LoadAssetAtPath<WeaponData>(path);
             if (data != null)
             {
+                // 나중에 추가한 필드는 기존 에셋에 0으로 들어온다. 0일 때만 초기값을 채운다.
                 SetFloatIfZero(data, "_recoilRecovery", 4f);
                 SetFloatIfZero(data, "_maxRecoil", 10f);
-                return data;
+                return;
             }
 
-            // 기획서 4.2 표의 레이저 피스톨 초기값. 에셋을 처음 만들 때만 넣는다.
             data = ScriptableObject.CreateInstance<WeaponData>();
             var so = new SerializedObject(data);
-            so.FindProperty("_displayName").stringValue = "레이저 피스톨";
-            so.FindProperty("_category").enumValueIndex = (int)WeaponCategory.Pistol;
-            so.FindProperty("_damage").floatValue = 15f;
-            so.FindProperty("_pelletCount").intValue = 1;
-            so.FindProperty("_fireRate").floatValue = 3f;
-            so.FindProperty("_range").floatValue = 12f;
-            so.FindProperty("_magazineSize").intValue = 12;
-            so.FindProperty("_reloadTime").floatValue = 1.2f;
-            so.FindProperty("_spreadAngle").floatValue = 2f;
-            so.FindProperty("_recoilPerShot").floatValue = 1.5f;
+            so.FindProperty("_displayName").stringValue = displayName;
+            so.FindProperty("_category").enumValueIndex = (int)category;
+            so.FindProperty("_damage").floatValue = damage;
+            so.FindProperty("_pelletCount").intValue = pelletCount;
+            so.FindProperty("_fireRate").floatValue = fireRate;
+            so.FindProperty("_range").floatValue = range;
+            so.FindProperty("_magazineSize").intValue = magazineSize;
+            so.FindProperty("_reloadTime").floatValue = reloadTime;
+            so.FindProperty("_spreadAngle").floatValue = spreadAngle;
+            so.FindProperty("_recoilPerShot").floatValue = recoilPerShot;
             so.FindProperty("_recoilRecovery").floatValue = 4f;
             so.FindProperty("_maxRecoil").floatValue = 10f;
-            so.FindProperty("_weight").floatValue = 1f;
+            so.FindProperty("_weight").floatValue = weight;
             so.ApplyModifiedPropertiesWithoutUndo();
-            AssetDatabase.CreateAsset(data, LaserPistolPath);
-            return data;
+            AssetDatabase.CreateAsset(data, path);
         }
 
         // ---------- 프리팹 ----------
+
+        private static void EnsureTracerPrefab()
+        {
+            if (File.Exists(TracerPrefabPath))
+            {
+                return;
+            }
+
+            var root = new GameObject("BulletTracer");
+            var line = root.AddComponent<LineRenderer>();
+            line.useWorldSpace = true;
+            line.positionCount = 2;
+            line.startWidth = 0.03f;
+            line.endWidth = 0.05f;
+            line.numCapVertices = 2;
+
+            // 총구 쪽은 옅게, 맞은 쪽은 진하게 해서 날아간 방향이 보이게 한다.
+            line.startColor = new Color(1f, 0.95f, 0.6f, 0.15f);
+            line.endColor = new Color(1f, 0.95f, 0.6f, 0.9f);
+            line.sharedMaterial = GetSpriteMaterial();
+            line.sortingOrder = 9;
+            root.AddComponent<BulletTracer>();
+            PrefabUtility.SaveAsPrefabAsset(root, TracerPrefabPath);
+            Object.DestroyImmediate(root);
+        }
+
+        // 선과 파티클의 기본 재질은 2D URP에서 분홍색으로 나오므로 스프라이트 기본 재질을 쓴다.
+        private static Material GetSpriteMaterial()
+        {
+            var probe = new GameObject("MaterialProbe");
+            Material material = probe.AddComponent<SpriteRenderer>().sharedMaterial;
+            Object.DestroyImmediate(probe);
+            return material;
+        }
 
         private static void EnsureBloodDecalPrefab(Sprite circle)
         {
@@ -320,13 +372,8 @@ namespace EscapeFromSpace.EditorTools
             shape.shapeType = ParticleSystemShapeType.Circle;
             shape.radius = 0.05f;
 
-            // 파티클 기본 재질은 2D URP에서 분홍색으로 나오므로 스프라이트 기본 재질을 쓴다.
-            var probe = new GameObject("MaterialProbe");
-            Material spriteMaterial = probe.AddComponent<SpriteRenderer>().sharedMaterial;
-            Object.DestroyImmediate(probe);
-
             var particleRenderer = root.GetComponent<ParticleSystemRenderer>();
-            particleRenderer.sharedMaterial = spriteMaterial;
+            particleRenderer.sharedMaterial = GetSpriteMaterial();
             particleRenderer.sortingOrder = 10;
 
             PrefabUtility.SaveAsPrefabAsset(root, SparkPrefabPath);
@@ -376,6 +423,7 @@ namespace EscapeFromSpace.EditorTools
             }
 
             SetReferenceIfEmpty(testTarget, "_health", targetHealth);
+            SetFloatIfZero(testTarget, "_respawnDelay", 3f);
 
             EnsureComponent(root, out SparkOnHit spark);
             SetReferenceIfEmpty(spark, "_health", targetHealth);
@@ -492,6 +540,7 @@ namespace EscapeFromSpace.EditorTools
             SetReferenceIfEmpty(shooter, "_roll", roll);
             SetReferenceIfEmpty(shooter, "_muzzle", muzzle);
             SetReferenceIfEmpty(shooter, "_hitMarkerPrefab", AssetDatabase.LoadAssetAtPath<GameObject>(HitMarkerPrefabPath));
+            SetReferenceIfEmpty(shooter, "_tracerPrefab", AssetDatabase.LoadAssetAtPath<BulletTracer>(TracerPrefabPath));
             SetReferenceIfEmpty(controller, "_shooter", shooter);
 
             // 가방이 생기기 전까지 쓰는 임시 예비탄. 탄창 2개분.

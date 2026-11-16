@@ -8,8 +8,16 @@ namespace EscapeFromSpace
         [SerializeField] private Health _health;
         [SerializeField] private float _maxHp;
 
+        // 무기 여러 종을 계속 쏴 보려고 다시 생기게 한다. 로봇으로 대체할 때 함께 없앤다.
+        [SerializeField, Tooltip("초. 부서진 뒤 같은 자리에 다시 생기기까지")] private float _respawnDelay;
+
+        private SpriteRenderer _renderer;
+        private Collider2D _collider;
+
         private void Awake()
         {
+            _renderer = GetComponent<SpriteRenderer>();
+            _collider = GetComponent<Collider2D>();
             _health.Initialize(_maxHp);
             _health.Died += OnDied;
         }
@@ -21,7 +29,21 @@ namespace EscapeFromSpace
 
         private void OnDied()
         {
-            Destroy(gameObject);
+            // 오브젝트를 끄면 타이머도 멈추므로 보이는 것과 충돌만 끈다.
+            SetPresent(false);
+            Invoke(nameof(Respawn), _respawnDelay);
+        }
+
+        private void Respawn()
+        {
+            _health.Initialize(_maxHp);
+            SetPresent(true);
+        }
+
+        private void SetPresent(bool present)
+        {
+            _renderer.enabled = present;
+            _collider.enabled = present;
         }
     }
 }

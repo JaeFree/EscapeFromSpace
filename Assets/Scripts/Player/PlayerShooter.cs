@@ -5,6 +5,7 @@ namespace EscapeFromSpace
     public class PlayerShooter : MonoBehaviour
     {
         // 가방과 무기 슬롯이 생기기 전까지 쓰는 임시 연결.
+        // 그때까지는 Play 중에 이 칸에 다른 무기 에셋을 끌어다 놓아 바꾼다.
         [SerializeField] private WeaponData _weapon;
         [SerializeField] private PlayerInputReader _input;
         [SerializeField] private PlayerController _controller;
@@ -13,6 +14,7 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("사격이 맞는 레이어 (벽, 적)")] private LayerMask _hitMask;
         [SerializeField] private LayerMask _wallMask;
         [SerializeField] private GameObject _hitMarkerPrefab;
+        [SerializeField] private BulletTracer _tracerPrefab;
 
         [Header("탄약")]
         // 가방(11/17)이 생기면 가방의 탄약으로 바꾼다. 그때까지는 여기에 직접 넣는다.
@@ -24,6 +26,8 @@ namespace EscapeFromSpace
         // 쌓인 반동(도). Inspector에서 보려고 노출한다.
         [SerializeField] private float _currentRecoil;
 
+        // 탄창 상태가 어느 무기의 것인지. Inspector에서 무기를 바꾼 것을 알아채는 데 쓴다.
+        private WeaponData _equipped;
         private float _nextFireTime;
         private float _reloadTimeLeft;
         private CameraShake _cameraShake;
@@ -31,20 +35,13 @@ namespace EscapeFromSpace
         public bool IsReloading { get; private set; }
         public int AmmoInMagazine => _ammoInMagazine;
         public int ReserveAmmo => _reserveAmmo;
-
-        private bool UsesAmmo => _weapon.MagazineSize > 0;
-
         public float CurrentRecoil => _currentRecoil;
 
         // 이번 발에 적용되는 퍼짐(±도). 이동 중에는 기본 퍼짐과 쌓인 반동을 더한 전체가 2배가 된다.
-        public float CurrentSpread
-        {
-            get
-            {
-                float spread = _weapon.SpreadAngle + _currentRecoil;
-                return _input.Move.sqrMagnitude > 0.01f ? spread * 2f : spread;
-            }
-        }
+        public float CurrentSpread => (_weapon.SpreadAngle + _currentRecoil) * MoveSpreadScale;
+
+        private bool UsesAmmo => _weapon.MagazineSize > 0;
+        private float MoveSpreadScale => _input.Move.sqrMagnitude > 0.01f ? 2f : 1f;
 
         private void Awake()
         {
@@ -54,6 +51,7 @@ namespace EscapeFromSpace
 
             if (_weapon != null)
             {
+                _equipped = _weapon;
                 _ammoInMagazine = _weapon.MagazineSize;
             }
         }
@@ -65,10 +63,21 @@ namespace EscapeFromSpace
                 return;
             }
 
+            if (_weapon != _equipped)
+            {
+                OnWeaponSwapped();
+            }
+
             UpdateReload();
 
             // 반동은 지연 없이 항상 회복한다 (연사 사이에도).
             _currentRecoil = Mathf.Max(0f, _currentRecoil - _weapon.RecoilRecovery * Time.deltaTime);
+
+            // 광선검 범위 판정은 10단계에서 만든다. 그때까지 근접 무기는 공격하지 않는다.
+            if (_weapon.Category == WeaponCategory.Melee)
+            {
+                return;
+            }
 
             if (!_input.FireHeld || !_controller.CanAct || _roll.IsRolling || IsReloading || Time.time < _nextFireTime)
             {
@@ -94,6 +103,17 @@ namespace EscapeFromSpace
             {
                 _cameraShake.AddRecoil(_weapon.RecoilPerShot);
             }
+        }
+
+        // 가방이 생기기 전까지의 임시 처리. 새 무기는 가득 찬 탄창과 탄창 2개분 예비탄으로 시작한다.
+        private void OnWeaponSwapped()
+        {
+            _equipped = _weapon;
+            _ammoInMagazine = _weapon.MagazineSize;
+            _reserveAmmo = _weapon.MagazineSize * 2;
+            _currentRecoil = 0f;
+            _nextFireTime = 0f;
+            IsReloading = false;
         }
 
         private void UpdateReload()
@@ -144,14 +164,35 @@ namespace EscapeFromSpace
             Vector2 muzzle = _muzzle.position;
 
             // 벽에 바짝 붙으면 총구가 벽 너머로 나간다. 그대로 쏘면 벽을 관통하므로 몸과 총구 사이의 벽을 먼저 확인한다.
-            RaycastHit2D hit = Physics2D.Linecast(center, muzzle, _wallMask);
-            if (hit.collider == null)
+            RaycastHit2D blocked = Physics2D.Linecast(center, muzzle, _wallMask);
+            if (blocked.collider != null)
             {
-                float spread = CurrentSpread;
-                float angle = Random.Range(-spread, spread);
-                Vector2 direction = Quaternion.Euler(0f, 0f, angle) * _controller.AimDirection;
-                hit = Physics2D.Raycast(muzzle, direction, _weapon.Range, _hitMask);
+                Instantiate(_hitMarkerPrefab, blocked.point, Quaternion.identity);
+                return;
             }
+
+            float moveScale = MoveSpreadScale;
+            bool isFan = _weapon.Category == WeaponCategory.Shotgun;
+
+            // 샷건의 퍼짐 값은 부채꼴 전체 각이다. 반동은 부채꼴의 중심 방향을 흔들고, 펠릿은 그 안에서 따로 흩어진다.
+            float fanCenter = isFan ? Random.Range(-_currentRecoil, _currentRecoil) * moveScale : 0f;
+            float fanHalf = _weapon.SpreadAngle * 0.5f * moveScale;
+            float spread = CurrentSpread;
+
+            for (int i = 0; i < _weapon.PelletCount; i++)
+            {
+                float angle = isFan ? fanCenter + Random.Range(-fanHalf, fanHalf) : Random.Range(-spread, spread);
+                Vector2 direction = Quaternion.Euler(0f, 0f, angle) * _controller.AimDirection;
+                FirePellet(muzzle, direction);
+            }
+        }
+
+        private void FirePellet(Vector2 muzzle, Vector2 direction)
+        {
+            RaycastHit2D hit = Physics2D.Raycast(muzzle, direction, _weapon.Range, _hitMask);
+            Vector2 end = hit.collider != null ? hit.point : muzzle + direction * _weapon.Range;
+
+            Instantiate(_tracerPrefab).Show(muzzle, end);
 
             if (hit.collider == null)
             {

@@ -29,7 +29,7 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("초")] private float _reloadTime;
 
         [Header("탄퍼짐과 반동")]
-        [SerializeField, Tooltip("도. 근접 무기는 공격 범위 각도")] private float _spreadAngle;
+        [SerializeField, Tooltip("도. 총은 ±이 값, 샷건은 부채꼴 전체 각, 근접 무기는 공격 범위 각도")] private float _spreadAngle;
         [SerializeField, Tooltip("도/발")] private float _recoilPerShot;
         [SerializeField, Tooltip("도/초. 쌓인 반동이 줄어드는 속도")] private float _recoilRecovery;
         [SerializeField, Tooltip("도. 반동이 이 값보다 더 쌓이지 않는다")] private float _maxRecoil;

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9805adf2d321c6b4d84f1cfc61bc2545, type: 3}
+  m_Name: PlasmaScatter
+  m_EditorClassIdentifier: 
+  _displayName: "\uD50C\uB77C\uC988\uB9C8 \uC2A4\uCE90\uD130"
+  _category: 4
+  _damage: 9
+  _pelletCount: 8
+  _fireRate: 1
+  _range: 6
+  _magazineSize: 6
+  _reloadTime: 2.5
+  _spreadAngle: 18
+  _recoilPerShot: 4
+  _recoilRecovery: 4
+  _maxRecoil: 10
+  _weight: 4
