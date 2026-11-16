@@ -30,6 +30,31 @@ namespace EscapeFromSpace
             IsDead = false;
         }
 
+        // 질식이나 과적처럼 몸 안에서 깎이는 피해. 방어력과 구르기 무적을 무시하고,
+        // 피격 효과(번쩍임, 혈흔)와 피격으로 취소되는 것들(루팅)을 건드리지 않는다.
+        public void TakeRawDamage(float damage)
+        {
+            if (IsDead)
+            {
+                return;
+            }
+
+            _currentHp = Mathf.Max(0f, _currentHp - damage);
+            if (_currentHp <= 0f)
+            {
+                IsDead = true;
+                Died?.Invoke();
+            }
+        }
+
+        public void Heal(float amount)
+        {
+            if (!IsDead)
+            {
+                _currentHp = Mathf.Min(MaxHp, _currentHp + amount);
+            }
+        }
+
         public void SetArmor(int armor)
         {
             _armor = armor;

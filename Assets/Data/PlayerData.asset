@@ -14,6 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _moveSpeed: 5
   _reloadMoveSpeedMultiplier: 0.7
+  _maxWeight: 20
+  _slowStartRatio: 0.5
+  _slowAtStart: 0.2
+  _slowStepRatio: 0.1
+  _slowPerStep: 0.1
+  _minSpeedRatio: 0.2
+  _overloadRatio: 1.5
+  _overloadDamagePerSecond: 0.5
   _maxHp: 100
   _rollDistance: 3
   _rollDuration: 0.4

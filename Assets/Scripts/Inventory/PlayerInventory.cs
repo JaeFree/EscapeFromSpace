@@ -108,6 +108,33 @@ namespace EscapeFromSpace
             Changed?.Invoke();
         }
 
+        // 장착한 것, 가방, 보관함을 모두 더한 무게 (기획서 6.4).
+        public float TotalWeight
+        {
+            get
+            {
+                float total = WeightIn(Bag) + WeightIn(SecureBox);
+                foreach (ItemStack stack in _equipped)
+                {
+                    total += WeightOf(stack);
+                }
+
+                return total;
+            }
+        }
+
+        // 가진 것의 가치 합계. 죽으면 보관함은 남으므로 잃은 가치를 셀 때는 뺀다.
+        public int TotalValue(bool includeSecureBox)
+        {
+            float total = ValueIn(Bag) + (includeSecureBox ? ValueIn(SecureBox) : 0f);
+            foreach (ItemStack stack in _equipped)
+            {
+                total += ValueOf(stack);
+            }
+
+            return Mathf.RoundToInt(total);
+        }
+
         // 가방과 보관함에 있는 그 탄약의 합계. 재장전의 예비탄으로 쓴다.
         public int CountAmmo(ItemData ammo)
         {
@@ -160,6 +187,44 @@ namespace EscapeFromSpace
             _health.SetArmor(armor);
 
             Bag.SetHeight(BaseBagHeight + (vest != null ? vest.Data.ExtraBagRows : 0));
+        }
+
+        // 탄약의 무게와 가치는 기본 수량 한 묶음 기준이라 발 수에 비례한다. 탄창에 든 탄은 세지 않는다.
+        private static float WeightOf(ItemStack stack)
+        {
+            return stack == null ? 0f : stack.Data.Weight * StackScale(stack);
+        }
+
+        private static float ValueOf(ItemStack stack)
+        {
+            return stack == null ? 0f : stack.Data.Value * StackScale(stack);
+        }
+
+        private static float StackScale(ItemStack stack)
+        {
+            return stack.IsStackable ? stack.Count / (float)stack.Data.DefaultCount : 1f;
+        }
+
+        private static float WeightIn(InventoryGrid grid)
+        {
+            float total = 0f;
+            foreach (ItemStack item in grid.Items)
+            {
+                total += WeightOf(item);
+            }
+
+            return total;
+        }
+
+        private static float ValueIn(InventoryGrid grid)
+        {
+            float total = 0f;
+            foreach (ItemStack item in grid.Items)
+            {
+                total += ValueOf(item);
+            }
+
+            return total;
         }
 
         private static int CountIn(InventoryGrid grid, ItemData data)

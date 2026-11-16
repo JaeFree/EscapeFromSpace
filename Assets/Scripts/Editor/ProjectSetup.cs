@@ -40,6 +40,7 @@ namespace EscapeFromSpace.EditorTools
         private const string ResearchContainerPrefabPath = "Assets/Prefabs/ResearchContainer.prefab";
         private const string RobotWreckPrefabPath = "Assets/Prefabs/RobotWreck.prefab";
         private const string DroppedItemPrefabPath = "Assets/Prefabs/DroppedItem.prefab";
+        private const string RaidConfigPath = "Assets/Data/RaidConfig.asset";
         private const string CombatConfigPath = "Assets/Data/CombatConfig.asset";
         private const string HitMarkerPrefabPath = "Assets/Prefabs/HitMarker.prefab";
         private const string BloodDecalPrefabPath = "Assets/Prefabs/BloodDecal.prefab";
@@ -79,6 +80,7 @@ namespace EscapeFromSpace.EditorTools
             EnsureItems();
             EnsureLootTables();
             CombatConfig combatConfig = EnsureCombatConfig();
+            EnsureRaidConfig();
             EnsureHitMarkerPrefab(circle);
             EnsureTracerPrefab(TracerPrefabPath, new Color(1f, 0.95f, 0.6f));
             EnsureSwingArcPrefab(SwingArcPrefabPath, new Color(0.55f, 0.9f, 1f, 0.6f));
@@ -216,6 +218,14 @@ namespace EscapeFromSpace.EditorTools
             {
                 // 나중에 추가한 필드는 기존 에셋에 0으로 들어온다. 0일 때만 초기값을 채운다.
                 SetFloatIfZero(data, "_reloadMoveSpeedMultiplier", 0.7f);
+                SetFloatIfZero(data, "_maxWeight", 20f);
+                SetFloatIfZero(data, "_slowStartRatio", 0.5f);
+                SetFloatIfZero(data, "_slowAtStart", 0.2f);
+                SetFloatIfZero(data, "_slowStepRatio", 0.1f);
+                SetFloatIfZero(data, "_slowPerStep", 0.1f);
+                SetFloatIfZero(data, "_minSpeedRatio", 0.2f);
+                SetFloatIfZero(data, "_overloadRatio", 1.5f);
+                SetFloatIfZero(data, "_overloadDamagePerSecond", 0.5f);
                 return data;
             }
 
@@ -224,6 +234,14 @@ namespace EscapeFromSpace.EditorTools
             var so = new SerializedObject(data);
             so.FindProperty("_moveSpeed").floatValue = 5f;
             so.FindProperty("_reloadMoveSpeedMultiplier").floatValue = 0.7f;
+            so.FindProperty("_maxWeight").floatValue = 20f;
+            so.FindProperty("_slowStartRatio").floatValue = 0.5f;
+            so.FindProperty("_slowAtStart").floatValue = 0.2f;
+            so.FindProperty("_slowStepRatio").floatValue = 0.1f;
+            so.FindProperty("_slowPerStep").floatValue = 0.1f;
+            so.FindProperty("_minSpeedRatio").floatValue = 0.2f;
+            so.FindProperty("_overloadRatio").floatValue = 1.5f;
+            so.FindProperty("_overloadDamagePerSecond").floatValue = 0.5f;
             so.FindProperty("_maxHp").floatValue = 100f;
             so.FindProperty("_rollDistance").floatValue = 3f;
             so.FindProperty("_rollDuration").floatValue = 0.4f;
@@ -248,6 +266,28 @@ namespace EscapeFromSpace.EditorTools
             material = new PhysicsMaterial2D { friction = 0f, bounciness = 0f };
             AssetDatabase.CreateAsset(material, NoFrictionPath);
             return material;
+        }
+
+        // 기획서 7장의 초기값. 에셋을 처음 만들 때만 넣는다.
+        private static void EnsureRaidConfig()
+        {
+            if (AssetDatabase.LoadAssetAtPath<RaidConfig>(RaidConfigPath) != null)
+            {
+                return;
+            }
+
+            var config = ScriptableObject.CreateInstance<RaidConfig>();
+            var so = new SerializedObject(config);
+            so.FindProperty("_baseOxygenSeconds").floatValue = 480f;
+            so.FindProperty("_suffocationDamagePerSecond").floatValue = 5f;
+            so.FindProperty("_oxygenWarningSeconds").floatValue = 60f;
+            so.FindProperty("_escapeCountdown").floatValue = 5f;
+
+            // 포드는 시작 1분 뒤에 열린다 (사용자 결정). 지금은 테스트 중이라 항상 열어 둔다.
+            so.FindProperty("_podOpenDelay").floatValue = 60f;
+            so.FindProperty("_podsAlwaysOpen").boolValue = true;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            AssetDatabase.CreateAsset(config, RaidConfigPath);
         }
 
         private static CombatConfig EnsureCombatConfig()
@@ -958,6 +998,32 @@ namespace EscapeFromSpace.EditorTools
             SetReferenceIfEmpty(interactor, "_droppedItemPrefab", AssetDatabase.LoadAssetAtPath<Lootable>(DroppedItemPrefabPath));
 
             SetReferenceIfEmpty(shooter, "_inventory", inventory);
+            SetReferenceIfEmpty(controller, "_inventory", inventory);
+
+            // 산소와 도구칸
+            EnsureComponent(root, out PlayerOxygen oxygen);
+            SetReferenceIfEmpty(oxygen, "_config", AssetDatabase.LoadAssetAtPath<RaidConfig>(RaidConfigPath));
+            SetReferenceIfEmpty(oxygen, "_health", health);
+            SetReferenceIfEmpty(oxygen, "_inventory", inventory);
+
+            if (EnsureComponent(root, out PlayerItemUser itemUser))
+            {
+                // 쓸 수 있는 아이템이 세 가지라 도구칸 1, 2, 3에 하나씩 놓는다.
+                var userObject = new SerializedObject(itemUser);
+                SerializedProperty slots = userObject.FindProperty("_slots");
+                slots.arraySize = 3;
+                slots.GetArrayElementAtIndex(0).objectReferenceValue = LoadItem("MediGel");
+                slots.GetArrayElementAtIndex(1).objectReferenceValue = LoadItem("MediKit");
+                slots.GetArrayElementAtIndex(2).objectReferenceValue = LoadItem("OxygenCan");
+                userObject.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            SetReferenceIfEmpty(itemUser, "_input", input);
+            SetReferenceIfEmpty(itemUser, "_controller", controller);
+            SetReferenceIfEmpty(itemUser, "_roll", roll);
+            SetReferenceIfEmpty(itemUser, "_inventory", inventory);
+            SetReferenceIfEmpty(itemUser, "_oxygen", oxygen);
+            SetReferenceIfEmpty(itemUser, "_health", health);
             SetReferenceIfEmpty(shooter, "_input", input);
             SetReferenceIfEmpty(shooter, "_controller", controller);
             SetReferenceIfEmpty(shooter, "_roll", roll);
@@ -1074,7 +1140,8 @@ namespace EscapeFromSpace.EditorTools
             }
 
             EnsureContainers();
-            EnsureUi(player);
+            RaidManager raid = EnsureRaid(player);
+            EnsureUi(player, raid);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             AddSceneToBuildSettings();
@@ -1114,7 +1181,62 @@ namespace EscapeFromSpace.EditorTools
         }
 
         // 가방 화면과 루팅 칸을 그리는 캔버스. 내용은 InventoryUI가 실행 중에 만든다.
-        private static void EnsureUi(GameObject player)
+        // 탈출 포드 2곳(서쪽·동쪽 포드 방)과 한 판의 진행을 맡는 RaidManager.
+        private static RaidManager EnsureRaid(GameObject player)
+        {
+            GameObject podParent = GameObject.Find("EscapePods");
+            if (podParent == null)
+            {
+                podParent = new GameObject("EscapePods");
+                var square = AssetDatabase.LoadAssetAtPath<Sprite>(SquarePath);
+                CreatePod(podParent.transform, "WestPod", new Vector2(4f, 17.5f), square);
+                CreatePod(podParent.transform, "EastPod", new Vector2(56f, 17.5f), square);
+            }
+
+            GameObject raidObject = GameObject.Find("RaidManager");
+            if (raidObject == null)
+            {
+                raidObject = new GameObject("RaidManager");
+            }
+
+            if (EnsureComponent(raidObject, out RaidManager raid))
+            {
+                EscapePod[] pods = podParent.GetComponentsInChildren<EscapePod>();
+                var raidSo = new SerializedObject(raid);
+                SerializedProperty list = raidSo.FindProperty("_pods");
+                list.arraySize = pods.Length;
+                for (int i = 0; i < pods.Length; i++)
+                {
+                    list.GetArrayElementAtIndex(i).objectReferenceValue = pods[i];
+                }
+
+                raidSo.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            SetReferenceIfEmpty(raid, "_config", AssetDatabase.LoadAssetAtPath<RaidConfig>(RaidConfigPath));
+            SetReferenceIfEmpty(raid, "_playerHealth", player.GetComponent<Health>());
+            SetReferenceIfEmpty(raid, "_inventory", player.GetComponent<PlayerInventory>());
+            return raid;
+        }
+
+        private static void CreatePod(Transform parent, string podName, Vector2 position, Sprite square)
+        {
+            var podObject = new GameObject(podName);
+            podObject.transform.SetParent(parent, false);
+            podObject.transform.position = position;
+            podObject.transform.localScale = new Vector3(2f, 2f, 1f);
+
+            // 바닥 위, 캐릭터 아래
+            var renderer = podObject.AddComponent<SpriteRenderer>();
+            renderer.sprite = square;
+            renderer.sortingOrder = -4;
+
+            var pod = new SerializedObject(podObject.AddComponent<EscapePod>());
+            pod.FindProperty("_renderer").objectReferenceValue = renderer;
+            pod.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void EnsureUi(GameObject player, RaidManager raid)
         {
             GameObject canvasObject = GameObject.Find("UI");
             if (canvasObject == null)
@@ -1133,6 +1255,21 @@ namespace EscapeFromSpace.EditorTools
             SetReferenceIfEmpty(ui, "_interactor", player.GetComponent<PlayerInteractor>());
             SetReferenceIfEmpty(ui, "_input", player.GetComponent<PlayerInputReader>());
             SetReferenceIfEmpty(ui, "_controller", player.GetComponent<PlayerController>());
+
+            EnsureComponent(canvasObject, out HudUI hud);
+            SetReferenceIfEmpty(hud, "_playerData", AssetDatabase.LoadAssetAtPath<PlayerData>(PlayerDataPath));
+            SetReferenceIfEmpty(hud, "_health", player.GetComponent<Health>());
+            SetReferenceIfEmpty(hud, "_oxygen", player.GetComponent<PlayerOxygen>());
+            SetReferenceIfEmpty(hud, "_inventory", player.GetComponent<PlayerInventory>());
+            SetReferenceIfEmpty(hud, "_shooter", player.GetComponent<PlayerShooter>());
+            SetReferenceIfEmpty(hud, "_itemUser", player.GetComponent<PlayerItemUser>());
+            SetReferenceIfEmpty(hud, "_roll", player.GetComponent<PlayerRoll>());
+            SetReferenceIfEmpty(hud, "_controller", player.GetComponent<PlayerController>());
+            SetReferenceIfEmpty(hud, "_raid", raid);
+            SetReferenceIfEmpty(hud, "_circleSprite", AssetDatabase.LoadAssetAtPath<Sprite>(CirclePath));
+
+            EnsureComponent(canvasObject, out ResultUI result);
+            SetReferenceIfEmpty(result, "_raid", raid);
         }
 
         // 로봇 초기 배치 (기획서 9.1: 화물칸 2~3기, 연구 구역 4~5기).

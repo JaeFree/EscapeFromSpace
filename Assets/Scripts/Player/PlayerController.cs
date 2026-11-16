@@ -9,6 +9,7 @@ namespace EscapeFromSpace
         [SerializeField] private PlayerInputReader _input;
         [SerializeField] private PlayerRoll _roll;
         [SerializeField] private PlayerShooter _shooter;
+        [SerializeField] private PlayerInventory _inventory;
         [SerializeField] private Health _health;
         [SerializeField] private Transform _aimPivot;
 
@@ -54,6 +55,12 @@ namespace EscapeFromSpace
                 return;
             }
 
+            // 최대 무게의 150%를 넘으면 HP가 서서히 준다.
+            if (_inventory.TotalWeight > _data.MaxWeight * _data.OverloadRatio)
+            {
+                _health.TakeRawDamage(_data.OverloadDamagePerSecond * Time.deltaTime);
+            }
+
             UpdateAim();
         }
 
@@ -65,7 +72,8 @@ namespace EscapeFromSpace
                 return;
             }
 
-            float speed = _data.MoveSpeed;
+            // 무게 감속과 재장전 감속은 서로 곱한다. 구르기는 무게의 영향을 받지 않는다.
+            float speed = _data.MoveSpeed * _data.WeightSpeedMultiplier(_inventory.TotalWeight);
             if (_shooter.IsReloading)
             {
                 speed *= _data.ReloadMoveSpeedMultiplier;
