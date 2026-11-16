@@ -16,7 +16,7 @@ namespace EscapeFromSpace
         [SerializeField] private BulletTracer _tracerPrefab;
         [SerializeField] private SwingArc _swingArcPrefab;
 
-        // HUD가 생기기 전까지 Inspector에서 보려고 노출한다. 값은 장착한 무기와 가방에서 읽어 온 것이다.
+        // Inspector에서 보려고 노출한다. 값은 장착한 무기와 가방에서 읽어 온 것이다.
         [Header("확인용 (읽기 전용)")]
         [SerializeField] private int _ammoInMagazine;
         [SerializeField] private int _reserveAmmo;
@@ -33,6 +33,11 @@ namespace EscapeFromSpace
         private readonly List<Health> _swingHits = new List<Health>();
 
         public bool IsReloading { get; private set; }
+
+        // 재장전 진행도 0~1과 남은 시간. HUD의 진행 바가 읽는다.
+        public float ReloadProgress => IsReloading && _weapon != null && _weapon.ReloadTime > 0f
+            ? Mathf.Clamp01(1f - _reloadTimeLeft / _weapon.ReloadTime) : 0f;
+        public float ReloadTimeLeft => IsReloading ? Mathf.Max(0f, _reloadTimeLeft) : 0f;
         public int AmmoInMagazine => _equipped != null ? _equipped.AmmoInMagazine : 0;
         public int ReserveAmmo => _weapon != null ? _inventory.CountAmmo(_weapon.AmmoItem) : 0;
         public float CurrentRecoil => _currentRecoil;

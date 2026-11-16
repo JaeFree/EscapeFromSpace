@@ -24,6 +24,7 @@ namespace EscapeFromSpace
         [SerializeField] private PlayerInputReader _input;
         [SerializeField] private PlayerController _controller;
         [SerializeField, Tooltip("칸. 루팅 칸을 대상보다 이만큼 위에 띄운다")] private float _lootPanelOffset = 0.9f;
+        [SerializeField, Tooltip("가방 화면 밖에 놓으면 바닥에 버린다. 대기실에서는 끈다")] private bool _canDropToWorld = true;
 
         // 크기는 1920×1080 화면 기준의 픽셀이다. Play를 다시 시작하면 반영된다.
         [Header("크기")]
@@ -90,6 +91,9 @@ namespace EscapeFromSpace
 
         public bool IsOpen => _isOpen;
 
+        // 끌고 있는 아이템은 어느 칸에도 없다. 그 사이에 저장하면 빠지므로 대기실이 이 값을 본다.
+        public bool IsDragging => _held != null;
+
         private float CellPitch => _cellSize + CellGap;
         private float LabelHeight => _labelFontSize + 14f;
         private float CountHeight => _countFontSize + 8f;
@@ -147,7 +151,9 @@ namespace EscapeFromSpace
 
             if (_dirty)
             {
+                // 루팅 칸의 크기는 다시 그릴 때 정해진다. 바뀐 크기로 자리를 다시 잡는다.
                 Redraw();
+                PositionLootPanel();
             }
         }
 
@@ -219,7 +225,7 @@ namespace EscapeFromSpace
             _isOpen = false;
         }
 
-        // 열 수 있는 대상 위에 "E"와 누르고 있는 진행도를 보여 준다.
+        // 열 수 있는 대상 위에 "E"를, 누르고 있는 동안에는 그 아래에 진행 바를 보여 준다.
         private void UpdateHint()
         {
             Lootable target = _interactor.Target;
@@ -231,7 +237,9 @@ namespace EscapeFromSpace
             }
 
             MoveToScreenPoint(_hint, _camera.WorldToScreenPoint(target.transform.position + Vector3.up * _lootPanelOffset));
-            _hintFill.fillAmount = _interactor.HoldProgress;
+            float progress = _interactor.HoldProgress;
+            _hintFill.transform.parent.gameObject.SetActive(progress > 0f);
+            _hintFill.fillAmount = progress;
         }
 
         private void PositionLootPanel()
@@ -241,6 +249,19 @@ namespace EscapeFromSpace
                 return;
             }
 
+            // 대기실 창고처럼 큰 칸은 대상 위에 띄우면 화면을 벗어난다. 가방 화면 오른쪽에 붙이고 화면에 맞게 줄인다.
+            Rect screen = ((RectTransform)transform).rect;
+            Vector2 size = _lootPanel.sizeDelta;
+            if (size.y > screen.height * 0.6f || size.x > screen.width * 0.5f)
+            {
+                float left = _bagPanel.anchoredPosition.x + _bagPanel.sizeDelta.x + 24f;
+                float scale = Mathf.Min(1f, (screen.height - 40f) / size.y, (screen.width - left - 24f) / size.x);
+                _lootPanel.localScale = new Vector3(scale, scale, 1f);
+                _lootPanel.anchoredPosition = new Vector2(left + size.x * scale * 0.5f, (screen.height - size.y * scale) * 0.5f);
+                return;
+            }
+
+            _lootPanel.localScale = Vector3.one;
             MoveToScreenPoint(
                 _lootPanel, _camera.WorldToScreenPoint(_shownLootable.transform.position + Vector3.up * _lootPanelOffset));
         }
@@ -339,7 +360,7 @@ namespace EscapeFromSpace
             switch (target.Kind)
             {
                 case TargetKind.Outside:
-                    return true;
+                    return _canDropToWorld;
 
                 case TargetKind.Grid:
                     ItemStack existing = target.View.Grid.GetAt(target.X, target.Y);
@@ -616,18 +637,13 @@ namespace EscapeFromSpace
             _highlight.gameObject.AddComponent<Image>();
             _highlight.gameObject.SetActive(false);
 
-            // "E" 안내와 진행도
+            // "E" 안내와 그 아래의 진행 바
             _hint = CreateRect("InteractHint", root, Vector2.zero, new Vector2(0.5f, 0f), Vector2.zero, new Vector2(60f, 60f));
             _hint.anchorMax = Vector2.zero;
             _hint.gameObject.AddComponent<Image>().color = PanelColor;
-            RectTransform fill = CreateRect("Fill", _hint, new Vector2(0f, 1f), new Vector2(0f, 1f), Vector2.zero, new Vector2(60f, 60f));
-            _hintFill = fill.gameObject.AddComponent<Image>();
-            _hintFill.sprite = WhiteSprite();
-            _hintFill.color = new Color(1f, 0.9f, 0.3f, 0.6f);
-            _hintFill.type = Image.Type.Filled;
-            _hintFill.fillMethod = Image.FillMethod.Vertical;
-            _hintFill.fillOrigin = (int)Image.OriginVertical.Bottom;
             CreateText("E", _hint, Vector2.zero, new Vector2(60f, 60f), 32, TextAnchor.MiddleCenter);
+            _hintFill = UiBuilder.Bar("HoldProgress", _hint, new Vector2(0.5f, 0f), new Vector2(0.5f, 1f), new Vector2(0f, -6f),
+                new Vector2(120f, 18f), new Color(1f, 0.9f, 0.3f));
             _hint.gameObject.SetActive(false);
 
             // 끌고 있는 아이템은 모든 것 위에 그린다.
@@ -792,13 +808,6 @@ namespace EscapeFromSpace
             text.verticalOverflow = VerticalWrapMode.Truncate;
             text.raycastTarget = false;
             return text;
-        }
-
-        // 채워지는 이미지는 스프라이트가 있어야 한다.
-        private static Sprite WhiteSprite()
-        {
-            Texture2D texture = Texture2D.whiteTexture;
-            return Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f));
         }
     }
 }

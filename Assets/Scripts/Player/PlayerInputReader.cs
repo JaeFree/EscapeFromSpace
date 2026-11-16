@@ -17,6 +17,8 @@ namespace EscapeFromSpace
         private InputAction _aimHold;
         private InputAction _interact;
         private InputAction _toggleBag;
+        private InputAction _escape;
+        private InputAction _toggleMap;
         private readonly InputAction[] _tools = new InputAction[3];
 
         public Vector2 Move => _move.ReadValue<Vector2>();
@@ -28,6 +30,8 @@ namespace EscapeFromSpace
         public bool AimHeld => _aimHold.IsPressed();
         public bool InteractHeld => _interact.IsPressed();
         public bool ToggleBagPressedThisFrame => _toggleBag.WasPressedThisFrame();
+        public bool EscapeHeld => _escape.IsPressed();
+        public bool ToggleMapPressedThisFrame => _toggleMap.WasPressedThisFrame();
 
         // 도구칸 1, 2, 3. index는 0부터.
         public bool ToolPressedThisFrame(int index)
@@ -46,6 +50,8 @@ namespace EscapeFromSpace
             _aimHold = _playerMap.FindAction("AimHold", true);
             _interact = _playerMap.FindAction("Interact", true);
             _toggleBag = _playerMap.FindAction("ToggleBag", true);
+            _escape = _playerMap.FindAction("Escape", true);
+            _toggleMap = _playerMap.FindAction("ToggleMap", true);
             for (int i = 0; i < _tools.Length; i++)
             {
                 _tools[i] = _playerMap.FindAction($"Tool{i + 1}", true);

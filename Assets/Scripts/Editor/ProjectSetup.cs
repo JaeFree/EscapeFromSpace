@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -22,6 +23,9 @@ namespace EscapeFromSpace.EditorTools
         private const string InputPath = "Assets/Input/GameInput.inputactions";
         private const string PlayerPrefabPath = "Assets/Prefabs/Player.prefab";
         private const string ScenePath = "Assets/Scenes/Station.unity";
+        private const string LobbyScenePath = "Assets/Scenes/Lobby.unity";
+        private const string StoragePrefabPath = "Assets/Prefabs/Storage.prefab";
+        private const string ItemDatabasePath = "Assets/Data/ItemDatabase.asset";
         private const string NoFrictionPath = "Assets/Physics/NoFriction.physicsMaterial2D";
         private const string LaserPistolPath = "Assets/Data/Weapons/LaserPistol.asset";
         private const string LightSaberPath = "Assets/Data/Weapons/LightSaber.asset";
@@ -78,6 +82,7 @@ namespace EscapeFromSpace.EditorTools
             PlayerData playerData = EnsurePlayerData();
             EnsureWeapons();
             EnsureItems();
+            EnsureItemDatabase();
             EnsureLootTables();
             CombatConfig combatConfig = EnsureCombatConfig();
             EnsureRaidConfig();
@@ -104,13 +109,20 @@ namespace EscapeFromSpace.EditorTools
             // 바닥에 버린 아이템. 다시 주울 수 있고 1분 뒤 사라진다.
             EnsureLootablePrefab(DroppedItemPrefabPath, "DroppedItem", square, 0, Color.white, 0.35f, -1,
                 false, 1, 1, null, 0f, 60f, true);
+
+            // 대기실 창고 5×10 (기획서 7장). 누르면 바로 열리고 내용은 저장 파일에서 채운다.
+            EnsureLootablePrefab(StoragePrefabPath, "Storage", square, wallLayer, new Color(0.35f, 0.45f, 0.7f), 1.6f, 0,
+                true, 5, 10, null, 0f, 0f, false);
             EnsureTracerPrefab(RobotTracerPrefabPath, new Color(1f, 0.3f, 0.25f));
             EnsureSwingArcPrefab(RobotSwingArcPrefabPath, new Color(1f, 0.3f, 0.25f, 0.6f));
             EnsureRobotPrefab(combatConfig, square, circle, playerLayer, wallLayer, enemyLayer);
             EnsurePlayerPrefab(playerData, combatConfig, square, circle, playerLayer, wallLayer, enemyLayer);
             AssetDatabase.SaveAssets();
 
+            // 레이드 씬을 마지막에 열어 둔다. 메뉴를 돌린 뒤 에디터에 남는 씬이다.
+            EnsureLobbyScene(wallLayer);
             EnsureScene(wallLayer);
+            EnsureBuildScenes();
 
             AssetDatabase.SaveAssets();
             Debug.Log("[ProjectSetup] 에셋 생성·갱신 완료");
@@ -281,7 +293,7 @@ namespace EscapeFromSpace.EditorTools
             so.FindProperty("_baseOxygenSeconds").floatValue = 480f;
             so.FindProperty("_suffocationDamagePerSecond").floatValue = 5f;
             so.FindProperty("_oxygenWarningSeconds").floatValue = 60f;
-            so.FindProperty("_escapeCountdown").floatValue = 5f;
+            so.FindProperty("_escapeHoldTime").floatValue = 5f;
 
             // 포드는 시작 1분 뒤에 열린다 (사용자 결정). 지금은 테스트 중이라 항상 열어 둔다.
             so.FindProperty("_podOpenDelay").floatValue = 60f;
@@ -510,6 +522,37 @@ namespace EscapeFromSpace.EditorTools
             {
                 SetReferenceIfEmpty(weapon, "_ammoItem", LoadItem(ammoName));
             }
+        }
+
+        // 저장 파일이 아이템을 이름으로 찾을 때 쓰는 목록. 폴더에 있는데 목록에 없는 아이템만 덧붙인다.
+        private static void EnsureItemDatabase()
+        {
+            var database = AssetDatabase.LoadAssetAtPath<ItemDatabase>(ItemDatabasePath);
+            if (database == null)
+            {
+                database = ScriptableObject.CreateInstance<ItemDatabase>();
+                AssetDatabase.CreateAsset(database, ItemDatabasePath);
+            }
+
+            var so = new SerializedObject(database);
+            SerializedProperty list = so.FindProperty("_items");
+            foreach (string guid in AssetDatabase.FindAssets("t:ItemData", new[] { ItemFolder }))
+            {
+                var item = AssetDatabase.LoadAssetAtPath<ItemData>(AssetDatabase.GUIDToAssetPath(guid));
+                bool listed = false;
+                for (int i = 0; i < list.arraySize; i++)
+                {
+                    listed |= list.GetArrayElementAtIndex(i).objectReferenceValue == item;
+                }
+
+                if (!listed)
+                {
+                    list.arraySize++;
+                    list.GetArrayElementAtIndex(list.arraySize - 1).objectReferenceValue = item;
+                }
+            }
+
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static ItemData LoadItem(string fileName)
@@ -975,7 +1018,7 @@ namespace EscapeFromSpace.EditorTools
                 shooterObject.ApplyModifiedPropertiesWithoutUndo();
             }
 
-            // 가방: 장비 칸, 가방, 보관함. 시작 장비는 대기실이 생기기 전까지 쓰는 임시 기본 세트다.
+            // 가방: 장비 칸, 가방, 보관함. 시작 장비는 레이드 씬을 바로 Play할 때만 쓰는 테스트용 기본 세트다.
             if (EnsureComponent(root, out PlayerInventory inventory))
             {
                 var inventoryObject = new SerializedObject(inventory);
@@ -1076,43 +1119,18 @@ namespace EscapeFromSpace.EditorTools
             var wallTile = AssetDatabase.LoadAssetAtPath<Tile>(WallTilePath);
             var floorTile = AssetDatabase.LoadAssetAtPath<Tile>(FloorTilePath);
 
-            GameObject cameraObject = GameObject.Find("Main Camera");
-            if (cameraObject == null)
-            {
-                cameraObject = new GameObject("Main Camera");
-                cameraObject.tag = "MainCamera";
-                cameraObject.transform.position = new Vector3(StationLayout.SpawnX, StationLayout.SpawnY, -10f);
-                var camera = cameraObject.AddComponent<Camera>();
-                camera.orthographic = true;
-                camera.orthographicSize = 8f;
-                camera.clearFlags = CameraClearFlags.SolidColor;
-                camera.backgroundColor = new Color(0.05f, 0.05f, 0.07f);
-                cameraObject.AddComponent<AudioListener>();
-            }
-
-            EnsureComponent(cameraObject, out CameraFollow follow);
-            EnsureComponent(cameraObject, out CameraShake shake);
-            SetReferenceIfEmpty(shake, "_config", AssetDatabase.LoadAssetAtPath<CombatConfig>(CombatConfigPath));
-            SetReferenceIfEmpty(follow, "_shake", shake);
-
-            if (GameObject.Find("Global Light 2D") == null)
-            {
-                // 2D URP는 조명이 없으면 스프라이트가 검게 나온다.
-                var lightObject = new GameObject("Global Light 2D");
-                var light = lightObject.AddComponent<Light2D>();
-                light.lightType = Light2D.LightType.Global;
-            }
+            CameraFollow follow = EnsureCameraAndLight(new Vector2(StationLayout.SpawnX, StationLayout.SpawnY));
 
             GameObject grid = GameObject.Find("Grid");
             if (grid == null)
             {
-                BuildMap(wallTile, floorTile, wallLayer);
+                BuildMap(wallTile, floorTile, wallLayer, StationLayout.BuildWalls());
             }
             else if (IsMapEmpty(grid))
             {
                 // 타일이 하나도 없으면 사용자가 그린 맵이 아니라 생성이 실패한 것이므로 다시 만든다.
                 Object.DestroyImmediate(grid);
-                BuildMap(wallTile, floorTile, wallLayer);
+                BuildMap(wallTile, floorTile, wallLayer, StationLayout.BuildWalls());
             }
 
             EnsureWallColliders();
@@ -1144,7 +1162,159 @@ namespace EscapeFromSpace.EditorTools
             EnsureUi(player, raid);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
-            AddSceneToBuildSettings();
+        }
+
+        private static CameraFollow EnsureCameraAndLight(Vector2 position)
+        {
+            GameObject cameraObject = GameObject.Find("Main Camera");
+            if (cameraObject == null)
+            {
+                cameraObject = new GameObject("Main Camera");
+                cameraObject.tag = "MainCamera";
+                cameraObject.transform.position = new Vector3(position.x, position.y, -10f);
+                var camera = cameraObject.AddComponent<Camera>();
+                camera.orthographic = true;
+                camera.orthographicSize = 8f;
+                camera.clearFlags = CameraClearFlags.SolidColor;
+                camera.backgroundColor = new Color(0.05f, 0.05f, 0.07f);
+                cameraObject.AddComponent<AudioListener>();
+            }
+
+            EnsureComponent(cameraObject, out CameraFollow follow);
+            EnsureComponent(cameraObject, out CameraShake shake);
+            SetReferenceIfEmpty(shake, "_config", AssetDatabase.LoadAssetAtPath<CombatConfig>(CombatConfigPath));
+            SetReferenceIfEmpty(follow, "_shake", shake);
+
+            if (GameObject.Find("Global Light 2D") == null)
+            {
+                // 2D URP는 조명이 없으면 스프라이트가 검게 나온다.
+                var lightObject = new GameObject("Global Light 2D");
+                var light = lightObject.AddComponent<Light2D>();
+                light.lightType = Light2D.LightType.Global;
+            }
+
+            return follow;
+        }
+
+        // ---------- 대기실 씬 ----------
+
+        // 걸어 다니는 방. 왼쪽 위에 창고, 중앙 위쪽에 레이드로 가는 포탈 (2026-11-16 사용자 결정).
+        // 처음 한 번만 놓고 이후에는 Scene 뷰에서 옮긴다.
+        private static void EnsureLobbyScene(int wallLayer)
+        {
+            Scene scene = File.Exists(LobbyScenePath)
+                ? EditorSceneManager.OpenScene(LobbyScenePath, OpenSceneMode.Single)
+                : EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+            // 씬을 연 뒤에 에셋을 불러와야 참조가 살아 있다.
+            var playerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefabPath);
+            var wallTile = AssetDatabase.LoadAssetAtPath<Tile>(WallTilePath);
+            var floorTile = AssetDatabase.LoadAssetAtPath<Tile>(FloorTilePath);
+            var square = AssetDatabase.LoadAssetAtPath<Sprite>(SquarePath);
+            var items = AssetDatabase.LoadAssetAtPath<ItemDatabase>(ItemDatabasePath);
+
+            CameraFollow follow = EnsureCameraAndLight(new Vector2(LobbyLayout.SpawnX, LobbyLayout.SpawnY));
+
+            if (GameObject.Find("Grid") == null)
+            {
+                BuildMap(wallTile, floorTile, wallLayer, LobbyLayout.BuildWalls());
+            }
+
+            EnsureWallColliders();
+
+            GameObject player = GameObject.Find("Player");
+            if (player == null)
+            {
+                player = (GameObject)PrefabUtility.InstantiatePrefab(playerPrefab);
+                player.transform.position = new Vector3(LobbyLayout.SpawnX, LobbyLayout.SpawnY, 0f);
+
+                // 대기실에서는 쏘거나 아이템을 쓰거나 산소가 줄지 않는다. 가방과 이동만 쓴다.
+                DisableComponent(player.GetComponent<PlayerShooter>());
+                DisableComponent(player.GetComponent<PlayerOxygen>());
+                DisableComponent(player.GetComponent<PlayerItemUser>());
+            }
+
+            SetReferenceIfEmpty(follow, "_target", player.transform);
+
+            GameObject storage = GameObject.Find("Storage");
+            if (storage == null)
+            {
+                storage = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(StoragePrefabPath));
+                storage.transform.position = new Vector3(LobbyLayout.StorageX, LobbyLayout.StorageY, 0f);
+            }
+
+            GameObject portal = GameObject.Find("Portal");
+            if (portal == null)
+            {
+                portal = new GameObject("Portal");
+                portal.transform.position = new Vector3(LobbyLayout.PortalX, LobbyLayout.PortalY, 0f);
+                portal.transform.localScale = new Vector3(3f, 2f, 1f);
+
+                // 바닥 위, 캐릭터 아래
+                var renderer = portal.AddComponent<SpriteRenderer>();
+                renderer.sprite = square;
+                renderer.color = new Color(0.6f, 0.4f, 1f);
+                renderer.sortingOrder = -4;
+            }
+
+            GameObject canvasObject = EnsureCanvas();
+            if (EnsureComponent(canvasObject, out InventoryUI ui))
+            {
+                // 대기실에서는 아이템을 버릴 수 없다. 화면 밖에 놓으면 원래 자리로 돌아간다.
+                var uiObject = new SerializedObject(ui);
+                uiObject.FindProperty("_canDropToWorld").boolValue = false;
+                uiObject.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            SetReferenceIfEmpty(ui, "_inventory", player.GetComponent<PlayerInventory>());
+            SetReferenceIfEmpty(ui, "_interactor", player.GetComponent<PlayerInteractor>());
+            SetReferenceIfEmpty(ui, "_input", player.GetComponent<PlayerInputReader>());
+            SetReferenceIfEmpty(ui, "_controller", player.GetComponent<PlayerController>());
+
+            GameObject lobbyObject = GameObject.Find("LobbyManager");
+            if (lobbyObject == null)
+            {
+                lobbyObject = new GameObject("LobbyManager");
+            }
+
+            if (EnsureComponent(lobbyObject, out LobbyManager lobby))
+            {
+                // 기획서 7장의 기본 세트: 레이저 피스톨 + 권총 에너지 셀 24발 + 광선검. 처음 시작할 때 3세트.
+                var lobbySo = new SerializedObject(lobby);
+                SerializedProperty starter = lobbySo.FindProperty("_starterSet");
+                (string item, int count)[] set = { ("LaserPistolItem", 1), ("PistolCell", 24), ("LightSaberItem", 1) };
+                starter.arraySize = set.Length;
+                for (int i = 0; i < set.Length; i++)
+                {
+                    starter.GetArrayElementAtIndex(i).FindPropertyRelative("_item").objectReferenceValue = LoadItem(set[i].item);
+                    starter.GetArrayElementAtIndex(i).FindPropertyRelative("_count").intValue = set[i].count;
+                }
+
+                lobbySo.FindProperty("_starterSetCount").intValue = 3;
+                lobbySo.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            SetReferenceIfEmpty(lobby, "_inventory", player.GetComponent<PlayerInventory>());
+            SetReferenceIfEmpty(lobby, "_controller", player.GetComponent<PlayerController>());
+            SetReferenceIfEmpty(lobby, "_inventoryUi", ui);
+            SetReferenceIfEmpty(lobby, "_storage", storage.GetComponent<Lootable>());
+            SetReferenceIfEmpty(lobby, "_items", items);
+            SetReferenceIfEmpty(lobby, "_portal", portal.transform);
+
+            EnsureComponent(canvasObject, out LobbyUI lobbyUi);
+            SetReferenceIfEmpty(lobbyUi, "_lobby", lobby);
+            SetReferenceIfEmpty(lobbyUi, "_inventory", player.GetComponent<PlayerInventory>());
+            SetReferenceIfEmpty(lobbyUi, "_playerData", AssetDatabase.LoadAssetAtPath<PlayerData>(PlayerDataPath));
+
+            EditorSceneManager.SaveScene(scene, LobbyScenePath);
+        }
+
+        // 씬에 놓인 프리팹 인스턴스의 컴포넌트를 끈다. 프리팹 원본은 건드리지 않는다.
+        private static void DisableComponent(Behaviour component)
+        {
+            var so = new SerializedObject(component);
+            so.FindProperty("m_Enabled").boolValue = false;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         // 컨테이너 초기 배치 (기획서 9.1: 일반 8개, 연구 2개). 처음 한 번만 만들고 이후에는 Scene 뷰에서 옮긴다.
@@ -1213,9 +1383,26 @@ namespace EscapeFromSpace.EditorTools
                 raidSo.ApplyModifiedPropertiesWithoutUndo();
             }
 
+            // 전체 맵의 "가 본 곳" 기록. 벽 타일맵을 읽으므로 길찾기와 같은 오브젝트에 둔다.
+            GameObject pathfinding = GameObject.Find("Pathfinding");
+            if (EnsureComponent(pathfinding, out MapExplorer map))
+            {
+                var mapSo = new SerializedObject(map);
+                mapSo.FindProperty("_wallMask").intValue = 1 << LayerMask.NameToLayer("Wall");
+                mapSo.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            SetReferenceIfEmpty(map, "_walls", GameObject.Find("Grid").transform.Find("Walls").GetComponent<Tilemap>());
+            SetReferenceIfEmpty(map, "_player", player.transform);
+
             SetReferenceIfEmpty(raid, "_config", AssetDatabase.LoadAssetAtPath<RaidConfig>(RaidConfigPath));
             SetReferenceIfEmpty(raid, "_playerHealth", player.GetComponent<Health>());
             SetReferenceIfEmpty(raid, "_inventory", player.GetComponent<PlayerInventory>());
+            SetReferenceIfEmpty(raid, "_input", player.GetComponent<PlayerInputReader>());
+            SetReferenceIfEmpty(raid, "_controller", player.GetComponent<PlayerController>());
+            SetReferenceIfEmpty(raid, "_roll", player.GetComponent<PlayerRoll>());
+            SetReferenceIfEmpty(raid, "_items", AssetDatabase.LoadAssetAtPath<ItemDatabase>(ItemDatabasePath));
+            SetReferenceIfEmpty(raid, "_map", map);
             return raid;
         }
 
@@ -1236,7 +1423,8 @@ namespace EscapeFromSpace.EditorTools
             pod.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static void EnsureUi(GameObject player, RaidManager raid)
+        // 화면 요소가 모두 붙는 캔버스. 내용은 각 화면 스크립트가 실행 중에 만든다.
+        private static GameObject EnsureCanvas()
         {
             GameObject canvasObject = GameObject.Find("UI");
             if (canvasObject == null)
@@ -1249,6 +1437,13 @@ namespace EscapeFromSpace.EditorTools
                 scaler.referenceResolution = new Vector2(1920f, 1080f);
                 scaler.matchWidthOrHeight = 1f;
             }
+
+            return canvasObject;
+        }
+
+        private static void EnsureUi(GameObject player, RaidManager raid)
+        {
+            GameObject canvasObject = EnsureCanvas();
 
             EnsureComponent(canvasObject, out InventoryUI ui);
             SetReferenceIfEmpty(ui, "_inventory", player.GetComponent<PlayerInventory>());
@@ -1270,6 +1465,26 @@ namespace EscapeFromSpace.EditorTools
 
             EnsureComponent(canvasObject, out ResultUI result);
             SetReferenceIfEmpty(result, "_raid", raid);
+
+            if (EnsureComponent(canvasObject, out MapUI mapUi))
+            {
+                EscapePod[] pods = GameObject.Find("EscapePods").GetComponentsInChildren<EscapePod>();
+                var mapUiSo = new SerializedObject(mapUi);
+                SerializedProperty list = mapUiSo.FindProperty("_pods");
+                list.arraySize = pods.Length;
+                for (int i = 0; i < pods.Length; i++)
+                {
+                    list.GetArrayElementAtIndex(i).objectReferenceValue = pods[i];
+                }
+
+                mapUiSo.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            SetReferenceIfEmpty(mapUi, "_map", GameObject.Find("Pathfinding").GetComponent<MapExplorer>());
+            SetReferenceIfEmpty(mapUi, "_raid", raid);
+            SetReferenceIfEmpty(mapUi, "_input", player.GetComponent<PlayerInputReader>());
+            SetReferenceIfEmpty(mapUi, "_controller", player.GetComponent<PlayerController>());
+            SetReferenceIfEmpty(mapUi, "_circleSprite", AssetDatabase.LoadAssetAtPath<Sprite>(CirclePath));
         }
 
         // 로봇 초기 배치 (기획서 9.1: 화물칸 2~3기, 연구 구역 4~5기).
@@ -1352,7 +1567,7 @@ namespace EscapeFromSpace.EditorTools
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static void BuildMap(Tile wallTile, Tile floorTile, int wallLayer)
+        private static void BuildMap(Tile wallTile, Tile floorTile, int wallLayer, bool[,] layout)
         {
             var gridObject = new GameObject("Grid");
             gridObject.AddComponent<Grid>();
@@ -1375,10 +1590,9 @@ namespace EscapeFromSpace.EditorTools
             composite.geometryType = CompositeCollider2D.GeometryType.Polygons;
             tilemapCollider.compositeOperation = Collider2D.CompositeOperation.Merge;
 
-            bool[,] layout = StationLayout.BuildWalls();
-            for (int x = 0; x < StationLayout.Width; x++)
+            for (int x = 0; x < layout.GetLength(0); x++)
             {
-                for (int y = 0; y < StationLayout.Height; y++)
+                for (int y = 0; y < layout.GetLength(1); y++)
                 {
                     var cell = new Vector3Int(x, y, 0);
                     floor.SetTile(cell, floorTile);
@@ -1444,21 +1658,31 @@ namespace EscapeFromSpace.EditorTools
             return true;
         }
 
-        private static void AddSceneToBuildSettings()
+        // 게임은 대기실에서 시작하므로 빌드 목록의 맨 앞이 대기실, 그다음이 레이드 씬이어야 한다.
+        // 나머지 씬은 있던 순서대로 뒤에 둔다.
+        private static void EnsureBuildScenes()
         {
             EditorBuildSettingsScene[] scenes = EditorBuildSettings.scenes;
+            if (scenes.Length >= 2 && scenes[0].path == LobbyScenePath && scenes[1].path == ScenePath)
+            {
+                return;
+            }
+
+            var updated = new List<EditorBuildSettingsScene>
+            {
+                new EditorBuildSettingsScene(LobbyScenePath, true),
+                new EditorBuildSettingsScene(ScenePath, true),
+            };
+
             foreach (EditorBuildSettingsScene buildScene in scenes)
             {
-                if (buildScene.path == ScenePath)
+                if (buildScene.path != LobbyScenePath && buildScene.path != ScenePath)
                 {
-                    return;
+                    updated.Add(buildScene);
                 }
             }
 
-            var updated = new EditorBuildSettingsScene[scenes.Length + 1];
-            updated[0] = new EditorBuildSettingsScene(ScenePath, true);
-            scenes.CopyTo(updated, 1);
-            EditorBuildSettings.scenes = updated;
+            EditorBuildSettings.scenes = updated.ToArray();
         }
 
         // ---------- 공통 ----------

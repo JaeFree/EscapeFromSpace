@@ -82,6 +82,21 @@ namespace EscapeFromSpace
             return text;
         }
 
+        // 왼쪽에서 오른쪽으로 차오르는 진행 바. 채워지는 쪽을 돌려주고, 배경은 그 부모다.
+        public static Image Bar(string name, Transform parent, Vector2 anchor, Vector2 pivot, Vector2 position, Vector2 size, Color fillColor)
+        {
+            RectTransform back = Rect(name, parent, anchor, pivot, position, size);
+            Image(back, new Color(0.08f, 0.09f, 0.12f, 0.9f));
+
+            RectTransform fillRect = Rect("Fill", back, Vector2.zero, Vector2.zero, new Vector2(2f, 2f), size - new Vector2(4f, 4f));
+            Image fill = Image(fillRect, fillColor, WhiteSprite);
+            fill.type = UnityEngine.UI.Image.Type.Filled;
+            fill.fillMethod = UnityEngine.UI.Image.FillMethod.Horizontal;
+            fill.fillOrigin = (int)UnityEngine.UI.Image.OriginHorizontal.Left;
+            fill.fillAmount = 0f;
+            return fill;
+        }
+
         // 캔버스가 화면에 바로 그려지면(Overlay) 카메라 없이 화면 좌표를 그대로 쓴다.
         public static Camera CameraOf(Canvas canvas)
         {

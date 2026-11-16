@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace EscapeFromSpace
 {
-    // 레이드 중 항상 보이는 화면 (기획서 9.4): 왼쪽 아래 원 게이지, 가운데 아래 무기칸과 도구칸, 포드 위 카운트다운.
+    // 레이드 중 항상 보이는 화면 (기획서 9.4): 왼쪽 아래 원 게이지, 가운데 아래 무기칸과 도구칸, 도구칸 위 진행 바, 포드 위 탈출 안내.
     public class HudUI : MonoBehaviour
     {
         private static readonly Color BackColor = new Color(0.08f, 0.09f, 0.12f, 0.85f);
@@ -11,6 +11,10 @@ namespace EscapeFromSpace
         private static readonly Color OxygenColor = new Color(0.3f, 0.7f, 1f);
         private static readonly Color WeightColor = new Color(0.95f, 0.8f, 0.3f);
         private static readonly Color WarningColor = new Color(1f, 0.15f, 0.15f);
+        private static readonly Color ReloadBarColor = new Color(0.95f, 0.8f, 0.3f);
+        private static readonly Color RollBarColor = new Color(0.45f, 0.75f, 1f);
+        private static readonly Color ItemBarColor = new Color(0.4f, 0.9f, 0.5f);
+        private static readonly Color EscapeBarColor = new Color(0.3f, 0.95f, 0.5f);
 
         [SerializeField] private PlayerData _playerData;
         [SerializeField] private Health _health;
@@ -45,12 +49,16 @@ namespace EscapeFromSpace
         private Text _weaponName;
         private Text _ammoText;
         private readonly Image[] _toolImages = new Image[PlayerItemUser.SlotCount];
-        private readonly Image[] _toolProgress = new Image[PlayerItemUser.SlotCount];
         private readonly Text[] _toolNames = new Text[PlayerItemUser.SlotCount];
         private readonly Text[] _toolCounts = new Text[PlayerItemUser.SlotCount];
-        private Text _rollText;
-        private RectTransform _podCountdown;
-        private Text _podCountdownText;
+
+        // 재장전과 구르기 쿨타임은 같은 바를 쓰고, 아이템 사용은 그 위의 바를 따로 쓴다 (2026-11-16 사용자 결정).
+        private Image _actionBar;
+        private Text _actionBarLabel;
+        private Image _itemBar;
+        private Text _itemBarLabel;
+        private RectTransform _podHint;
+        private Image _escapeBar;
         private RectTransform _bagPanel;
 
         private void Awake()
@@ -77,7 +85,8 @@ namespace EscapeFromSpace
             UpdateGauges();
             UpdateWeapon();
             UpdateTools();
-            UpdatePodCountdown();
+            UpdateBars();
+            UpdatePodHint();
         }
 
         private void UpdateGauges()
@@ -120,10 +129,6 @@ namespace EscapeFromSpace
             {
                 _ammoText.text = string.Empty;
             }
-            else if (_shooter.IsReloading)
-            {
-                _ammoText.text = "재장전 중";
-            }
             else
             {
                 _ammoText.text = $"{_shooter.AmmoInMagazine} / {_shooter.ReserveAmmo}";
@@ -145,28 +150,63 @@ namespace EscapeFromSpace
                 _toolNames[i].color = has ? Color.black : Color.gray;
                 _toolCounts[i].text = item != null ? count.ToString() : string.Empty;
                 _toolCounts[i].color = has ? Color.black : Color.gray;
-
-                bool isUsing = item != null && _itemUser.Using == item;
-                _toolProgress[i].enabled = isUsing;
-                _toolProgress[i].fillAmount = isUsing ? _itemUser.UseProgress : 0f;
             }
-
-            // 구르기를 했을 때만 도구칸 위에 쿨타임을 보여 준다.
-            float cooldown = _roll.CooldownRemaining;
-            _rollText.text = cooldown > 0f ? $"구르기 {cooldown:0.0}" : string.Empty;
         }
 
-        private void UpdatePodCountdown()
+        // 진행 중인 동작을 도구칸 위에 바로 보여 준다. 하는 동안에만 보인다.
+        private void UpdateBars()
         {
-            EscapePod pod = _raid != null ? _raid.CountingPod : null;
-            _podCountdown.gameObject.SetActive(pod != null);
+            // 재장전과 구르기 쿨타임이 겹치면 지금 하고 있는 동작인 재장전을 먼저 보여 준다.
+            float cooldown = _roll.CooldownRemaining;
+            if (_shooter.IsReloading)
+            {
+                ShowBar(_actionBar, _actionBarLabel, ReloadBarColor, _shooter.ReloadProgress, $"재장전 {_shooter.ReloadTimeLeft:0.0}");
+            }
+            else if (cooldown > 0f && _playerData.RollCooldown > 0f)
+            {
+                ShowBar(_actionBar, _actionBarLabel, RollBarColor, 1f - cooldown / _playerData.RollCooldown, $"구르기 {cooldown:0.0}");
+            }
+            else
+            {
+                HideBar(_actionBar);
+            }
+
+            ItemData item = _itemUser.Using;
+            if (item != null)
+            {
+                ShowBar(_itemBar, _itemBarLabel, ItemBarColor, _itemUser.UseProgress, $"{item.DisplayName} {_itemUser.UseTimeLeft:0.0}");
+            }
+            else
+            {
+                HideBar(_itemBar);
+            }
+        }
+
+        private static void ShowBar(Image fill, Text label, Color color, float progress, string text)
+        {
+            fill.transform.parent.gameObject.SetActive(true);
+            fill.color = color;
+            fill.fillAmount = progress;
+            label.text = text;
+        }
+
+        private static void HideBar(Image fill)
+        {
+            fill.transform.parent.gameObject.SetActive(false);
+        }
+
+        // 열린 포드 안에 서 있으면 포드 위에 탈출 키와 누르고 있는 진행도를 보여 준다.
+        private void UpdatePodHint()
+        {
+            EscapePod pod = _raid != null ? _raid.ReachablePod : null;
+            _podHint.gameObject.SetActive(pod != null);
             if (pod == null)
             {
                 return;
             }
 
-            UiBuilder.MoveToScreenPoint(_canvas, _podCountdown, _camera.WorldToScreenPoint(pod.transform.position + Vector3.up * 1.6f));
-            _podCountdownText.text = Mathf.CeilToInt(_raid.CountdownLeft).ToString();
+            UiBuilder.MoveToScreenPoint(_canvas, _podHint, _camera.WorldToScreenPoint(pod.transform.position + Vector3.up * 1.6f));
+            _escapeBar.fillAmount = _raid.EscapeProgress;
         }
 
         // ---------- 그리기 ----------
@@ -202,34 +242,43 @@ namespace EscapeFromSpace
                     new Vector2(_slotSize, _slotSize));
                 _toolImages[i] = UiBuilder.Image(slot, BackColor);
 
-                RectTransform progress = UiBuilder.Rect("Progress", slot, Vector2.zero, Vector2.zero, Vector2.zero,
-                    new Vector2(_slotSize, _slotSize));
-                _toolProgress[i] = UiBuilder.Image(progress, new Color(1f, 1f, 1f, 0.55f), UiBuilder.WhiteSprite);
-                _toolProgress[i].type = Image.Type.Filled;
-                _toolProgress[i].fillMethod = Image.FillMethod.Vertical;
-                _toolProgress[i].fillOrigin = (int)Image.OriginVertical.Bottom;
-
                 _toolNames[i] = UiBuilder.Text(string.Empty, slot, _fontSize - 2, TextAnchor.MiddleCenter, Color.black);
                 _toolCounts[i] = UiBuilder.Text(string.Empty, slot, _fontSize + 2, TextAnchor.LowerRight, Color.black);
                 _toolCounts[i].fontStyle = FontStyle.Bold;
 
                 // 누르는 키
-                Text key = UiBuilder.Text((i + 1).ToString(), slot, _fontSize, TextAnchor.UpperLeft, Color.white);
-                key.fontStyle = FontStyle.Bold;
-                key.gameObject.AddComponent<Outline>().effectColor = Color.black;
+                Text slotKey = UiBuilder.Text((i + 1).ToString(), slot, _fontSize, TextAnchor.UpperLeft, Color.white);
+                slotKey.fontStyle = FontStyle.Bold;
+                slotKey.gameObject.AddComponent<Outline>().effectColor = Color.black;
             }
 
-            RectTransform roll = UiBuilder.Rect("RollCooldown", bar, new Vector2(1f, 1f), new Vector2(1f, 0f), new Vector2(0f, 6f),
-                new Vector2(_slotSize * 3f + gap * 2f, _fontSize + 12f));
-            _rollText = UiBuilder.Text(string.Empty, roll, _fontSize, TextAnchor.MiddleCenter, Color.white);
+            // 도구칸 위의 진행 바 두 줄: 아래는 재장전·구르기 쿨타임, 위는 아이템 사용
+            var barSize = new Vector2(_slotSize * 3f + gap * 2f, _fontSize + 10f);
+            _actionBar = UiBuilder.Bar("ActionProgress", bar, new Vector2(1f, 1f), new Vector2(1f, 0f), new Vector2(0f, 8f), barSize,
+                ReloadBarColor);
+            _actionBarLabel = CreateBarLabel(_actionBar);
+            _itemBar = UiBuilder.Bar("ItemProgress", bar, new Vector2(1f, 1f), new Vector2(1f, 0f),
+                new Vector2(0f, 8f + barSize.y + 6f), barSize, ItemBarColor);
+            _itemBarLabel = CreateBarLabel(_itemBar);
+            HideBar(_actionBar);
+            HideBar(_itemBar);
 
-            // 탈출 카운트다운은 포드 위에 숫자로
-            _podCountdown = UiBuilder.Rect("PodCountdown", transform, Vector2.zero, new Vector2(0.5f, 0f), Vector2.zero,
-                new Vector2(120f, 90f));
-            _podCountdownText = UiBuilder.Text(string.Empty, _podCountdown, 64, TextAnchor.MiddleCenter, Color.white);
-            _podCountdownText.fontStyle = FontStyle.Bold;
-            _podCountdownText.gameObject.AddComponent<Outline>().effectColor = Color.black;
-            _podCountdown.gameObject.SetActive(false);
+            // 탈출 안내: 포드 위에 키와 그 아래 진행 바
+            _podHint = UiBuilder.Rect("PodHint", transform, Vector2.zero, new Vector2(0.5f, 0f), Vector2.zero, new Vector2(64f, 64f));
+            UiBuilder.Image(_podHint, BackColor);
+            Text key = UiBuilder.Text("X", _podHint, 36, TextAnchor.MiddleCenter, Color.white);
+            key.fontStyle = FontStyle.Bold;
+            _escapeBar = UiBuilder.Bar("EscapeProgress", _podHint, new Vector2(0.5f, 0f), new Vector2(0.5f, 1f), new Vector2(0f, -6f),
+                new Vector2(160f, 20f), EscapeBarColor);
+            _podHint.gameObject.SetActive(false);
+        }
+
+        // 바 위에 겹쳐 쓰는 글자. 채워진 색 위에서도 읽히게 테두리를 준다.
+        private Text CreateBarLabel(Image fill)
+        {
+            Text label = UiBuilder.Text(string.Empty, (RectTransform)fill.transform.parent, _fontSize - 2, TextAnchor.MiddleCenter, Color.white);
+            label.gameObject.AddComponent<Outline>().effectColor = Color.black;
+            return label;
         }
 
         // 아래에서부터 차오르는 원. 값은 원 안에, 이름은 원 위에 쓴다.

@@ -15,10 +15,23 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("초. 0이 아니면 이 시간이 지나 사라진다 (바닥에 버린 아이템)")] private float _lifetime;
         [SerializeField, Tooltip("비면 사라진다 (바닥에 버린 아이템)")] private bool _destroyWhenEmpty;
 
+        private InventoryGrid _grid;
         private bool _filled;
         private float _age;
 
-        public InventoryGrid Grid { get; private set; }
+        // 대기실 창고처럼 다른 오브젝트가 Awake에서 내용을 채울 수 있어서 처음 쓸 때 만든다.
+        public InventoryGrid Grid
+        {
+            get
+            {
+                if (_grid == null)
+                {
+                    _grid = new InventoryGrid(_width, _height);
+                }
+
+                return _grid;
+            }
+        }
         public float OpenTime => _openTime;
 
         // 화면에서 아이템을 끌고 있는 동안에는 비어도 사라지지 않는다. 못 놓았을 때 돌아올 자리다.
@@ -54,14 +67,8 @@ namespace EscapeFromSpace
         // 내용물을 직접 넣는다 (바닥에 버린 아이템).
         public void SetContents(ItemStack stack)
         {
-            EnsureGrid();
             Grid.TryAdd(stack);
             _filled = true;
-        }
-
-        private void Awake()
-        {
-            EnsureGrid();
         }
 
         private void OnEnable()
@@ -98,14 +105,6 @@ namespace EscapeFromSpace
                 {
                     Destroy(gameObject);
                 }
-            }
-        }
-
-        private void EnsureGrid()
-        {
-            if (Grid == null)
-            {
-                Grid = new InventoryGrid(_width, _height);
             }
         }
     }

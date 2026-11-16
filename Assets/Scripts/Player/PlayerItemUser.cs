@@ -21,6 +21,7 @@ namespace EscapeFromSpace
         // 지금 쓰고 있는 아이템. 없으면 null.
         public ItemData Using => _using;
         public float UseProgress => _using != null && _using.UseTime > 0f ? 1f - _useTimeLeft / _using.UseTime : 0f;
+        public float UseTimeLeft => _using != null ? Mathf.Max(0f, _useTimeLeft) : 0f;
 
         public ItemData GetSlot(int index)
         {

@@ -19,7 +19,7 @@ namespace EscapeFromSpace
 
         public Vector2 AimDirection { get; private set; } = Vector2.right;
 
-        // 이동·사격·구르기를 할 수 있는 상태인지. 피격 경직 중이거나 HP가 0이면 막는다 (사망 처리는 11/18).
+        // 이동·사격·구르기를 할 수 있는 상태인지. 피격 경직 중이거나 HP가 0이면 막는다.
         // 조준 회전은 경직 중에도 된다.
         public bool CanAct => !_health.IsDead && _stunTimeLeft <= 0f;
 
@@ -28,6 +28,12 @@ namespace EscapeFromSpace
 
         // 가방 화면이 열려 있는지. 화면(InventoryUI)이 정한다. 열려 있어도 이동은 되고 사격·구르기·재장전만 막는다.
         public bool IsBagOpen { get; set; }
+
+        // 탈출 키를 누르고 있는 동안에는 걸을 수 없다. RaidManager가 정한다.
+        public bool IsMovementLocked { get; set; }
+
+        // 대기실에서는 창고 물건을 잔뜩 들어도 다치지 않게 끈다.
+        public bool TakesOverloadDamage { get; set; } = true;
 
         private void Awake()
         {
@@ -56,7 +62,7 @@ namespace EscapeFromSpace
             }
 
             // 최대 무게의 150%를 넘으면 HP가 서서히 준다.
-            if (_inventory.TotalWeight > _data.MaxWeight * _data.OverloadRatio)
+            if (TakesOverloadDamage && _inventory.TotalWeight > _data.MaxWeight * _data.OverloadRatio)
             {
                 _health.TakeRawDamage(_data.OverloadDamagePerSecond * Time.deltaTime);
             }
@@ -79,7 +85,7 @@ namespace EscapeFromSpace
                 speed *= _data.ReloadMoveSpeedMultiplier;
             }
 
-            _rigidbody.linearVelocity = CanAct ? _input.Move * speed : Vector2.zero;
+            _rigidbody.linearVelocity = CanAct && !IsMovementLocked ? _input.Move * speed : Vector2.zero;
         }
 
         private void OnDamaged(float damage, Vector2 hitPoint)

@@ -1157,6 +1157,7 @@ GameObject:
   m_Component:
   - component: {fileID: 530211473}
   - component: {fileID: 530211472}
+  - component: {fileID: 530211474}
   m_Layer: 0
   m_Name: Pathfinding
   m_TagString: Untagged
@@ -1196,6 +1197,25 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &530211474
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 530211471}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e34a923cf1df5746bc0f81f3bdf8860, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _walls: {fileID: 746340745}
+  _wallMask:
+    serializedVersion: 2
+    m_Bits: 128
+  _player: {fileID: 772505394}
+  _revealRadius: 7
+  _interval: 0.2
 --- !u!1001 &533815427
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10143,6 +10163,7 @@ GameObject:
   - component: {fileID: 760178476}
   - component: {fileID: 760178481}
   - component: {fileID: 760178480}
+  - component: {fileID: 760178482}
   m_Layer: 0
   m_Name: UI
   m_TagString: Untagged
@@ -10167,6 +10188,7 @@ MonoBehaviour:
   _input: {fileID: 772505397}
   _controller: {fileID: 772505396}
   _lootPanelOffset: 0.9
+  _canDropToWorld: 1
   _cellSize: 108
   _itemFontSize: 19
   _countFontSize: 22
@@ -10249,6 +10271,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _raid: {fileID: 1989797258}
+  _lobbySceneName: Lobby
 --- !u!114 &760178481
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10274,6 +10297,27 @@ MonoBehaviour:
   _gaugeSize: 130
   _slotSize: 100
   _fontSize: 20
+--- !u!114 &760178482
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 760178475}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6fc772d1366811141a6cdb6d090a2307, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _map: {fileID: 530211474}
+  _raid: {fileID: 1989797258}
+  _input: {fileID: 772505397}
+  _controller: {fileID: 772505396}
+  _pods:
+  - {fileID: 115633518}
+  - {fileID: 1646974269}
+  _circleSprite: {fileID: 21300000, guid: e3e09a83a7454da4ea789df24d5f4fb1, type: 3}
+  _cellPixels: 22
 --- !u!1001 &772505393
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -36164,9 +36208,14 @@ MonoBehaviour:
   _config: {fileID: 11400000, guid: 35be1393733f0404aada9e05b1ea6b0f, type: 2}
   _playerHealth: {fileID: 772505395}
   _inventory: {fileID: 772505399}
+  _input: {fileID: 772505397}
+  _controller: {fileID: 772505396}
+  _roll: {fileID: 211658894}
   _pods:
   - {fileID: 115633518}
   - {fileID: 1646974269}
+  _items: {fileID: 11400000, guid: 4165a764eabe42049a63baece06f1bf1, type: 2}
+  _map: {fileID: 530211474}
 --- !u!4 &1989797259
 Transform:
   m_ObjectHideFlags: 0

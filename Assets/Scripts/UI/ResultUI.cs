@@ -9,12 +9,14 @@ namespace EscapeFromSpace
     public class ResultUI : MonoBehaviour
     {
         [SerializeField] private RaidManager _raid;
+        [SerializeField, Tooltip("결과 화면에서 돌아갈 대기실 씬의 이름")] private string _lobbySceneName = "Lobby";
 
         private Canvas _canvas;
         private RectTransform _root;
         private RectTransform _button;
         private Text _title;
         private Text _body;
+        private Text _buttonText;
         private bool _shown;
 
         private void Awake()
@@ -58,6 +60,8 @@ namespace EscapeFromSpace
             _root.gameObject.SetActive(true);
             _root.SetAsLastSibling();
 
+            _buttonText.text = GameSession.RaidFromLobby ? "대기실로 (Enter)" : "다시 시작 (Enter)";
+
             int seconds = Mathf.FloorToInt(_raid.ElapsedTime);
             string time = $"걸린 시간  {seconds / 60}:{seconds % 60:00}";
 
@@ -76,11 +80,18 @@ namespace EscapeFromSpace
             }
         }
 
-        // 대기실 씬이 생기기 전까지는 같은 씬을 다시 불러 처음부터 시작한다 (임시).
+        // 대기실에서 들어온 판이면 대기실로 돌아간다. 레이드 씬을 바로 Play했으면 같은 씬을 다시 불러 처음부터 한다.
         private void Leave()
         {
             Time.timeScale = 1f;
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            if (GameSession.RaidFromLobby)
+            {
+                SceneManager.LoadScene(_lobbySceneName);
+            }
+            else
+            {
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            }
         }
 
         private void Build()
@@ -106,7 +117,7 @@ namespace EscapeFromSpace
             _button = UiBuilder.Rect("Button", box, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 34f),
                 new Vector2(320f, 76f));
             UiBuilder.Image(_button, new Color(0.25f, 0.5f, 0.9f));
-            UiBuilder.Text("다시 시작 (Enter)", _button, 28, TextAnchor.MiddleCenter, Color.white);
+            _buttonText = UiBuilder.Text(string.Empty, _button, 28, TextAnchor.MiddleCenter, Color.white);
 
             _root.gameObject.SetActive(false);
         }
