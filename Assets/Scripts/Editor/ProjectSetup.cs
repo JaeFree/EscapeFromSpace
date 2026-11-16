@@ -248,16 +248,17 @@ namespace EscapeFromSpace.EditorTools
         // 기획서 4.2 표의 초기값. 에셋을 처음 만들 때만 넣는다.
         private static void EnsureWeapons()
         {
-            EnsureWeapon(LightSaberPath, "광선검", WeaponCategory.Melee, 40f, 1, 1.25f, 1.8f, 0, 0f, 120f, 0f, 1.5f);
-            EnsureWeapon(LaserPistolPath, "레이저 피스톨", WeaponCategory.Pistol, 15f, 1, 3f, 12f, 12, 1.2f, 2f, 1.5f, 1f);
-            EnsureWeapon(PulseRiflePath, "펄스 라이플", WeaponCategory.AssaultRifle, 10f, 1, 8f, 18f, 30, 2f, 3f, 0.8f, 3.5f);
-            EnsureWeapon(Nebula7Path, "네뷸라-7", WeaponCategory.Sniper, 85f, 1, 0.6f, 30f, 5, 3f, 6f, 6f, 4.5f);
-            EnsureWeapon(PlasmaScatterPath, "플라즈마 스캐터", WeaponCategory.Shotgun, 9f, 8, 1f, 6f, 6, 2.5f, 18f, 4f, 4f);
+            EnsureWeapon(LightSaberPath, "광선검", WeaponCategory.Melee, 40f, 1, 1.25f, 1.8f, 0, 0f, 120f, 0f, 0f, 1.5f);
+            EnsureWeapon(LaserPistolPath, "레이저 피스톨", WeaponCategory.Pistol, 15f, 1, 3f, 12f, 12, 1.2f, 2f, 0f, 1.5f, 1f);
+            EnsureWeapon(PulseRiflePath, "펄스 라이플", WeaponCategory.AssaultRifle, 10f, 1, 8f, 18f, 30, 2f, 3f, 0f, 0.8f, 3.5f);
+            EnsureWeapon(Nebula7Path, "네뷸라-7", WeaponCategory.Sniper, 85f, 1, 0.6f, 30f, 5, 3f, 6f, 0.5f, 6f, 4.5f);
+            EnsureWeapon(PlasmaScatterPath, "플라즈마 스캐터", WeaponCategory.Shotgun, 9f, 8, 1f, 6f, 6, 2.5f, 18f, 0f, 4f, 4f);
         }
 
         private static void EnsureWeapon(
             string path, string displayName, WeaponCategory category, float damage, int pelletCount, float fireRate,
-            float range, int magazineSize, float reloadTime, float spreadAngle, float recoilPerShot, float weight)
+            float range, int magazineSize, float reloadTime, float spreadAngle, float aimSpreadAngle, float recoilPerShot,
+            float weight)
         {
             var data = AssetDatabase.LoadAssetAtPath<WeaponData>(path);
             if (data != null)
@@ -265,6 +266,7 @@ namespace EscapeFromSpace.EditorTools
                 // 나중에 추가한 필드는 기존 에셋에 0으로 들어온다. 0일 때만 초기값을 채운다.
                 SetFloatIfZero(data, "_recoilRecovery", 4f);
                 SetFloatIfZero(data, "_maxRecoil", 10f);
+                SetFloatIfZero(data, "_aimSpreadAngle", aimSpreadAngle);
                 return;
             }
 
@@ -279,6 +281,7 @@ namespace EscapeFromSpace.EditorTools
             so.FindProperty("_magazineSize").intValue = magazineSize;
             so.FindProperty("_reloadTime").floatValue = reloadTime;
             so.FindProperty("_spreadAngle").floatValue = spreadAngle;
+            so.FindProperty("_aimSpreadAngle").floatValue = aimSpreadAngle;
             so.FindProperty("_recoilPerShot").floatValue = recoilPerShot;
             so.FindProperty("_recoilRecovery").floatValue = 4f;
             so.FindProperty("_maxRecoil").floatValue = 10f;
@@ -542,6 +545,23 @@ namespace EscapeFromSpace.EditorTools
             SetReferenceIfEmpty(shooter, "_hitMarkerPrefab", AssetDatabase.LoadAssetAtPath<GameObject>(HitMarkerPrefabPath));
             SetReferenceIfEmpty(shooter, "_tracerPrefab", AssetDatabase.LoadAssetAtPath<BulletTracer>(TracerPrefabPath));
             SetReferenceIfEmpty(controller, "_shooter", shooter);
+
+            // 저격총 조준 원. 마우스 위치에 그리므로 플레이어를 따라 돌지 않게 뿌리 바로 아래에 둔다.
+            if (EnsureChild(root.transform, "AimReticle", out Transform reticleTransform))
+            {
+                var line = reticleTransform.gameObject.AddComponent<LineRenderer>();
+                line.startWidth = 0.04f;
+                line.endWidth = 0.04f;
+                line.startColor = new Color(1f, 0.9f, 0.3f);
+                line.endColor = new Color(1f, 0.9f, 0.3f);
+                line.sharedMaterial = GetSpriteMaterial();
+                line.sortingOrder = 11;
+            }
+
+            EnsureComponent(reticleTransform.gameObject, out AimReticle reticle);
+            SetReferenceIfEmpty(reticle, "_shooter", shooter);
+            SetReferenceIfEmpty(reticle, "_input", input);
+            SetReferenceIfEmpty(reticle, "_muzzle", muzzle);
 
             // 가방이 생기기 전까지 쓰는 임시 예비탄. 탄창 2개분.
             var reserveObject = new SerializedObject(shooter);

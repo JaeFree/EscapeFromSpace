@@ -38,7 +38,12 @@ namespace EscapeFromSpace
         public float CurrentRecoil => _currentRecoil;
 
         // 이번 발에 적용되는 퍼짐(±도). 이동 중에는 기본 퍼짐과 쌓인 반동을 더한 전체가 2배가 된다.
-        public float CurrentSpread => (_weapon.SpreadAngle + _currentRecoil) * MoveSpreadScale;
+        public float CurrentSpread => (BaseSpread + _currentRecoil) * MoveSpreadScale;
+
+        // 저격총은 우클릭을 누르는 동안 기본 퍼짐만 줄어든다. 반동 누적과 이동 중 2배는 그대로 받는다.
+        public bool IsAiming => _weapon != null && _weapon.Category == WeaponCategory.Sniper && _input.AimHeld;
+
+        private float BaseSpread => IsAiming ? _weapon.AimSpreadAngle : _weapon.SpreadAngle;
 
         private bool UsesAmmo => _weapon.MagazineSize > 0;
         private float MoveSpreadScale => _input.Move.sqrMagnitude > 0.01f ? 2f : 1f;

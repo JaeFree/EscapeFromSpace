@@ -21,6 +21,7 @@ MonoBehaviour:
   _magazineSize: 5
   _reloadTime: 3
   _spreadAngle: 6
+  _aimSpreadAngle: 0.5
   _recoilPerShot: 6
   _recoilRecovery: 4
   _maxRecoil: 10
