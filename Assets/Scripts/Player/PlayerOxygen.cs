@@ -17,6 +17,9 @@ namespace EscapeFromSpace
         public bool IsSuffocating => Current <= 0f;
         public bool IsLow => Current <= _config.OxygenWarningSeconds;
 
+        // 대기실에서는 줄지 않는다. 헬멧을 바꿔 끼면 늘어난 양은 그대로 보인다.
+        public bool IsDraining { get; set; } = true;
+
         private void OnEnable()
         {
             _inventory.Changed += OnInventoryChanged;
@@ -36,7 +39,7 @@ namespace EscapeFromSpace
 
         private void Update()
         {
-            if (_health.IsDead)
+            if (_health.IsDead || !IsDraining)
             {
                 return;
             }

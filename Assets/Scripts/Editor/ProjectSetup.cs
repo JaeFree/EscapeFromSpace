@@ -1220,19 +1220,18 @@ namespace EscapeFromSpace.EditorTools
                 BuildMap(wallTile, floorTile, wallLayer, LobbyLayout.BuildWalls());
             }
 
-            EnsureWallColliders();
-
             GameObject player = GameObject.Find("Player");
             if (player == null)
             {
                 player = (GameObject)PrefabUtility.InstantiatePrefab(playerPrefab);
                 player.transform.position = new Vector3(LobbyLayout.SpawnX, LobbyLayout.SpawnY, 0f);
 
-                // 대기실에서는 쏘거나 아이템을 쓰거나 산소가 줄지 않는다. 가방과 이동만 쓴다.
-                DisableComponent(player.GetComponent<PlayerShooter>());
-                DisableComponent(player.GetComponent<PlayerOxygen>());
+                // 대기실에서는 아이템을 쓸 수 없다. 사격은 사격장이 허락할 때만 되고, 산소는 LobbyManager가 줄지 않게 한다.
                 DisableComponent(player.GetComponent<PlayerItemUser>());
             }
+
+            GameObject range = EnsureShootingRange(player, wallTile, square);
+            EnsureWallColliders();
 
             SetReferenceIfEmpty(follow, "_target", player.transform);
 
@@ -1296,6 +1295,8 @@ namespace EscapeFromSpace.EditorTools
 
             SetReferenceIfEmpty(lobby, "_inventory", player.GetComponent<PlayerInventory>());
             SetReferenceIfEmpty(lobby, "_controller", player.GetComponent<PlayerController>());
+            SetReferenceIfEmpty(lobby, "_roll", player.GetComponent<PlayerRoll>());
+            SetReferenceIfEmpty(lobby, "_oxygen", player.GetComponent<PlayerOxygen>());
             SetReferenceIfEmpty(lobby, "_inventoryUi", ui);
             SetReferenceIfEmpty(lobby, "_storage", storage.GetComponent<Lootable>());
             SetReferenceIfEmpty(lobby, "_items", items);
@@ -1303,10 +1304,113 @@ namespace EscapeFromSpace.EditorTools
 
             EnsureComponent(canvasObject, out LobbyUI lobbyUi);
             SetReferenceIfEmpty(lobbyUi, "_lobby", lobby);
-            SetReferenceIfEmpty(lobbyUi, "_inventory", player.GetComponent<PlayerInventory>());
-            SetReferenceIfEmpty(lobbyUi, "_playerData", AssetDatabase.LoadAssetAtPath<PlayerData>(PlayerDataPath));
+
+            // 대기실에도 레이드와 같은 HUD를 둔다 (2026-11-16 사용자 결정). 탈출 포드가 없으므로 RaidManager 칸은 비워 둔다.
+            if (EnsureComponent(canvasObject, out HudUI hud))
+            {
+                // 산소 게이지가 헬멧에 따른 최대치를 보여 주도록 산소 컴포넌트를 다시 켠다. 줄지 않게 하는 것은 LobbyManager가 한다.
+                var oxygenSo = new SerializedObject(player.GetComponent<PlayerOxygen>());
+                oxygenSo.FindProperty("m_Enabled").boolValue = true;
+                oxygenSo.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            SetReferenceIfEmpty(hud, "_playerData", AssetDatabase.LoadAssetAtPath<PlayerData>(PlayerDataPath));
+            SetReferenceIfEmpty(hud, "_health", player.GetComponent<Health>());
+            SetReferenceIfEmpty(hud, "_oxygen", player.GetComponent<PlayerOxygen>());
+            SetReferenceIfEmpty(hud, "_inventory", player.GetComponent<PlayerInventory>());
+            SetReferenceIfEmpty(hud, "_shooter", player.GetComponent<PlayerShooter>());
+            SetReferenceIfEmpty(hud, "_itemUser", player.GetComponent<PlayerItemUser>());
+            SetReferenceIfEmpty(hud, "_roll", player.GetComponent<PlayerRoll>());
+            SetReferenceIfEmpty(hud, "_controller", player.GetComponent<PlayerController>());
+            SetReferenceIfEmpty(hud, "_circleSprite", AssetDatabase.LoadAssetAtPath<Sprite>(CirclePath));
+            SetReferenceIfEmpty(lobbyUi, "_shootingRange", range.transform);
 
             EditorSceneManager.SaveScene(scene, LobbyScenePath);
+        }
+
+        // 대기실 왼쪽 아래의 사격장 (2026-11-16 사용자 결정): 서서 쏘는 구역, 칸막이 벽으로 막은 사로, 위아래로 오가는 표적 로봇 2기.
+        // 처음 한 번만 만들고 이후에는 Scene 뷰에서 옮긴다.
+        private static GameObject EnsureShootingRange(GameObject player, Tile wallTile, Sprite square)
+        {
+            GameObject range = GameObject.Find("ShootingRange");
+            if (range != null)
+            {
+                return range;
+            }
+
+            // 사로와 방을 나누는 벽. 표적이 방 안을 돌아다니는 길을 막지 않게 한다.
+            var walls = GameObject.Find("Grid").transform.Find("Walls").GetComponent<Tilemap>();
+            for (int x = LobbyLayout.LaneWallStartX; x <= LobbyLayout.LaneEndX; x++)
+            {
+                walls.SetTile(new Vector3Int(x, LobbyLayout.LaneWallY, 0), wallTile);
+            }
+
+            for (int y = 1; y < LobbyLayout.LaneWallY; y++)
+            {
+                walls.SetTile(new Vector3Int(LobbyLayout.LaneEndX, y, 0), wallTile);
+            }
+
+            range = new GameObject("ShootingRange");
+            range.transform.position = new Vector3(LobbyLayout.RangeX, LobbyLayout.RangeY, 0f);
+            range.transform.localScale = new Vector3(4f, 4f, 1f);
+
+            // 바닥 위, 캐릭터 아래
+            var renderer = range.AddComponent<SpriteRenderer>();
+            renderer.sprite = square;
+            renderer.color = new Color(0.95f, 0.8f, 0.3f, 0.35f);
+            renderer.sortingOrder = -4;
+
+            // 예전에 만든 대기실 씬에서는 사격 컴포넌트를 꺼 두었다. 사격장이 생기면 다시 켠다.
+            var shooter = player.GetComponent<PlayerShooter>();
+            var shooterSo = new SerializedObject(shooter);
+            shooterSo.FindProperty("m_Enabled").boolValue = true;
+            shooterSo.ApplyModifiedPropertiesWithoutUndo();
+
+            var rangeSo = new SerializedObject(range.AddComponent<ShootingRange>());
+            rangeSo.FindProperty("_shooter").objectReferenceValue = shooter;
+            rangeSo.ApplyModifiedPropertiesWithoutUndo();
+
+            // 표적은 레이드 로봇의 HP를 그대로 쓴다. 하나는 아래에서, 하나는 위에서 출발해 엇갈려 움직인다.
+            var parent = new GameObject("RangeTargets");
+            CreateRangeTarget(parent.transform, "RangeTarget 1", "PistolRobot", new Vector2(9.5f, 1.5f), 3f, square);
+            CreateRangeTarget(parent.transform, "RangeTarget 2", "RifleRobot", new Vector2(13.5f, 4.5f), -3f, square);
+            return range;
+        }
+
+        private static void CreateRangeTarget(Transform parent, string targetName, string robotName, Vector2 position, float travel, Sprite square)
+        {
+            var target = new GameObject(targetName);
+            target.transform.SetParent(parent, false);
+            target.transform.position = position;
+            target.layer = LayerMask.NameToLayer("Enemy");
+
+            var body = target.AddComponent<Rigidbody2D>();
+            body.bodyType = RigidbodyType2D.Kinematic;
+            body.interpolation = RigidbodyInterpolation2D.Interpolate;
+
+            var collider = target.AddComponent<CircleCollider2D>();
+            collider.radius = 0.4f;
+
+            // 레이드의 로봇과 같은 사각형 모양
+            EnsureChild(target.transform, "Body", out Transform bodyVisual);
+            bodyVisual.localScale = new Vector3(0.75f, 0.75f, 1f);
+            var renderer = bodyVisual.gameObject.AddComponent<SpriteRenderer>();
+            renderer.sprite = square;
+
+            var health = target.AddComponent<Health>();
+            SetReferenceIfEmpty(health, "_config", AssetDatabase.LoadAssetAtPath<CombatConfig>(CombatConfigPath));
+
+            var spark = target.AddComponent<SparkOnHit>();
+            SetReferenceIfEmpty(spark, "_health", health);
+            SetReferenceIfEmpty(spark, "_sparkPrefab", AssetDatabase.LoadAssetAtPath<GameObject>(SparkPrefabPath));
+
+            var so = new SerializedObject(target.AddComponent<RangeTarget>());
+            so.FindProperty("_data").objectReferenceValue = AssetDatabase.LoadAssetAtPath<RobotData>(RobotDataPath(robotName));
+            so.FindProperty("_health").objectReferenceValue = health;
+            so.FindProperty("_body").objectReferenceValue = renderer;
+            so.FindProperty("_collider").objectReferenceValue = collider;
+            so.FindProperty("_travel").floatValue = travel;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         // 씬에 놓인 프리팹 인스턴스의 컴포넌트를 끈다. 프리팹 원본은 건드리지 않는다.

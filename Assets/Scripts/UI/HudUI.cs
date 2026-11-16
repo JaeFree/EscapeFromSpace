@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace EscapeFromSpace
 {
-    // 레이드 중 항상 보이는 화면 (기획서 9.4): 왼쪽 아래 원 게이지, 가운데 아래 무기칸과 도구칸, 도구칸 위 진행 바, 포드 위 탈출 안내.
+    // 레이드와 대기실에서 항상 보이는 화면 (기획서 9.4): 왼쪽 아래 원 게이지, 가운데 아래 무기칸과 도구칸, 도구칸 위 진행 바, 포드 위 탈출 안내.
     public class HudUI : MonoBehaviour
     {
         private static readonly Color BackColor = new Color(0.08f, 0.09f, 0.12f, 0.85f);
@@ -59,28 +59,25 @@ namespace EscapeFromSpace
         private Text _itemBarLabel;
         private RectTransform _podHint;
         private Image _escapeBar;
-        private RectTransform _bagPanel;
+        private RectTransform _actionRoot;
+        private InventoryUI _inventoryUi;
 
         private void Awake()
         {
             _canvas = GetComponent<Canvas>();
             _camera = Camera.main;
+            _inventoryUi = GetComponent<InventoryUI>();
             Build();
         }
 
         private void Update()
         {
             // 가방 화면이 왼쪽을 덮으므로 열려 있는 동안에는 게이지를 그 오른쪽으로 옮긴다.
-            if (_bagPanel == null)
-            {
-                Transform panel = transform.Find("BagPanel");
-                _bagPanel = panel != null ? (RectTransform)panel : null;
-            }
+            float panelWidth = _inventoryUi != null ? _inventoryUi.LeftPanelWidth : 0f;
+            _gaugeRoot.anchoredPosition = new Vector2(panelWidth > 0f ? panelWidth + 24f : 30f, 30f);
 
-            float left = _controller.IsBagOpen && _bagPanel != null
-                ? _bagPanel.anchoredPosition.x + _bagPanel.sizeDelta.x + 24f
-                : 30f;
-            _gaugeRoot.anchoredPosition = new Vector2(left, 30f);
+            // 대기실 창고 칸은 화면 아래 가운데까지 덮는다. 열려 있는 동안에는 무기칸과 도구칸을 숨긴다.
+            _actionRoot.gameObject.SetActive(_inventoryUi == null || !_inventoryUi.IsLootDocked);
 
             UpdateGauges();
             UpdateWeapon();
@@ -224,6 +221,7 @@ namespace EscapeFromSpace
             float width = _slotSize * 4f + gap * 3f + 24f;
             RectTransform bar = UiBuilder.Rect("ActionBar", transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
                 new Vector2(0f, 30f), new Vector2(width, _slotSize));
+            _actionRoot = bar;
 
             RectTransform weapon = UiBuilder.Rect("WeaponSlot", bar, Vector2.zero, Vector2.zero, Vector2.zero,
                 new Vector2(_slotSize, _slotSize));

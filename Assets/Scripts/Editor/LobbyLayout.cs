@@ -18,6 +18,15 @@ namespace EscapeFromSpace.EditorTools
         public const float PortalX = 12f;
         public const float PortalY = 12f;
 
+        // 사격장: 왼쪽 아래 구석의 서서 쏘는 구역(4×4칸)과 그 오른쪽으로 뻗은 사로.
+        public const float RangeX = 3f;
+        public const float RangeY = 3f;
+
+        // 사로의 위쪽 칸막이 벽(줄 번호)과 그 벽이 시작하는 칸, 사로가 끝나는 벽의 칸
+        public const int LaneWallY = 5;
+        public const int LaneWallStartX = 6;
+        public const int LaneEndX = 16;
+
         public static bool[,] BuildWalls()
         {
             var walls = new bool[Width, Height];

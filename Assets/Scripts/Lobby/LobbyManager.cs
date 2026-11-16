@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 namespace EscapeFromSpace
 {
     // 레이드 사이의 대기실 (기획서 7장). 창고와 가진 것을 저장 파일에서 불러오고, 바뀔 때마다 저장하고, 포탈로 레이드에 보낸다.
+    // 대기실에서는 구를 수 없고, 사격은 사격장(ShootingRange)에서만 된다.
     public class LobbyManager : MonoBehaviour
     {
         [Serializable]
@@ -19,13 +20,15 @@ namespace EscapeFromSpace
 
         [SerializeField] private PlayerInventory _inventory;
         [SerializeField] private PlayerController _controller;
+        [SerializeField] private PlayerRoll _roll;
+        [SerializeField] private PlayerOxygen _oxygen;
         [SerializeField] private InventoryUI _inventoryUi;
         [SerializeField] private Lootable _storage;
         [SerializeField] private ItemDatabase _items;
 
         [Header("포탈")]
         [SerializeField] private Transform _portal;
-        [SerializeField, Tooltip("칸. 이 크기의 구역에 들어가면 레이드를 시작한다")] private Vector2 _portalSize = new Vector2(3f, 2f);
+        [SerializeField, Tooltip("칸. 이 크기의 구역에 들어가면 출격할지 묻는다")] private Vector2 _portalSize = new Vector2(3f, 2f);
         [SerializeField] private string _raidSceneName = "Station";
 
         // 게임을 처음 시작할 때 한 번만 창고에 넣는다. 다시 지급하지 않는다.
@@ -34,6 +37,12 @@ namespace EscapeFromSpace
         [SerializeField] private int _starterSetCount = 3;
 
         private bool _leaving;
+
+        // 취소한 뒤에는 포탈 밖으로 나갔다가 다시 들어와야 또 묻는다.
+        private bool _declined;
+
+        // 출격할지 묻는 창이 떠 있는지. 창은 LobbyUI가 그린다.
+        public bool IsConfirming { get; private set; }
 
         public Lootable Storage => _storage;
         public Transform Portal => _portal;
@@ -55,6 +64,8 @@ namespace EscapeFromSpace
             }
 
             _controller.TakesOverloadDamage = false;
+            _roll.IsAllowed = false;
+            _oxygen.IsDraining = false;
         }
 
         private void OnEnable()
@@ -69,16 +80,56 @@ namespace EscapeFromSpace
 
         private void Update()
         {
-            // 가방을 연 채로 지나가다 실수로 출격하지 않게, 가방을 닫았을 때만 포탈이 듣는다.
-            if (_leaving || _controller.IsBagOpen || !PortalContains(_controller.transform.position))
+            if (_leaving)
+            {
+                return;
+            }
+
+            bool inPortal = PortalContains(_controller.transform.position);
+            if (!inPortal)
+            {
+                _declined = false;
+            }
+
+            if (IsConfirming)
+            {
+                // 묻는 동안 가방을 열면 고르던 중으로 보고 창을 닫는다.
+                if (!inPortal || _controller.IsBagOpen)
+                {
+                    CancelLaunch();
+                }
+
+                return;
+            }
+
+            // 가방을 연 채로 지나갈 때는 묻지 않는다.
+            if (inPortal && !_declined && !_controller.IsBagOpen)
+            {
+                IsConfirming = true;
+                _controller.IsMovementLocked = true;
+            }
+        }
+
+        public void ConfirmLaunch()
+        {
+            if (!IsConfirming || _leaving)
             {
                 return;
             }
 
             _leaving = true;
+            IsConfirming = false;
             Save();
             GameSession.StartRaid();
             SceneManager.LoadScene(_raidSceneName);
+        }
+
+        // 대기실에 그대로 남는다. 포탈 위에 서 있어도 다시 묻지 않게 표시해 둔다.
+        public void CancelLaunch()
+        {
+            IsConfirming = false;
+            _declined = true;
+            _controller.IsMovementLocked = false;
         }
 
         private bool PortalContains(Vector2 position)

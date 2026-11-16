@@ -91,6 +91,29 @@ namespace EscapeFromSpace
 
         public bool IsOpen => _isOpen;
 
+        // 대기실 창고처럼 큰 루팅 칸이 가방 화면 오른쪽에 붙어 있는지. 화면 아래까지 덮으므로 HUD가 이 값을 보고 비킨다.
+        public bool IsLootDocked { get; private set; }
+
+        // 가방 화면(과 거기 붙은 루팅 칸)이 차지한 왼쪽 폭. 닫혀 있으면 0. HUD의 게이지가 이 오른쪽으로 옮겨 간다.
+        public float LeftPanelWidth
+        {
+            get
+            {
+                if (!_isOpen)
+                {
+                    return 0f;
+                }
+
+                float right = _bagPanel.anchoredPosition.x + _bagPanel.sizeDelta.x;
+                if (IsLootDocked)
+                {
+                    right = _lootPanel.anchoredPosition.x + _lootPanel.sizeDelta.x * _lootPanel.localScale.x * 0.5f;
+                }
+
+                return right;
+            }
+        }
+
         // 끌고 있는 아이템은 어느 칸에도 없다. 그 사이에 저장하면 빠지므로 대기실이 이 값을 본다.
         public bool IsDragging => _held != null;
 
@@ -143,6 +166,7 @@ namespace EscapeFromSpace
 
             if (!_isOpen)
             {
+                IsLootDocked = false;
                 return;
             }
 
@@ -244,6 +268,7 @@ namespace EscapeFromSpace
 
         private void PositionLootPanel()
         {
+            IsLootDocked = false;
             if (_shownLootable == null)
             {
                 return;
@@ -258,6 +283,7 @@ namespace EscapeFromSpace
                 float scale = Mathf.Min(1f, (screen.height - 40f) / size.y, (screen.width - left - 24f) / size.x);
                 _lootPanel.localScale = new Vector3(scale, scale, 1f);
                 _lootPanel.anchoredPosition = new Vector2(left + size.x * scale * 0.5f, (screen.height - size.y * scale) * 0.5f);
+                IsLootDocked = true;
                 return;
             }
 

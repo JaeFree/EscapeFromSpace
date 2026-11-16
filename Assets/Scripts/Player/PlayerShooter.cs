@@ -39,6 +39,12 @@ namespace EscapeFromSpace
             ? Mathf.Clamp01(1f - _reloadTimeLeft / _weapon.ReloadTime) : 0f;
         public float ReloadTimeLeft => IsReloading ? Mathf.Max(0f, _reloadTimeLeft) : 0f;
         public int AmmoInMagazine => _equipped != null ? _equipped.AmmoInMagazine : 0;
+
+        // 대기실에서는 사격장 안에서만 무기를 쓸 수 있다. ShootingRange가 정한다.
+        public bool CanUseWeapon { get; set; } = true;
+
+        // 사격장에서는 탄창이 줄지 않는다. 줄지 않으니 재장전도 하지 않아 가방의 탄약이 그대로 남는다.
+        public bool HasInfiniteAmmo { get; set; }
         public int ReserveAmmo => _weapon != null ? _inventory.CountAmmo(_weapon.AmmoItem) : 0;
         public float CurrentRecoil => _currentRecoil;
 
@@ -76,10 +82,16 @@ namespace EscapeFromSpace
                 return;
             }
 
+            if (!CanUseWeapon)
+            {
+                IsReloading = false;
+                return;
+            }
+
             // 가방을 연 동안에는 좌클릭이 드래그, R이 회전이라 사격과 재장전 시작을 막는다.
             bool bagOpen = _controller.IsBagOpen;
 
-            UpdateReload(!bagOpen);
+            UpdateReload(!bagOpen && !HasInfiniteAmmo);
 
             // 반동은 지연 없이 항상 회복한다 (연사 사이에도).
             _currentRecoil = Mathf.Max(0f, _currentRecoil - _weapon.RecoilRecovery * Time.deltaTime);
@@ -92,7 +104,7 @@ namespace EscapeFromSpace
                 return;
             }
 
-            if (UsesAmmo)
+            if (UsesAmmo && !HasInfiniteAmmo)
             {
                 if (_equipped.AmmoInMagazine <= 0)
                 {

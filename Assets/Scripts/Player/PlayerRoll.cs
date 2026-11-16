@@ -16,13 +16,16 @@ namespace EscapeFromSpace
         public bool IsRolling { get; private set; }
         public float CooldownRemaining { get; private set; }
 
+        // 대기실에서는 구를 수 없다. LobbyManager가 끈다.
+        public bool IsAllowed { get; set; } = true;
+
         private void Update()
         {
             CooldownRemaining = Mathf.Max(0f, CooldownRemaining - Time.deltaTime);
             _invincibleTimeLeft = Mathf.Max(0f, _invincibleTimeLeft - Time.deltaTime);
             _health.IsInvincible = _invincibleTimeLeft > 0f;
 
-            if (_input.RollPressedThisFrame && _controller.CanAct && !_controller.IsBagOpen && !IsRolling && CooldownRemaining <= 0f)
+            if (IsAllowed && _input.RollPressedThisFrame && _controller.CanAct && !_controller.IsBagOpen && !IsRolling && CooldownRemaining <= 0f)
             {
                 StartRoll();
             }
