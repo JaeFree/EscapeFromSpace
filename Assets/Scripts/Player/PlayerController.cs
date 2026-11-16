@@ -8,6 +8,7 @@ namespace EscapeFromSpace
         [SerializeField] private PlayerData _data;
         [SerializeField] private PlayerInputReader _input;
         [SerializeField] private PlayerRoll _roll;
+        [SerializeField] private PlayerShooter _shooter;
         [SerializeField] private Health _health;
         [SerializeField] private Transform _aimPivot;
 
@@ -20,6 +21,9 @@ namespace EscapeFromSpace
         // 이동·사격·구르기를 할 수 있는 상태인지. 피격 경직 중이거나 HP가 0이면 막는다 (사망 처리는 11/18).
         // 조준 회전은 경직 중에도 된다.
         public bool CanAct => !_health.IsDead && _stunTimeLeft <= 0f;
+
+        // 재장전은 경직 중에도 이어지므로 CanAct와 따로 본다.
+        public bool IsDead => _health.IsDead;
 
         private void Awake()
         {
@@ -58,7 +62,13 @@ namespace EscapeFromSpace
                 return;
             }
 
-            _rigidbody.linearVelocity = CanAct ? _input.Move * _data.MoveSpeed : Vector2.zero;
+            float speed = _data.MoveSpeed;
+            if (_shooter.IsReloading)
+            {
+                speed *= _data.ReloadMoveSpeedMultiplier;
+            }
+
+            _rigidbody.linearVelocity = CanAct ? _input.Move * speed : Vector2.zero;
         }
 
         private void OnDamaged(float damage, Vector2 hitPoint)

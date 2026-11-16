@@ -14,17 +14,98 @@ namespace EscapeFromSpace
         [SerializeField] private LayerMask _wallMask;
         [SerializeField] private GameObject _hitMarkerPrefab;
 
+        [Header("탄약")]
+        // 가방(11/17)이 생기면 가방의 탄약으로 바꾼다. 그때까지는 여기에 직접 넣는다.
+        [SerializeField, Tooltip("예비탄 (임시)")] private int _reserveAmmo;
+
+        // HUD가 생기기 전까지 Inspector에서 탄창을 보려고 노출한다.
+        [SerializeField] private int _ammoInMagazine;
+
         private float _nextFireTime;
+        private float _reloadTimeLeft;
+
+        public bool IsReloading { get; private set; }
+        public int AmmoInMagazine => _ammoInMagazine;
+        public int ReserveAmmo => _reserveAmmo;
+
+        private bool UsesAmmo => _weapon.MagazineSize > 0;
+
+        private void Awake()
+        {
+            if (_weapon != null)
+            {
+                _ammoInMagazine = _weapon.MagazineSize;
+            }
+        }
 
         private void Update()
         {
-            if (_weapon == null || !_input.FireHeld || !_controller.CanAct || _roll.IsRolling || Time.time < _nextFireTime)
+            if (_weapon == null)
             {
                 return;
             }
 
+            UpdateReload();
+
+            if (!_input.FireHeld || !_controller.CanAct || _roll.IsRolling || IsReloading || Time.time < _nextFireTime)
+            {
+                return;
+            }
+
+            if (UsesAmmo)
+            {
+                if (_ammoInMagazine <= 0)
+                {
+                    return;
+                }
+
+                _ammoInMagazine--;
+            }
+
             _nextFireTime = Time.time + 1f / _weapon.FireRate;
             Fire();
+        }
+
+        private void UpdateReload()
+        {
+            // 구르면 재장전이 취소된다. 탄창이 비어 있으면 구르기가 끝난 뒤 아래에서 다시 자동으로 시작한다.
+            if (_roll.IsRolling || _controller.IsDead)
+            {
+                IsReloading = false;
+                return;
+            }
+
+            if (IsReloading)
+            {
+                _reloadTimeLeft -= Time.deltaTime;
+                if (_reloadTimeLeft <= 0f)
+                {
+                    FinishReload();
+                }
+
+                return;
+            }
+
+            if (!UsesAmmo || _reserveAmmo <= 0 || _ammoInMagazine >= _weapon.MagazineSize)
+            {
+                return;
+            }
+
+            // 탄을 다 쓰면 클릭 없이 자동으로 재장전한다. 탄이 남아 있으면 R키로만 한다.
+            if (_ammoInMagazine <= 0 || _input.ReloadPressedThisFrame)
+            {
+                IsReloading = true;
+                _reloadTimeLeft = _weapon.ReloadTime;
+            }
+        }
+
+        private void FinishReload()
+        {
+            // 남은 탄은 유지하고 모자란 만큼만 예비탄에서 채운다.
+            int loaded = Mathf.Min(_weapon.MagazineSize - _ammoInMagazine, _reserveAmmo);
+            _ammoInMagazine += loaded;
+            _reserveAmmo -= loaded;
+            IsReloading = false;
         }
 
         private void Fire()

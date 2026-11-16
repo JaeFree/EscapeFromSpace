@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: PlayerData
   m_EditorClassIdentifier: 
   _moveSpeed: 5
+  _reloadMoveSpeedMultiplier: 0.7
   _maxHp: 100
   _rollDistance: 3
   _rollDuration: 0.4

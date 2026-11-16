@@ -338,6 +338,7 @@ MonoBehaviour:
   _data: {fileID: 11400000, guid: fa97fd80059a0ae4ea8b9be42ca10036, type: 2}
   _input: {fileID: 5598884973092948156}
   _roll: {fileID: 1751094079760387129}
+  _shooter: {fileID: 6759398714086557480}
   _health: {fileID: 722836350339408983}
   _aimPivot: {fileID: 460640815210042848}
 --- !u!114 &1751094079760387129
@@ -380,6 +381,8 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   _hitMarkerPrefab: {fileID: 616239616664432743, guid: 48949187975de3d48b2a7dcf7efc11f0, type: 3}
+  _reserveAmmo: 24
+  _ammoInMagazine: 0
 --- !u!114 &722836350339408983
 MonoBehaviour:
   m_ObjectHideFlags: 0

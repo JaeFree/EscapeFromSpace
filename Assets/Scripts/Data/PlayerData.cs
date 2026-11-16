@@ -9,6 +9,8 @@ namespace EscapeFromSpace
         [Header("이동")]
         [SerializeField, Tooltip("칸/초")] private float _moveSpeed;
 
+        [SerializeField, Tooltip("재장전 중 이동 속도에 곱하는 값. 0.7이면 30% 느려진다")] private float _reloadMoveSpeedMultiplier;
+
         [Header("체력")]
         [SerializeField] private float _maxHp;
 
@@ -24,6 +26,7 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("이 개수를 넘으면 오래된 혈흔부터 지운다")] private int _maxBloodDecals;
 
         public float MoveSpeed => _moveSpeed;
+        public float ReloadMoveSpeedMultiplier => _reloadMoveSpeedMultiplier;
         public float MaxHp => _maxHp;
         public float RollDistance => _rollDistance;
         public float RollDuration => _rollDuration;

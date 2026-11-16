@@ -180,6 +180,8 @@ namespace EscapeFromSpace.EditorTools
             var data = AssetDatabase.LoadAssetAtPath<PlayerData>(PlayerDataPath);
             if (data != null)
             {
+                // 나중에 추가한 필드는 기존 에셋에 0으로 들어온다. 0일 때만 초기값을 채운다.
+                SetFloatIfZero(data, "_reloadMoveSpeedMultiplier", 0.7f);
                 return data;
             }
 
@@ -187,6 +189,7 @@ namespace EscapeFromSpace.EditorTools
             data = ScriptableObject.CreateInstance<PlayerData>();
             var so = new SerializedObject(data);
             so.FindProperty("_moveSpeed").floatValue = 5f;
+            so.FindProperty("_reloadMoveSpeedMultiplier").floatValue = 0.7f;
             so.FindProperty("_maxHp").floatValue = 100f;
             so.FindProperty("_rollDistance").floatValue = 3f;
             so.FindProperty("_rollDuration").floatValue = 0.4f;
@@ -481,6 +484,16 @@ namespace EscapeFromSpace.EditorTools
             SetReferenceIfEmpty(shooter, "_roll", roll);
             SetReferenceIfEmpty(shooter, "_muzzle", muzzle);
             SetReferenceIfEmpty(shooter, "_hitMarkerPrefab", AssetDatabase.LoadAssetAtPath<GameObject>(HitMarkerPrefabPath));
+            SetReferenceIfEmpty(controller, "_shooter", shooter);
+
+            // 가방이 생기기 전까지 쓰는 임시 예비탄. 탄창 2개분.
+            var reserveObject = new SerializedObject(shooter);
+            SerializedProperty reserveAmmo = reserveObject.FindProperty("_reserveAmmo");
+            if (reserveAmmo.intValue == 0)
+            {
+                reserveAmmo.intValue = weapon.MagazineSize * 2;
+                reserveObject.ApplyModifiedPropertiesWithoutUndo();
+            }
 
             PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefabPath);
 
@@ -706,6 +719,17 @@ namespace EscapeFromSpace.EditorTools
             child.SetParent(parent, false);
             child.gameObject.layer = parent.gameObject.layer;
             return true;
+        }
+
+        private static void SetFloatIfZero(Object target, string propertyName, float value)
+        {
+            var so = new SerializedObject(target);
+            SerializedProperty property = so.FindProperty(propertyName);
+            if (property.floatValue == 0f)
+            {
+                property.floatValue = value;
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
         }
 
         private static void SetReferenceIfEmpty(Object target, string propertyName, Object value)

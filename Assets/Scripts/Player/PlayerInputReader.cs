@@ -13,11 +13,13 @@ namespace EscapeFromSpace
         private InputAction _aim;
         private InputAction _roll;
         private InputAction _fire;
+        private InputAction _reload;
 
         public Vector2 Move => _move.ReadValue<Vector2>();
         public Vector2 AimScreenPosition => _aim.ReadValue<Vector2>();
         public bool RollPressedThisFrame => _roll.WasPressedThisFrame();
         public bool FireHeld => _fire.IsPressed();
+        public bool ReloadPressedThisFrame => _reload.WasPressedThisFrame();
 
         private void Awake()
         {
@@ -26,6 +28,7 @@ namespace EscapeFromSpace
             _aim = _playerMap.FindAction("Aim", true);
             _roll = _playerMap.FindAction("Roll", true);
             _fire = _playerMap.FindAction("Fire", true);
+            _reload = _playerMap.FindAction("Reload", true);
         }
 
         private void OnEnable()
