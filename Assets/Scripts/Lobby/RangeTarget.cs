@@ -19,6 +19,7 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("칸. 가로, 세로")] private Vector2 _barSize = new Vector2(0.9f, 0.12f);
         [SerializeField, Tooltip("칸. 표적 중심에서 위로")] private float _barHeight = 0.65f;
         [SerializeField] private Color _barColor = new Color(0.9f, 0.15f, 0.15f);
+        [SerializeField, Tooltip("바를 그리는 사각형 그림")] private Sprite _barSprite;
 
         private Rigidbody2D _rigidbody;
         private Vector2 _origin;
@@ -31,12 +32,13 @@ namespace EscapeFromSpace
         {
             _rigidbody = GetComponent<Rigidbody2D>();
             _origin = transform.position;
-            _body.color = _data.Color;
+            // 표적은 사로 왼쪽의 사수를 보고 있다.
+            _data.ApplyLook(_body, 180f);
             _health.Initialize(_data.MaxHp);
             BuildBar();
         }
 
-        // HP 바는 몸과 같은 사각형 그림 두 장으로 실행 중에 만든다: 어두운 바탕과 그 위의 빨간 바.
+        // HP 바는 사각형 그림 두 장으로 실행 중에 만든다: 어두운 바탕과 그 위의 빨간 바.
         private void BuildBar()
         {
             _bar = CreateBarPart("HpBar", transform, new Color(0.05f, 0.05f, 0.07f, 0.9f), 12);
@@ -52,7 +54,7 @@ namespace EscapeFromSpace
             var part = new GameObject(partName).transform;
             part.SetParent(parent, false);
             var renderer = part.gameObject.AddComponent<SpriteRenderer>();
-            renderer.sprite = _body.sprite;
+            renderer.sprite = _barSprite;
             renderer.color = color;
             renderer.sortingOrder = sortingOrder;
             return part;

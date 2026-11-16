@@ -39,6 +39,10 @@ namespace EscapeFromSpace
         [Header("가방")]
         [SerializeField, Tooltip("kg")] private float _weight;
 
+        [Header("모양")]
+        [SerializeField, Tooltip("손에 든 모습. 총구(칼끝)가 위를 보는 그림")] private Sprite _sprite;
+        [SerializeField, Tooltip("칸. 손에 들었을 때 그림의 길이. 사거리나 총구 위치와는 상관없다")] private float _visualLength;
+
         public string DisplayName => _displayName;
         public WeaponCategory Category => _category;
         public float Damage => _damage;
@@ -54,5 +58,7 @@ namespace EscapeFromSpace
         public float RecoilRecovery => _recoilRecovery;
         public float MaxRecoil => _maxRecoil;
         public float Weight => _weight;
+        public Sprite Sprite => _sprite;
+        public float VisualLength => _visualLength;
     }
 }

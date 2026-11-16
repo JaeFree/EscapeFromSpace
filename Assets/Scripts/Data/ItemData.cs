@@ -19,7 +19,8 @@ namespace EscapeFromSpace
     {
         [SerializeField] private string _displayName;
         [SerializeField] private ItemCategory _category;
-        [SerializeField, Tooltip("단색 도형 단계에서 칸에 칠하는 색")] private Color _color = Color.white;
+        [SerializeField, Tooltip("칸의 바탕에 칠하는 종류별 색")] private Color _color = Color.white;
+        [SerializeField, Tooltip("칸에 그리는 그림. 없으면 색과 이름만 나온다")] private Sprite _icon;
 
         [Header("가방")]
         [SerializeField, Tooltip("칸")] private int _width = 1;
@@ -45,6 +46,7 @@ namespace EscapeFromSpace
         public string DisplayName => _displayName;
         public ItemCategory Category => _category;
         public Color Color => _color;
+        public Sprite Icon => _icon;
         public int Width => _width;
         public int Height => _height;
         public float Weight => _weight;

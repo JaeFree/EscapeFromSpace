@@ -26,6 +26,15 @@ namespace EscapeFromSpace.EditorTools
         private const string LobbyScenePath = "Assets/Scenes/Lobby.unity";
         private const string StoragePrefabPath = "Assets/Prefabs/Storage.prefab";
         private const string ItemDatabasePath = "Assets/Data/ItemDatabase.asset";
+
+        // 그림은 Kenney의 CC0 에셋 팩에서 골라 저장소에 넣어 둔 것이다 (폴더마다 License.txt).
+        private const string AstronautFolder = "Assets/Art/Kenney/SpaceShooterExtension";
+        private const string WeaponArtFolder = "Assets/Art/Kenney/SpaceShooterRedux";
+        private const string TileArtFolder = "Assets/Art/Kenney/TopDownShooter";
+        private const string FlashShaderName = "EscapeFromSpace/SpriteFlash";
+        private const string FlashMaterialPath = "Assets/Art/Shaders/SpriteFlash.mat";
+        private const string MeshShaderName = "EscapeFromSpace/VertexColor";
+        private const string MeshMaterialPath = "Assets/Art/Shaders/VertexColor.mat";
         private const string NoFrictionPath = "Assets/Physics/NoFriction.physicsMaterial2D";
         private const string LaserPistolPath = "Assets/Data/Weapons/LaserPistol.asset";
         private const string LightSaberPath = "Assets/Data/Weapons/LightSaber.asset";
@@ -81,6 +90,7 @@ namespace EscapeFromSpace.EditorTools
 
             PlayerData playerData = EnsurePlayerData();
             EnsureWeapons();
+            EnsureWeaponArt();
             EnsureItems();
             EnsureItemDatabase();
             EnsureLootTables();
@@ -117,6 +127,8 @@ namespace EscapeFromSpace.EditorTools
             EnsureSwingArcPrefab(RobotSwingArcPrefabPath, new Color(1f, 0.3f, 0.25f, 0.6f));
             EnsureRobotPrefab(combatConfig, square, circle, playerLayer, wallLayer, enemyLayer);
             EnsurePlayerPrefab(playerData, combatConfig, square, circle, playerLayer, wallLayer, enemyLayer);
+            EnsureArt(square);
+            FixMeshMaterials();
             AssetDatabase.SaveAssets();
 
             // 레이드 씬을 마지막에 열어 둔다. 메뉴를 돌린 뒤 에디터에 남는 씬이다.
@@ -367,6 +379,185 @@ namespace EscapeFromSpace.EditorTools
             so.FindProperty("_weight").floatValue = weight;
             so.ApplyModifiedPropertiesWithoutUndo();
             AssetDatabase.CreateAsset(data, path);
+        }
+
+        // 무기별 손에 든 모습 (2026-11-16 디자인 단계). 그림 칸이 비어 있을 때만 채운다.
+        // 길이는 무기 사이의 크기 차이가 보이도록 정한 초기값이고 Inspector에서 조정한다.
+        private static void EnsureWeaponArt()
+        {
+            SetWeaponArt(LightSaberPath, "laserBlue01", 0.9f);
+            SetWeaponArt(LaserPistolPath, "gun01", 0.45f);
+            SetWeaponArt(PulseRiflePath, "gun04", 0.7f);
+            SetWeaponArt(Nebula7Path, "gun08", 0.95f);
+            SetWeaponArt(PlasmaScatterPath, "gun05", 0.65f);
+        }
+
+        private static void SetWeaponArt(string weaponPath, string spriteName, float visualLength)
+        {
+            var weapon = AssetDatabase.LoadAssetAtPath<WeaponData>(weaponPath);
+            SetReferenceIfEmpty(weapon, "_sprite", EnsureArtSprite($"{WeaponArtFolder}/{spriteName}.png"));
+            SetFloatIfZero(weapon, "_visualLength", visualLength);
+        }
+
+        // 저장소에 넣어 둔 그림 파일을 스프라이트로 읽히게 한다. 한 번 설정한 뒤에는 Inspector에서 바꾼 값을 건드리지 않는다.
+        // pixelsPerUnit은 그림의 몇 픽셀이 1칸인지다. 타일은 칸 사이에 틈이 보이지 않게 isTile을 켠다.
+        private static Sprite EnsureArtSprite(string path, float pixelsPerUnit = 100f, bool isTile = false)
+        {
+            const string marker = "EscapeFromSpace:configured";
+            var importer = (TextureImporter)AssetImporter.GetAtPath(path);
+            if (importer.userData != marker)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.spritePixelsPerUnit = pixelsPerUnit;
+                importer.mipmapEnabled = false;
+                importer.filterMode = isTile ? FilterMode.Point : FilterMode.Bilinear;
+                importer.textureCompression = TextureImporterCompression.Uncompressed;
+                importer.userData = marker;
+
+                if (isTile)
+                {
+                    var settings = new TextureImporterSettings();
+                    importer.ReadTextureSettings(settings);
+                    settings.spriteMeshType = SpriteMeshType.FullRect;
+                    importer.SetTextureSettings(settings);
+                }
+
+                importer.SaveAndReimport();
+            }
+
+            return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        }
+
+        // ---------- 디자인 단계의 그림 ----------
+
+        // 단색 도형을 에셋 팩의 그림으로 바꾼다 (2026-11-16 디자인 단계). 아직 단색 도형(사각형 그림)인 것만 바꾸고,
+        // 그림 칸이 비어 있는 데이터만 채운다. 이미 다른 그림을 넣었으면 건드리지 않는다.
+        private static void EnsureArt(Sprite square)
+        {
+            // 맵: 벽은 무늬가 있는 밝은 타일, 바닥은 어두운 타일. 타일 에셋을 바꾸면 칠해 둔 맵 전체가 바뀐다.
+            ReplaceTileArt(WallTilePath, square, $"{TileArtFolder}/wall.png", Color.white);
+            ReplaceTileArt(FloorTilePath, square, $"{TileArtFolder}/floor.png", new Color(0.62f, 0.64f, 0.72f));
+
+            // 뒤질 수 있는 것들. 프리팹의 크기는 그대로 두고 그림이 1칸을 채우게 읽는다.
+            ReplacePrefabArt(ContainerPrefabPath, square, $"{AstronautFolder}/crate_gray.png", 84f);
+            ReplacePrefabArt(ResearchContainerPrefabPath, square, $"{AstronautFolder}/crate_red.png", 84f);
+            ReplacePrefabArt(StoragePrefabPath, square, $"{AstronautFolder}/locker_gray.png", 168f);
+            ReplacePrefabArt(RobotWreckPrefabPath, square, $"{WeaponArtFolder}/meteorGrey_med1.png", 43f);
+
+            // 로봇 5종은 모양이 다른 보안 드론이다.
+            SetRobotArt("MeleeRobot", "enemyRed4");
+            SetRobotArt("PistolRobot", "enemyRed1");
+            SetRobotArt("RifleRobot", "enemyRed2");
+            SetRobotArt("SniperRobot", "enemyRed3");
+            SetRobotArt("ShotgunRobot", "enemyRed5");
+
+            // 가방과 HUD의 아이템 그림
+            (string item, string sprite)[] icons =
+            {
+                ("PistolCell", "powerupYellow_bolt"), ("RifleCell", "powerupBlue_bolt"), ("SniperCell", "powerupRed_bolt"),
+                ("PlasmaCapsule", "powerupGreen_bolt"), ("MediGel", "pill_green"), ("MediKit", "pill_red"), ("OxygenCan", "pill_blue"),
+                ("CircuitPart", "things_silver"), ("QuantumCore", "star_gold"),
+                ("LightSaberItem", "laserBlue01"), ("LaserPistolItem", "gun01"), ("PulseRifleItem", "gun04"),
+                ("Nebula7Item", "gun08"), ("PlasmaScatterItem", "gun05"),
+                ("Vest1", "shield_bronze"), ("Vest2", "shield_silver"), ("Vest3", "shield_gold"),
+                ("Helmet1", "ufoBlue"), ("Helmet2", "ufoGreen"), ("Helmet3", "ufoRed"),
+            };
+            foreach ((string item, string sprite) in icons)
+            {
+                SetReferenceIfEmpty(LoadItem(item), "_icon", EnsureArtSprite($"{WeaponArtFolder}/{sprite}.png"));
+            }
+        }
+
+        private static void ReplaceTileArt(string tilePath, Sprite placeholder, string spritePath, Color color)
+        {
+            var tile = AssetDatabase.LoadAssetAtPath<Tile>(tilePath);
+            if (tile.sprite != placeholder)
+            {
+                return;
+            }
+
+            tile.sprite = EnsureArtSprite(spritePath, 64f, true);
+            tile.color = color;
+            EditorUtility.SetDirty(tile);
+        }
+
+        private static void ReplacePrefabArt(string prefabPath, Sprite placeholder, string spritePath, float pixelsPerUnit)
+        {
+            GameObject root = PrefabUtility.LoadPrefabContents(prefabPath);
+            var renderer = root.GetComponent<SpriteRenderer>();
+            if (renderer.sprite == placeholder)
+            {
+                renderer.sprite = EnsureArtSprite(spritePath, pixelsPerUnit);
+                renderer.color = Color.white;
+                PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
+            }
+
+            PrefabUtility.UnloadPrefabContents(root);
+        }
+
+        // 씬에 직접 놓은 오브젝트(탈출 포드, 포탈)의 그림을 바꾼다. 색은 스크립트가 상태에 따라 칠하므로 그대로 둔다.
+        private static void ReplaceSceneArt(SpriteRenderer renderer, Sprite placeholder, string spritePath, float pixelsPerUnit)
+        {
+            if (renderer != null && renderer.sprite == placeholder)
+            {
+                renderer.sprite = EnsureArtSprite(spritePath, pixelsPerUnit);
+                EditorUtility.SetDirty(renderer);
+            }
+        }
+
+        private static void SetRobotArt(string robotName, string spriteName)
+        {
+            var robot = AssetDatabase.LoadAssetAtPath<RobotData>(RobotDataPath(robotName));
+            SetReferenceIfEmpty(robot, "_sprite", EnsureArtSprite($"{WeaponArtFolder}/{spriteName}.png"));
+            SetFloatIfZero(robot, "_visualSize", 1f);
+        }
+
+        // 코드로 만든 메시(광선검 범위, 근접 로봇의 베기, 샷건 충전 범위)는 스프라이트 기본 재질로는 그려지지 않는다.
+        // 예전에 그 재질로 만든 프리팹을 꼭짓점 색 재질로 바꾼다. 다른 재질을 넣어 두었으면 건드리지 않는다.
+        private static void FixMeshMaterials()
+        {
+            var material = AssetDatabase.LoadAssetAtPath<Material>(MeshMaterialPath);
+            if (material == null)
+            {
+                material = new Material(Shader.Find(MeshShaderName));
+                AssetDatabase.CreateAsset(material, MeshMaterialPath);
+            }
+
+            Material spriteMaterial = GetSpriteMaterial();
+            foreach (string path in new[] { SwingArcPrefabPath, RobotSwingArcPrefabPath, RobotPrefabPath })
+            {
+                GameObject root = PrefabUtility.LoadPrefabContents(path);
+                bool changed = false;
+                foreach (MeshRenderer renderer in root.GetComponentsInChildren<MeshRenderer>(true))
+                {
+                    if (renderer.sharedMaterial == spriteMaterial)
+                    {
+                        renderer.sharedMaterial = material;
+                        changed = true;
+                    }
+                }
+
+                if (changed)
+                {
+                    PrefabUtility.SaveAsPrefabAsset(root, path);
+                }
+
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        // 피격 번쩍임용 재질. 우주인 그림이 원래 흰색이라 색을 곱하는 기본 재질로는 번쩍임이 안 보인다.
+        private static Material EnsureFlashMaterial()
+        {
+            var material = AssetDatabase.LoadAssetAtPath<Material>(FlashMaterialPath);
+            if (material == null)
+            {
+                material = new Material(Shader.Find(FlashShaderName));
+                AssetDatabase.CreateAsset(material, FlashMaterialPath);
+            }
+
+            return material;
         }
 
         // 기획서 5.3 표의 초기값. 에셋을 처음 만들 때만 넣는다.
@@ -676,14 +867,24 @@ namespace EscapeFromSpace.EditorTools
                 collider.sharedMaterial = EnsureNoFrictionMaterial();
             }
 
-            // 플레이어(원)와 구분되게 사각형으로 둔다.
-            if (EnsureChild(root.transform, "Body", out Transform bodyVisual))
-            {
-                bodyVisual.localScale = new Vector3(0.75f, 0.75f, 1f);
-                bodyVisual.gameObject.AddComponent<SpriteRenderer>().sprite = square;
-            }
-
             EnsureChild(root.transform, "FacingPivot", out Transform facingPivot);
+
+            // 몸은 바라보는 방향으로 함께 돌아야 해서 FacingPivot 아래에 둔다. 예전 프리팹은 뿌리 바로 아래에 있었으므로 옮긴다.
+            // 그림이 없는 로봇은 플레이어와 구분되게 사각형으로 보인다.
+            Transform bodyVisual = facingPivot.Find("Body");
+            if (bodyVisual == null)
+            {
+                bodyVisual = root.transform.Find("Body");
+                if (bodyVisual == null)
+                {
+                    bodyVisual = new GameObject("Body").transform;
+                    bodyVisual.gameObject.layer = root.layer;
+                    bodyVisual.localScale = new Vector3(0.75f, 0.75f, 1f);
+                    bodyVisual.gameObject.AddComponent<SpriteRenderer>().sprite = square;
+                }
+
+                bodyVisual.SetParent(facingPivot, false);
+            }
 
             if (EnsureChild(facingPivot, "Barrel", out Transform barrel))
             {
@@ -784,6 +985,7 @@ namespace EscapeFromSpace.EditorTools
             SetReferenceIfEmpty(robot, "_health", health);
             SetReferenceIfEmpty(robot, "_motor", motor);
             SetReferenceIfEmpty(robot, "_body", bodyVisual.GetComponent<SpriteRenderer>());
+            SetReferenceIfEmpty(robot, "_barrel", barrel.GetComponent<SpriteRenderer>());
 
             PrefabUtility.SaveAsPrefabAsset(root, RobotPrefabPath);
 
@@ -1093,6 +1295,38 @@ namespace EscapeFromSpace.EditorTools
             SetReferenceIfEmpty(reticle, "_input", input);
             SetReferenceIfEmpty(reticle, "_muzzle", muzzle);
 
+            // 겉모습: 단색 도형(원 + 막대)을 우주인 그림과 무기 그림으로 바꾼다. 처음 붙일 때 한 번만 바꾼다.
+            var bodyRenderer = bodyVisual.GetComponent<SpriteRenderer>();
+            var gunRenderer = aimPivot.Find("Gun").GetComponent<SpriteRenderer>();
+            if (EnsureComponent(root, out PlayerVisual visual))
+            {
+                bodyVisual.localScale = Vector3.one;
+                bodyRenderer.sprite = EnsureArtSprite($"{AstronautFolder}/astronaut_stand.png");
+                bodyRenderer.color = Color.white;
+
+                // 무기 그림은 위를 보고 있어서 조준 방향(오른쪽)으로 눕힌다. 크기와 위치는 PlayerVisual이 무기마다 정한다.
+                Transform gunTransform = gunRenderer.transform;
+                gunTransform.localRotation = Quaternion.Euler(0f, 0f, -90f);
+                gunTransform.localScale = Vector3.one;
+                gunRenderer.color = Color.white;
+
+                var visualSo = new SerializedObject(visual);
+                visualSo.FindProperty("_unarmedSprite").objectReferenceValue = EnsureArtSprite($"{AstronautFolder}/astronaut_stand.png");
+                visualSo.FindProperty("_armedSprite").objectReferenceValue = EnsureArtSprite($"{AstronautFolder}/astronaut_hold.png");
+                visualSo.ApplyModifiedPropertiesWithoutUndo();
+
+                SetReferenceIfEmpty(flash, "_flashMaterial", EnsureFlashMaterial());
+            }
+
+            SetReferenceIfEmpty(visual, "_controller", controller);
+            SetReferenceIfEmpty(visual, "_input", input);
+            SetReferenceIfEmpty(visual, "_roll", roll);
+            SetReferenceIfEmpty(visual, "_shooter", shooter);
+            SetReferenceIfEmpty(visual, "_muzzle", muzzle);
+            SetReferenceIfEmpty(visual, "_inventory", inventory);
+            SetReferenceIfEmpty(visual, "_body", bodyRenderer);
+            SetReferenceIfEmpty(visual, "_weapon", gunRenderer);
+
             PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefabPath);
 
             if (exists)
@@ -1160,6 +1394,13 @@ namespace EscapeFromSpace.EditorTools
             EnsureContainers();
             RaidManager raid = EnsureRaid(player);
             EnsureUi(player, raid);
+
+            // 탈출 포드는 착륙장 모양. 열림·닫힘 색은 EscapePod가 그 위에 칠한다.
+            var placeholder = AssetDatabase.LoadAssetAtPath<Sprite>(SquarePath);
+            foreach (EscapePod pod in Object.FindObjectsByType<EscapePod>(FindObjectsSortMode.None))
+            {
+                ReplaceSceneArt(pod.GetComponent<SpriteRenderer>(), placeholder, $"{AstronautFolder}/pad.png", 108f);
+            }
 
             EditorSceneManager.SaveScene(scene, ScenePath);
         }
@@ -1324,6 +1565,19 @@ namespace EscapeFromSpace.EditorTools
             SetReferenceIfEmpty(hud, "_controller", player.GetComponent<PlayerController>());
             SetReferenceIfEmpty(hud, "_circleSprite", AssetDatabase.LoadAssetAtPath<Sprite>(CirclePath));
             SetReferenceIfEmpty(lobbyUi, "_shootingRange", range.transform);
+
+            // 포탈은 둥근 막 모양. 그림이 원이라 구역(3×2칸)을 덮도록 크기를 맞춘다. 색은 그대로 보라색을 칠한다.
+            var portalRenderer = portal.GetComponent<SpriteRenderer>();
+            if (portalRenderer.sprite == square)
+            {
+                ReplaceSceneArt(portalRenderer, square, $"{WeaponArtFolder}/shield3.png", 144f);
+                portal.transform.localScale = new Vector3(3f, 3f, 1f);
+            }
+
+            foreach (RangeTarget target in Object.FindObjectsByType<RangeTarget>(FindObjectsSortMode.None))
+            {
+                SetReferenceIfEmpty(target, "_barSprite", square);
+            }
 
             EditorSceneManager.SaveScene(scene, LobbyScenePath);
         }

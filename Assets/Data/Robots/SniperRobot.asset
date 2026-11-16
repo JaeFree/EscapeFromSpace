@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _displayName: "\uC800\uACA9 \uBCF4\uC548 \uB85C\uBD07"
   _color: {r: 0.95, g: 0.3, b: 0.7, a: 1}
+  _sprite: {fileID: 21300000, guid: 84fc531e41612f3498b855a96ed74672, type: 3}
+  _visualSize: 1
   _maxHp: 50
   _lootTable: {fileID: 11400000, guid: 9c9f76c9499659d4386eaf06b4e7f576, type: 2}
   _attackKind: 3

@@ -7,7 +7,8 @@
 - **3부 (완료)**: 11/16 작업. 11~15단계 모두 커밋했다.
 - **4부 (완료)**: 11/17 작업. 16~20단계 모두 커밋했다.
 - **5부 (구현 완료, 확인 대기)**: 11/18 작업. 21~24단계는 사용자가 "문제없음"으로 확인했다. 요청한 수정 두 가지(진행 바, 탈출 방식)와 25단계(대기실 씬)를 구현했고 사용자의 Unity 확인을 기다린다.
-- **6부 (구현 완료, 확인 대기)**: 11/19 작업. M키 전체 맵과 Windows 빌드를 만들었다. Inspector 밸런싱(플레이테스트 5판)은 사용자가 한다.
+- **6부 (완료)**: 11/19 작업. M키 전체 맵과 Windows 빌드를 만들었다. Inspector 밸런싱(플레이테스트 5판)은 사용자가 디자인 뒤로 미뤘다.
+- **7부 (진행 중)**: 디자인. 플레이어·무기·걷기·구르기(첫 범위)와 로봇·맵·가방·HUD 그림(둘째 범위)을 구현했고 사용자의 Unity 확인을 기다린다.
 
 # 1부: 11/13 + 11/14 작업 (완료)
 
@@ -62,7 +63,7 @@ Assets/
     Save/               SaveData, SaveSystem, GameSession
     UI/                 InventoryUI, HudUI, ResultUI, MapUI, LobbyUI, UiBuilder
     Data/               PlayerData, WeaponData, CombatConfig, ItemData, LootTable, RobotData, RaidConfig, ItemDatabase
-    Player/             PlayerInputReader, PlayerController, PlayerRoll, PlayerShooter, AimReticle, PlayerOxygen, PlayerItemUser
+    Player/             PlayerInputReader, PlayerController, PlayerRoll, PlayerShooter, AimReticle, PlayerOxygen, PlayerItemUser, PlayerVisual
     Editor/             ProjectSetup, StationLayout, LobbyLayout, BuildScript
 ```
 
@@ -495,3 +496,88 @@ GDD에 값이나 규칙이 비어 있는 부분이다. "추천" 열이 제안이
 - 맵을 열어도 게임은 멈추지 않고 조작도 막지 않는다.
 - 가 본 곳은 레이드가 끝날 때(탈출·사망 모두) 저장한다. 레이드 중에 게임을 끄면 그 판에 새로 가 본 곳은 남지 않는다. `Station` 씬을 바로 Play한 판은 저장하지 않는다.
 - 빌드에는 `Lobby`와 `Station` 씬만 넣는다. 빌드 설정의 씬 순서는 대기실이 먼저다. `ProjectSettings`의 Product Name을 `TempProject`에서 `ESCAPE from Space`로 바꿨다.
+
+# 7부: 디자인 (진행 중)
+
+2026-11-16에 사용자가 Inspector 밸런싱을 뒤로 미루고 디자인을 먼저 하기로 했다. GDD 1장과 10장에 반영했다.
+
+## 결정 사항 (7부)
+
+| # | 항목 | 결정 |
+| --- | --- | --- |
+| 1 | 캐릭터 애니메이션 | GDD의 제외 항목에서 포함으로 바꾼다 |
+| 2 | 에셋 출처 | 무료 에셋 팩. 캐릭터는 우주복을 입은 우주인. 쓰는 곳마다 맞는 그림을 고르는 일은 Claude에게 맡김 |
+| 3 | 그림 방식 | 픽셀이든 벡터풍이든 무료로 구할 수 있는 것 중 가장 잘 맞는 것으로 통일. 캐릭터는 마우스 방향으로 통째로 회전 |
+| 4 | 첫 범위 | 플레이어, 무기별 총 모양, 동작은 걷기와 구르기 |
+
+## 고른 에셋
+
+모두 Kenney(kenney.nl)의 CC0 팩이고 매끈한 벡터풍이다. 쓰는 파일만 `Assets/Art/Kenney/` 아래에 넣었고 폴더마다 원본 `License.txt`를 같이 두었다. CC0라 표시 의무는 없다 (README에 출처를 적으면 좋다).
+
+| 쓰는 곳 | 파일 | 팩 |
+| --- | --- | --- |
+| 플레이어 (맨손) | `astronaut_stand.png` (원본 `spaceAstronauts_001`) | Space Shooter Extension |
+| 플레이어 (무기를 듦) | `astronaut_hold.png` (원본 `spaceAstronauts_002`) | Space Shooter Extension |
+| 레이저 피스톨 | `gun01.png` | Space Shooter Redux |
+| 펄스 라이플 | `gun04.png` | Space Shooter Redux |
+| 플라즈마 스캐터 | `gun05.png` | Space Shooter Redux |
+| 네뷸라-7 | `gun08.png` | Space Shooter Redux |
+| 광선검 | `laserBlue01.png` | Space Shooter Redux |
+
+고른 이유: 위에서 본 우주복 우주인이 오른쪽을 보는 그림으로 들어 있어 회전 방식에 그대로 맞고, 같은 제작자의 우주 팩에 정거장 부품·로봇으로 쓸 만한 그림이 더 있어 이후 단계도 같은 방식으로 통일할 수 있다. 살펴봤지만 쓰지 않은 것: Kenney Top-down Shooter(우주인이 없음), Top-down Tanks Redux(포신 그림이 총으로는 어색함).
+
+## 구현하면서 정한 세부
+
+- 무료 팩에 위에서 본 우주인의 걷기·구르기 그림(프레임)이 없다. 그래서 그림을 바꾸지 않고 움직임으로 만들었다. 프레임 애니메이션을 원하면 그런 그림이 있는 팩을 따로 찾아야 한다.
+  - 걷기: 몸이 조준 방향을 중심으로 좌우 7°씩 흔들리고 5% 커졌다 작아진다. 걸음은 실제로 움직인 거리로 세서, 무거워서 느리면 걸음도 느려지고 멈추면 바로 가라앉는다.
+  - 구르기: 몸이 구르는 방향을 보고 그 방향으로 60%까지 납작해졌다 펴지기를 두 번 한다. 구르는 동안 무기는 숨긴다.
+  - 값은 Player 프리팹 `PlayerVisual`의 Inspector에서 조정한다.
+- 무기 그림은 `WeaponData`의 모양 칸(Sprite, Visual Length)에 둔다. 길이 초기값: 피스톨 0.45, 스캐터 0.65, 라이플 0.7, 광선검 0.9, 네뷸라-7 0.95칸.
+- 무기를 들면 팔을 앞으로 뻗은 그림, 맨손이면 팔을 내린 그림을 쓴다. 무기 그림은 두 손 사이에서 앞으로 나온다.
+- 피격 번쩍임: 우주인 그림이 원래 흰색이라 색을 바꾸는 방식으로는 안 보인다. 번쩍이는 동안 그림을 흰색 한 가지로 칠하는 재질(`Art/Shaders/SpriteFlash`)로 바꾼다.
+- 총구 위치는 아래 둘째 범위에서 무기 그림의 끝으로 옮겼다.
+
+## 둘째 범위 (구현 완료, 확인 대기)
+
+2026-11-16에 사용자가 첫 범위를 보고 정했다.
+
+| # | 결정 |
+| --- | --- |
+| 1 | 걷기·구르기는 지금 방식(그림 한 장을 회전과 크기로 움직임)으로 간다 |
+| 2 | 총구 위치를 무기 그림의 끝에 맞춘다 |
+| 3 | 로봇, 맵, 가방, HUD의 그림을 모두 진행한다 |
+| 4 | 광선검은 대기실 어디서든 휘두를 수 있다 (총은 사격장에서만) |
+| 버그 | 광선검을 휘둘러도 그림이 안 움직이고 범위가 안 나오는 것을 고친다 |
+
+추가로 고른 에셋 (모두 Kenney CC0, `Assets/Art/Kenney/`):
+
+| 쓰는 곳 | 파일 | 팩 |
+| --- | --- | --- |
+| 로봇 5종 | `enemyRed4`(근접), `enemyRed1`(권총), `enemyRed2`(AR), `enemyRed3`(저격), `enemyRed5`(샷건) | Space Shooter Redux |
+| 로봇 잔해 | `meteorGrey_med1` (로봇 색을 입힘) | Space Shooter Redux |
+| 일반 / 연구 컨테이너 | `crate_gray` / `crate_red` (원본 `spaceBuilding_002` / `_001`) | Space Shooter Extension |
+| 대기실 창고 | `locker_gray` (원본 `spaceBuilding_006`) | Space Shooter Extension |
+| 탈출 포드 | `pad` (원본 `spaceBuilding_018`. 열림·닫힘 색을 입힘) | Space Shooter Extension |
+| 포탈 | `shield3` (보라색을 입힘) | Space Shooter Redux |
+| 벽 / 바닥 타일 | `wall` / `floor` (원본 `tile_08` / `tile_86`) | Top-down Shooter |
+| 탄약 4종 | `powerupYellow_bolt`(권총), `powerupBlue_bolt`(라이플), `powerupRed_bolt`(저격), `powerupGreen_bolt`(플라즈마) | Space Shooter Redux |
+| 메디젤 / 메디킷 / 산소 캔 | `pill_green` / `pill_red` / `pill_blue` | Space Shooter Redux |
+| 회로 부품 / 퀀텀 코어 | `things_silver` / `star_gold` | Space Shooter Redux |
+| 방탄복 1·2·3단계 | `shield_bronze` / `shield_silver` / `shield_gold` | Space Shooter Redux |
+| 헬멧 1·2·3단계 | `ufoBlue` / `ufoGreen` / `ufoRed` (위에서 본 둥근 헬멧으로 씀) | Space Shooter Redux |
+| 무기 아이템 5종 | 손에 든 모양과 같은 그림 | Space Shooter Redux |
+
+구현하면서 정한 세부:
+
+- 로봇은 사람 모양이 아니라 모양이 서로 다른 붉은 보안 드론으로 했다. 종류는 색이 아니라 모양으로 구분한다. 같은 방식의 무료 팩에 무기 5종을 구분해 든 로봇 그림이 없어서다. 몸이 바라보는 방향으로 돈다. 크기는 `RobotData`의 Visual Size(초기값 1칸)로 조정한다.
+- 사격장의 표적도 같은 드론 그림을 쓰고 사수 쪽을 본다.
+- 그림을 바꾸는 규칙: `에셋 생성·갱신`은 아직 단색 도형(사각형 그림)인 것만 바꾸고, 그림 칸이 비어 있는 데이터만 채운다. Inspector에서 다른 그림을 넣으면 그대로 둔다.
+- 타일은 타일 에셋(`Tiles/WallTile`, `FloorTile`)의 그림만 바꿨다. 칠해 둔 맵은 그대로다. 바닥은 무늬 없는 어두운 타일에 푸른 기를 입혔다.
+- 가방과 HUD의 칸은 종류별 바탕색 위에 아이템 그림을 그리고 이름과 수량을 그 위에 쓴다. 바닥에 버린 아이템도 그 그림으로 보인다. 화면 틀(패널, 게이지)은 그대로다.
+- 광선검을 휘두르면 무기 그림이 범위의 왼쪽 끝에서 오른쪽 끝으로 0.15초 동안 지나간다 (`PlayerVisual`의 Swing Duration). 판정은 전과 같이 휘두른 순간에 끝난다.
+- 총구는 손 위치 0.2칸 + 무기 그림 길이다 (피스톨 0.65, 스캐터 0.85, 라이플 0.9, 네뷸라-7 1.15칸. 전에는 모두 0.7칸). 무기 에셋의 Visual Length를 바꾸면 총구도 같이 움직인다. 긴 무기는 벽에 바짝 붙으면 총구가 벽 너머로 나가 쏘지 못하는 거리가 조금 늘었다.
+- 가방을 열었을 때 왼쪽 아래 게이지가 가운데의 무기칸·도구칸과 겹쳐서, 그동안은 게이지를 그 칸들 위로 올린다 (그림을 넣으면서 눈에 띄어 같이 고침).
+
+광선검 범위가 안 나온 원인: 범위 표시(부채꼴)와 로봇의 샷건 충전 범위는 코드로 만든 메시인데, 스프라이트 기본 재질을 쓰고 있었다. 이 재질은 SpriteRenderer가 넣어 주는 값에 기대고 있어서 MeshRenderer에서는 아무것도 그려지지 않는다. 꼭짓점 색을 그대로 칠하는 재질(`Art/Shaders/VertexColor`)을 만들어 `SwingArc`, `RobotSwingArc`, `Robot` 프리팹의 메시에 넣었다. 10단계 때 사용자가 확인했던 것이 언제부터 안 보였는지는 확인하지 못했다.
+
+아직 단색 도형인 것: 사격장 바닥, 궤적 선과 명중점, 혈흔, 불꽃, 로봇의 "!" 표시와 조준선, 화면 틀(패널·게이지·버튼), 전체 맵.

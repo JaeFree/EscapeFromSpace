@@ -15,6 +15,7 @@ MonoBehaviour:
   _displayName: "\uD68C\uB85C \uBD80\uD488"
   _category: 3
   _color: {r: 0.8, g: 0.6, b: 0.9, a: 1}
+  _icon: {fileID: 21300000, guid: 046c3b869fd13904baccf9e0d3c455da, type: 3}
   _width: 1
   _height: 1
   _weight: 2

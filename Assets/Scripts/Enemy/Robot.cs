@@ -29,6 +29,7 @@ namespace EscapeFromSpace
         [SerializeField] private RobotMotor _motor;
         [SerializeField] private RobotAttack _attack;
         [SerializeField] private SpriteRenderer _body;
+        [SerializeField, Tooltip("단색 도형일 때 바라보는 쪽을 알려 주는 막대. 그림이 있으면 숨긴다")] private SpriteRenderer _barrel;
         [SerializeField, Tooltip("경계 상태에서 머리 위에 켜는 표시")] private GameObject _alertMark;
         [SerializeField] private LayerMask _wallMask;
         [SerializeField, Tooltip("부서진 자리에 남는 잔해. 컨테이너처럼 뒤진다")] private Lootable _wreckPrefab;
@@ -64,7 +65,13 @@ namespace EscapeFromSpace
             _data = data;
             _waypoints = waypoints;
             _player = player;
-            _body.color = data.Color;
+            // 몸은 바라보는 방향으로 도는 자식 아래에 있어서 그 +X를 보게만 해 두면 된다.
+            data.ApplyLook(_body, 0f);
+            if (_barrel != null)
+            {
+                _barrel.enabled = data.Sprite == null;
+            }
+
             _health.Initialize(data.MaxHp);
             _alertMark.SetActive(false);
 
@@ -447,8 +454,8 @@ namespace EscapeFromSpace
             var wreckRenderer = wreck.GetComponentInChildren<SpriteRenderer>();
             if (wreckRenderer != null)
             {
-                // 어느 로봇의 잔해인지 알 수 있게 원래 색을 어둡게 쓴다.
-                wreckRenderer.color = Color.Lerp(_data.Color, Color.black, 0.6f);
+                // 어느 로봇의 잔해인지 알 수 있게 그 로봇의 색을 입힌다. 어두운 바닥에서도 보이도록 조금만 어둡게 한다.
+                wreckRenderer.color = Color.Lerp(_data.Color, Color.black, 0.25f);
             }
 
             Destroy(gameObject);

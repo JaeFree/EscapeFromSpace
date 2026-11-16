@@ -16,6 +16,10 @@ namespace EscapeFromSpace
         public bool IsRolling { get; private set; }
         public float CooldownRemaining { get; private set; }
 
+        // 구르는 방향과 진행도 0~1. 구르는 모습을 그리는 쪽(PlayerVisual)이 읽는다.
+        public Vector2 Direction => _direction;
+        public float Progress => _data.RollDistance > 0f ? Mathf.Clamp01(1f - _remainingDistance / _data.RollDistance) : 1f;
+
         // 대기실에서는 구를 수 없다. LobbyManager가 끈다.
         public bool IsAllowed { get; set; } = true;
 

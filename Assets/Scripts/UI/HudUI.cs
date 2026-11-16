@@ -46,6 +46,8 @@ namespace EscapeFromSpace
         private Gauge _oxygenGauge;
         private Gauge _weightGauge;
         private Image _weaponImage;
+        private Image _weaponIcon;
+        private readonly Image[] _toolIcons = new Image[PlayerItemUser.SlotCount];
         private Text _weaponName;
         private Text _ammoText;
         private readonly Image[] _toolImages = new Image[PlayerItemUser.SlotCount];
@@ -74,10 +76,14 @@ namespace EscapeFromSpace
         {
             // 가방 화면이 왼쪽을 덮으므로 열려 있는 동안에는 게이지를 그 오른쪽으로 옮긴다.
             float panelWidth = _inventoryUi != null ? _inventoryUi.LeftPanelWidth : 0f;
-            _gaugeRoot.anchoredPosition = new Vector2(panelWidth > 0f ? panelWidth + 24f : 30f, 30f);
 
             // 대기실 창고 칸은 화면 아래 가운데까지 덮는다. 열려 있는 동안에는 무기칸과 도구칸을 숨긴다.
-            _actionRoot.gameObject.SetActive(_inventoryUi == null || !_inventoryUi.IsLootDocked);
+            bool showActions = _inventoryUi == null || !_inventoryUi.IsLootDocked;
+            _actionRoot.gameObject.SetActive(showActions);
+
+            // 옮겨 간 게이지가 가운데의 무기칸·도구칸과 겹치지 않게, 그 칸들이 보이는 동안에는 그 위로 올린다.
+            float bottom = panelWidth > 0f && showActions ? 30f + _slotSize + 70f : 30f;
+            _gaugeRoot.anchoredPosition = new Vector2(panelWidth > 0f ? panelWidth + 24f : 30f, bottom);
 
             UpdateGauges();
             UpdateWeapon();
@@ -112,6 +118,7 @@ namespace EscapeFromSpace
             if (weapon == null)
             {
                 _weaponImage.color = BackColor;
+                UiBuilder.SetIcon(_weaponIcon, null, Color.white);
                 _weaponName.text = "맨손";
                 _weaponName.color = Color.gray;
                 _ammoText.text = string.Empty;
@@ -119,6 +126,7 @@ namespace EscapeFromSpace
             }
 
             _weaponImage.color = weapon.Data.Color;
+            UiBuilder.SetIcon(_weaponIcon, weapon.Data.Icon, Color.white);
             _weaponName.text = weapon.Data.DisplayName;
             _weaponName.color = Color.black;
 
@@ -143,6 +151,8 @@ namespace EscapeFromSpace
                 // 가진 것이 없으면 어둡게 해서 비어 있음을 보여 준다.
                 _toolImages[i].color = item == null ? BackColor
                     : has ? item.Color : Color.Lerp(item.Color, Color.black, 0.75f);
+                // 가진 것이 없으면 그림도 흐리게 한다.
+                UiBuilder.SetIcon(_toolIcons[i], item != null ? item.Icon : null, has ? Color.white : new Color(1f, 1f, 1f, 0.3f));
                 _toolNames[i].text = item != null ? item.DisplayName : string.Empty;
                 _toolNames[i].color = has ? Color.black : Color.gray;
                 _toolCounts[i].text = item != null ? count.ToString() : string.Empty;
@@ -226,6 +236,7 @@ namespace EscapeFromSpace
             RectTransform weapon = UiBuilder.Rect("WeaponSlot", bar, Vector2.zero, Vector2.zero, Vector2.zero,
                 new Vector2(_slotSize, _slotSize));
             _weaponImage = UiBuilder.Image(weapon, BackColor);
+            _weaponIcon = UiBuilder.Icon(weapon, _slotSize * 0.62f);
             _weaponName = UiBuilder.Text(string.Empty, weapon, _fontSize, TextAnchor.UpperLeft, Color.black);
 
             // 탄창 / 예비탄은 무기칸 위에 작게 (기획서 9.4)
@@ -239,8 +250,9 @@ namespace EscapeFromSpace
                 RectTransform slot = UiBuilder.Rect($"ToolSlot {i + 1}", bar, Vector2.zero, Vector2.zero, new Vector2(x, 0f),
                     new Vector2(_slotSize, _slotSize));
                 _toolImages[i] = UiBuilder.Image(slot, BackColor);
+                _toolIcons[i] = UiBuilder.Icon(slot, _slotSize * 0.55f);
 
-                _toolNames[i] = UiBuilder.Text(string.Empty, slot, _fontSize - 2, TextAnchor.MiddleCenter, Color.black);
+                _toolNames[i] = UiBuilder.Text(string.Empty, slot, _fontSize - 4, TextAnchor.LowerLeft, Color.black);
                 _toolCounts[i] = UiBuilder.Text(string.Empty, slot, _fontSize + 2, TextAnchor.LowerRight, Color.black);
                 _toolCounts[i].fontStyle = FontStyle.Bold;
 

@@ -60,6 +60,23 @@ namespace EscapeFromSpace
             return image;
         }
 
+        // 칸 가운데에 그리는 아이템 그림. 그림의 비율을 지키고, 그림이 없으면 보이지 않는다.
+        public static Image Icon(RectTransform parent, float size)
+        {
+            RectTransform rect = Rect("Icon", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(size, size));
+            Image icon = Image(rect, Color.white);
+            icon.preserveAspect = true;
+            icon.enabled = false;
+            return icon;
+        }
+
+        public static void SetIcon(Image icon, Sprite sprite, Color color)
+        {
+            icon.sprite = sprite;
+            icon.color = color;
+            icon.enabled = sprite != null;
+        }
+
         // 부모를 가득 채우는 글자
         public static Text Text(string content, RectTransform parent, int fontSize, TextAnchor alignment, Color color)
         {

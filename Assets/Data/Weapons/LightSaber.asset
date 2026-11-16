@@ -20,8 +20,12 @@ MonoBehaviour:
   _range: 1.8
   _magazineSize: 0
   _reloadTime: 0
+  _ammoItem: {fileID: 0}
   _spreadAngle: 120
+  _aimSpreadAngle: 0
   _recoilPerShot: 0
   _recoilRecovery: 4
   _maxRecoil: 10
   _weight: 1.5
+  _sprite: {fileID: 21300000, guid: d165bb0d2dda1374bbd647f05d0329ba, type: 3}
+  _visualLength: 0.9

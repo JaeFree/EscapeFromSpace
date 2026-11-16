@@ -782,6 +782,10 @@ namespace EscapeFromSpace
             RectTransform view = CreateRect(stack.Data.DisplayName, parent, new Vector2(0f, 1f), new Vector2(0f, 1f), position, size);
             view.gameObject.AddComponent<Image>().color = stack.Data.Color;
 
+            // 그림은 이름과 수량 아래에 깔린다.
+            Image icon = UiBuilder.Icon(view, Mathf.Min(size.x, size.y) * 0.62f);
+            UiBuilder.SetIcon(icon, stack.Data.Icon, Color.white);
+
             Text name = CreateText(stack.Data.DisplayName, view, new Vector2(5f, -3f), new Vector2(size.x - 10f, size.y - CountHeight), _itemFontSize,
                 TextAnchor.UpperLeft);
             name.color = Color.black;

@@ -16,7 +16,9 @@ namespace EscapeFromSpace
     public class RobotData : ScriptableObject
     {
         [SerializeField] private string _displayName;
-        [SerializeField, Tooltip("단색 도형 단계에서 종류를 구분하는 색")] private Color _color = Color.white;
+        [SerializeField, Tooltip("그림이 없을 때 종류를 구분하는 색. 잔해와 Scene 뷰 표시에도 쓴다")] private Color _color = Color.white;
+        [SerializeField, Tooltip("위에서 본 모습. 앞이 아래를 보는 그림")] private Sprite _sprite;
+        [SerializeField, Tooltip("칸. 그림의 긴 변의 길이")] private float _visualSize;
         [SerializeField] private float _maxHp;
 
         [SerializeField, Tooltip("부서진 뒤 잔해에서 나오는 것")] private LootTable _lootTable;
@@ -52,6 +54,25 @@ namespace EscapeFromSpace
         public LootTable LootTable => _lootTable;
         public string DisplayName => _displayName;
         public Color Color => _color;
+        public Sprite Sprite => _sprite;
+
+        // 그림이 있으면 그 그림을 크기에 맞춰 쓰고, 없으면 단색 도형에 종류 색을 칠한다.
+        // 그림은 앞이 아래를 보고 있어서 facingAngle(도, +X가 0)을 보게 하려면 90°를 더 돌린다.
+        public void ApplyLook(SpriteRenderer body, float facingAngle)
+        {
+            if (_sprite == null)
+            {
+                body.color = _color;
+                return;
+            }
+
+            body.sprite = _sprite;
+            body.color = Color.white;
+            Vector2 size = _sprite.bounds.size;
+            float scale = _visualSize / Mathf.Max(size.x, size.y);
+            body.transform.localScale = new Vector3(scale, scale, 1f);
+            body.transform.localRotation = Quaternion.Euler(0f, 0f, facingAngle + 90f);
+        }
         public float MaxHp => _maxHp;
         public RobotAttackKind AttackKind => _attackKind;
         public float Damage => _damage;

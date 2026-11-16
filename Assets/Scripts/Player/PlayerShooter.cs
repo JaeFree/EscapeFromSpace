@@ -40,13 +40,16 @@ namespace EscapeFromSpace
         public float ReloadTimeLeft => IsReloading ? Mathf.Max(0f, _reloadTimeLeft) : 0f;
         public int AmmoInMagazine => _equipped != null ? _equipped.AmmoInMagazine : 0;
 
-        // 대기실에서는 사격장 안에서만 무기를 쓸 수 있다. ShootingRange가 정한다.
+        // 대기실에서는 사격장 안에서만 총을 쓸 수 있다. ShootingRange가 정한다.
         public bool CanUseWeapon { get; set; } = true;
 
         // 사격장에서는 탄창이 줄지 않는다. 줄지 않으니 재장전도 하지 않아 가방의 탄약이 그대로 남는다.
         public bool HasInfiniteAmmo { get; set; }
         public int ReserveAmmo => _weapon != null ? _inventory.CountAmmo(_weapon.AmmoItem) : 0;
         public float CurrentRecoil => _currentRecoil;
+
+        // 근접 무기를 마지막으로 휘두른 시각(Time.time). 휘두르는 모습을 그리는 쪽(PlayerVisual)이 읽는다.
+        public float LastSwingTime { get; private set; } = float.NegativeInfinity;
 
         // 이번 발에 적용되는 퍼짐(±도). 이동 중에는 기본 퍼짐과 쌓인 반동을 더한 전체가 2배가 된다.
         public float CurrentSpread => _weapon != null ? (BaseSpread + _currentRecoil) * MoveSpreadScale : 0f;
@@ -82,7 +85,8 @@ namespace EscapeFromSpace
                 return;
             }
 
-            if (!CanUseWeapon)
+            // 대기실에서 총은 사격장 안에서만 쏜다. 근접 무기는 어디서든 휘두를 수 있다 (2026-11-16 사용자 결정).
+            if (!CanUseWeapon && _weapon.Category != WeaponCategory.Melee)
             {
                 IsReloading = false;
                 return;
@@ -187,6 +191,7 @@ namespace EscapeFromSpace
         // 근접 무기는 플레이어 앞쪽 부채꼴 안의 대상을 모두 맞힌다. 무기의 퍼짐 값이 부채꼴 전체 각이다.
         private void Swing()
         {
+            LastSwingTime = Time.time;
             Vector2 center = transform.position;
             Vector2 aim = _controller.AimDirection;
             float halfAngle = _weapon.SpreadAngle * 0.5f;

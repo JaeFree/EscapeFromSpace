@@ -27,3 +27,5 @@ MonoBehaviour:
   _recoilRecovery: 4
   _maxRecoil: 10
   _weight: 3.5
+  _sprite: {fileID: 21300000, guid: cdad4b1893c786143b2f65dcf0cbc89a, type: 3}
+  _visualLength: 0.7

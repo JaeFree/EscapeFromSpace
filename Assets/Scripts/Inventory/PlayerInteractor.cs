@@ -93,7 +93,22 @@ namespace EscapeFromSpace
             dropped.IsOpened = true;
 
             var renderer = dropped.GetComponentInChildren<SpriteRenderer>();
-            if (renderer != null)
+            if (renderer == null)
+            {
+                return;
+            }
+
+            // 그림이 있으면 그 그림으로, 없으면 종류 색 사각형으로 보인다. 그림의 크기는 원래 사각형의 크기에 맞춘다.
+            if (stack.Data.Icon != null)
+            {
+                float size = renderer.bounds.size.x;
+                renderer.sprite = stack.Data.Icon;
+                renderer.color = Color.white;
+                Vector2 spriteSize = stack.Data.Icon.bounds.size;
+                float scale = size / Mathf.Max(spriteSize.x, spriteSize.y);
+                renderer.transform.localScale = new Vector3(scale, scale, 1f);
+            }
+            else
             {
                 renderer.color = stack.Data.Color;
             }
