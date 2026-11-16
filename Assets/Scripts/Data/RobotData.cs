@@ -19,6 +19,8 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("단색 도형 단계에서 종류를 구분하는 색")] private Color _color = Color.white;
         [SerializeField] private float _maxHp;
 
+        [SerializeField, Tooltip("부서진 뒤 잔해에서 나오는 것")] private LootTable _lootTable;
+
         [Header("공격")]
         [SerializeField] private RobotAttackKind _attackKind;
         [SerializeField, Tooltip("한 발(펠릿 하나)의 피해")] private float _damage;
@@ -47,6 +49,7 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("초. 발견한 뒤 멈춰서 바라보는 시간")] private float _alertDuration;
         [SerializeField, Tooltip("초. 추격하다 이 시간 동안 못 찾으면 원래 자리로 돌아간다")] private float _chaseTimeout;
 
+        public LootTable LootTable => _lootTable;
         public string DisplayName => _displayName;
         public Color Color => _color;
         public float MaxHp => _maxHp;

@@ -22,7 +22,7 @@ namespace EscapeFromSpace
             _invincibleTimeLeft = Mathf.Max(0f, _invincibleTimeLeft - Time.deltaTime);
             _health.IsInvincible = _invincibleTimeLeft > 0f;
 
-            if (_input.RollPressedThisFrame && _controller.CanAct && !IsRolling && CooldownRemaining <= 0f)
+            if (_input.RollPressedThisFrame && _controller.CanAct && !_controller.IsBagOpen && !IsRolling && CooldownRemaining <= 0f)
             {
                 StartRoll();
             }

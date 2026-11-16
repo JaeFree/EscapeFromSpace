@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e30df89cd24d3b4080673414a123f7a, type: 3}
+  m_Name: MediGel
+  m_EditorClassIdentifier: 
+  _displayName: "\uBA54\uB514\uC824"
+  _category: 1
+  _color: {r: 0.4, g: 0.9, b: 0.5, a: 1}
+  _width: 1
+  _height: 1
+  _weight: 0.2
+  _value: 15
+  _maxStack: 1
+  _defaultCount: 1
+  _weapon: {fileID: 0}
+  _armor: 0
+  _extraBagRows: 0
+  _extraOxygenSeconds: 0
+  _healAmount: 20
+  _useTime: 2
+  _oxygenSeconds: 0

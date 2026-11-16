@@ -27,6 +27,7 @@ namespace EscapeFromSpace
         [Header("탄창")]
         [SerializeField, Tooltip("0이면 탄을 쓰지 않는다")] private int _magazineSize;
         [SerializeField, Tooltip("초")] private float _reloadTime;
+        [SerializeField, Tooltip("이 무기가 쓰는 탄약 아이템. 가방에 있는 이 탄약이 예비탄이다")] private ItemData _ammoItem;
 
         [Header("탄퍼짐과 반동")]
         [SerializeField, Tooltip("도. 총은 ±이 값, 샷건은 부채꼴 전체 각, 근접 무기는 공격 범위 각도")] private float _spreadAngle;
@@ -46,6 +47,7 @@ namespace EscapeFromSpace
         public float Range => _range;
         public int MagazineSize => _magazineSize;
         public float ReloadTime => _reloadTime;
+        public ItemData AmmoItem => _ammoItem;
         public float SpreadAngle => _spreadAngle;
         public float AimSpreadAngle => _aimSpreadAngle;
         public float RecoilPerShot => _recoilPerShot;

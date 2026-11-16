@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
+using UnityEngine.UI;
 
 namespace EscapeFromSpace.EditorTools
 {
@@ -33,6 +34,12 @@ namespace EscapeFromSpace.EditorTools
         private const string RobotPrefabPath = "Assets/Prefabs/Robot.prefab";
         private const string RobotTracerPrefabPath = "Assets/Prefabs/RobotTracer.prefab";
         private const string RobotSwingArcPrefabPath = "Assets/Prefabs/RobotSwingArc.prefab";
+        private const string ItemFolder = "Assets/Data/Items";
+        private const string LootFolder = "Assets/Data/Loot";
+        private const string ContainerPrefabPath = "Assets/Prefabs/Container.prefab";
+        private const string ResearchContainerPrefabPath = "Assets/Prefabs/ResearchContainer.prefab";
+        private const string RobotWreckPrefabPath = "Assets/Prefabs/RobotWreck.prefab";
+        private const string DroppedItemPrefabPath = "Assets/Prefabs/DroppedItem.prefab";
         private const string CombatConfigPath = "Assets/Data/CombatConfig.asset";
         private const string HitMarkerPrefabPath = "Assets/Prefabs/HitMarker.prefab";
         private const string BloodDecalPrefabPath = "Assets/Prefabs/BloodDecal.prefab";
@@ -40,7 +47,7 @@ namespace EscapeFromSpace.EditorTools
 
         private static readonly string[] Folders =
         {
-            "Assets/Art/Placeholder", "Assets/Data", "Assets/Data/Weapons", RobotDataFolder, "Assets/Prefabs", "Assets/Tiles", "Assets/Physics",
+            "Assets/Art/Placeholder", "Assets/Data", "Assets/Data/Weapons", RobotDataFolder, ItemFolder, LootFolder, "Assets/Prefabs", "Assets/Tiles", "Assets/Physics",
         };
 
         [MenuItem("EscapeFromSpace/에셋 생성·갱신")]
@@ -69,7 +76,8 @@ namespace EscapeFromSpace.EditorTools
 
             PlayerData playerData = EnsurePlayerData();
             EnsureWeapons();
-            var laserPistol = AssetDatabase.LoadAssetAtPath<WeaponData>(LaserPistolPath);
+            EnsureItems();
+            EnsureLootTables();
             CombatConfig combatConfig = EnsureCombatConfig();
             EnsureHitMarkerPrefab(circle);
             EnsureTracerPrefab(TracerPrefabPath, new Color(1f, 0.95f, 0.6f));
@@ -77,10 +85,27 @@ namespace EscapeFromSpace.EditorTools
             EnsureBloodDecalPrefab(circle);
             EnsureSparkPrefab();
             EnsureRobots();
+            foreach (string robotName in new[] { "MeleeRobot", "PistolRobot", "RifleRobot", "SniperRobot", "ShotgunRobot" })
+            {
+                SetReferenceIfEmpty(
+                    AssetDatabase.LoadAssetAtPath<RobotData>(RobotDataPath(robotName)), "_lootTable", LoadLoot(robotName + "Loot"));
+            }
+
+            // 컨테이너는 이동·사격·시야를 모두 막도록 벽 레이어에 둔다.
+            EnsureLootablePrefab(ContainerPrefabPath, "Container", square, wallLayer, new Color(0.6f, 0.45f, 0.25f), 0.9f, 0,
+                true, 3, 2, LoadLoot("NormalContainerLoot"), 1f, 0f, false);
+            EnsureLootablePrefab(ResearchContainerPrefabPath, "ResearchContainer", square, wallLayer, new Color(0.25f, 0.6f, 0.6f),
+                0.9f, 0, true, 3, 3, LoadLoot("ResearchContainerLoot"), 1f, 0f, false);
+            EnsureLootablePrefab(RobotWreckPrefabPath, "RobotWreck", square, 0, new Color(0.25f, 0.25f, 0.28f), 0.6f, -1,
+                false, 3, 1, null, 1f, 0f, false);
+
+            // 바닥에 버린 아이템. 다시 주울 수 있고 1분 뒤 사라진다.
+            EnsureLootablePrefab(DroppedItemPrefabPath, "DroppedItem", square, 0, Color.white, 0.35f, -1,
+                false, 1, 1, null, 0f, 60f, true);
             EnsureTracerPrefab(RobotTracerPrefabPath, new Color(1f, 0.3f, 0.25f));
             EnsureSwingArcPrefab(RobotSwingArcPrefabPath, new Color(1f, 0.3f, 0.25f, 0.6f));
             EnsureRobotPrefab(combatConfig, square, circle, playerLayer, wallLayer, enemyLayer);
-            EnsurePlayerPrefab(playerData, laserPistol, combatConfig, square, circle, playerLayer, wallLayer, enemyLayer);
+            EnsurePlayerPrefab(playerData, combatConfig, square, circle, playerLayer, wallLayer, enemyLayer);
             AssetDatabase.SaveAssets();
 
             EnsureScene(wallLayer);
@@ -361,7 +386,187 @@ namespace EscapeFromSpace.EditorTools
             return $"{RobotDataFolder}/{fileName}.asset";
         }
 
+        // ---------- 아이템과 루팅 표 ----------
+
+        // 기획서 6.3 아이템 표와 6.5 방어구 표의 초기값. 에셋을 처음 만들 때만 넣는다.
+        // 크기는 사용자 결정(2026-11-16)에 따라 모두 1×1이다. 무기·방어구의 가치는 8장의 판매가다.
+        private static void EnsureItems()
+        {
+            var ammoColor = new Color(0.95f, 0.85f, 0.35f);
+            var medicalColor = new Color(0.4f, 0.9f, 0.5f);
+            var consumableColor = new Color(0.45f, 0.8f, 1f);
+            var lootColor = new Color(0.8f, 0.6f, 0.9f);
+            var weaponColor = new Color(0.85f, 0.85f, 0.9f);
+            var vestColor = new Color(0.6f, 0.7f, 0.5f);
+            var helmetColor = new Color(0.75f, 0.65f, 0.5f);
+
+            EnsureItem("PistolCell", "권총 에너지 셀", ItemCategory.Ammo, ammoColor, 0.3f, 10, 60, 12);
+            EnsureItem("RifleCell", "라이플 에너지 셀", ItemCategory.Ammo, ammoColor, 0.6f, 20, 60, 30);
+            EnsureItem("SniperCell", "저격 에너지 셀", ItemCategory.Ammo, ammoColor, 0.4f, 25, 60, 5);
+            EnsureItem("PlasmaCapsule", "플라즈마 캡슐", ItemCategory.Ammo, ammoColor, 0.5f, 20, 60, 6);
+
+            EnsureItem("MediGel", "메디젤", ItemCategory.Medical, medicalColor, 0.2f, 15, 1, 1, healAmount: 20f, useTime: 2f);
+            EnsureItem("MediKit", "메디킷", ItemCategory.Medical, medicalColor, 0.8f, 40, 1, 1, healAmount: 60f, useTime: 4f);
+            EnsureItem("OxygenCan", "산소 캔", ItemCategory.Consumable, consumableColor, 0.5f, 25, 1, 1, oxygenSeconds: 60f);
+            EnsureItem("CircuitPart", "회로 부품", ItemCategory.Loot, lootColor, 2f, 30, 1, 1);
+            EnsureItem("QuantumCore", "퀀텀 코어", ItemCategory.Loot, lootColor, 1.5f, 200, 1, 1);
+
+            EnsureWeaponItem("LightSaberItem", LightSaberPath, weaponColor, 75, null);
+            EnsureWeaponItem("LaserPistolItem", LaserPistolPath, weaponColor, 50, "PistolCell");
+            EnsureWeaponItem("PulseRifleItem", PulseRiflePath, weaponColor, 300, "RifleCell");
+            EnsureWeaponItem("Nebula7Item", Nebula7Path, weaponColor, 450, "SniperCell");
+            EnsureWeaponItem("PlasmaScatterItem", PlasmaScatterPath, weaponColor, 350, "PlasmaCapsule");
+
+            EnsureItem("Vest1", "1단계 방탄복", ItemCategory.Vest, vestColor, 3f, 100, 1, 1, armor: 2, extraBagRows: 1);
+            EnsureItem("Vest2", "2단계 방탄복", ItemCategory.Vest, vestColor, 5f, 250, 1, 1, armor: 4, extraBagRows: 2);
+            EnsureItem("Vest3", "3단계 방탄복", ItemCategory.Vest, vestColor, 8f, 500, 1, 1, armor: 6, extraBagRows: 3);
+            EnsureItem("Helmet1", "1단계 헬멧", ItemCategory.Helmet, helmetColor, 1f, 75, 1, 1, armor: 2, extraOxygenSeconds: 60f);
+            EnsureItem("Helmet2", "2단계 헬멧", ItemCategory.Helmet, helmetColor, 1.5f, 200, 1, 1, armor: 4, extraOxygenSeconds: 120f);
+            EnsureItem("Helmet3", "3단계 헬멧", ItemCategory.Helmet, helmetColor, 2f, 400, 1, 1, armor: 6, extraOxygenSeconds: 180f);
+        }
+
+        private static ItemData EnsureItem(
+            string fileName, string displayName, ItemCategory category, Color color, float weight, int value, int maxStack,
+            int defaultCount, WeaponData weapon = null, int armor = 0, int extraBagRows = 0, float extraOxygenSeconds = 0f,
+            float healAmount = 0f, float useTime = 0f, float oxygenSeconds = 0f)
+        {
+            string path = $"{ItemFolder}/{fileName}.asset";
+            var data = AssetDatabase.LoadAssetAtPath<ItemData>(path);
+            if (data != null)
+            {
+                return data;
+            }
+
+            data = ScriptableObject.CreateInstance<ItemData>();
+            var so = new SerializedObject(data);
+            so.FindProperty("_displayName").stringValue = displayName;
+            so.FindProperty("_category").enumValueIndex = (int)category;
+            so.FindProperty("_color").colorValue = color;
+            so.FindProperty("_width").intValue = 1;
+            so.FindProperty("_height").intValue = 1;
+            so.FindProperty("_weight").floatValue = weight;
+            so.FindProperty("_value").intValue = value;
+            so.FindProperty("_maxStack").intValue = maxStack;
+            so.FindProperty("_defaultCount").intValue = defaultCount;
+            so.FindProperty("_weapon").objectReferenceValue = weapon;
+            so.FindProperty("_armor").intValue = armor;
+            so.FindProperty("_extraBagRows").intValue = extraBagRows;
+            so.FindProperty("_extraOxygenSeconds").floatValue = extraOxygenSeconds;
+            so.FindProperty("_healAmount").floatValue = healAmount;
+            so.FindProperty("_useTime").floatValue = useTime;
+            so.FindProperty("_oxygenSeconds").floatValue = oxygenSeconds;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            AssetDatabase.CreateAsset(data, path);
+            return data;
+        }
+
+        // 무기 아이템은 이름과 무게를 무기 에셋에서 가져온다. 무기가 쓰는 탄약도 여기서 이어 준다.
+        private static void EnsureWeaponItem(string fileName, string weaponPath, Color color, int value, string ammoName)
+        {
+            var weapon = AssetDatabase.LoadAssetAtPath<WeaponData>(weaponPath);
+            EnsureItem(fileName, weapon.DisplayName, ItemCategory.Weapon, color, weapon.Weight, value, 1, 1, weapon);
+
+            if (ammoName != null)
+            {
+                SetReferenceIfEmpty(weapon, "_ammoItem", LoadItem(ammoName));
+            }
+        }
+
+        private static ItemData LoadItem(string fileName)
+        {
+            return AssetDatabase.LoadAssetAtPath<ItemData>($"{ItemFolder}/{fileName}.asset");
+        }
+
+        // 기획서에는 나오는 곳만 있어서 비율과 개수는 PLAN.md 4부에서 정한 초기값이다.
+        // 방탄복은 연구 컨테이너에서만 나온다 (사용자 결정. 높은 단계는 나중에 추가할 네임드 로봇에서).
+        private static void EnsureLootTables()
+        {
+            EnsureLootTable("NormalContainerLoot", false, 2, 3,
+                ("PistolCell", 25f), ("RifleCell", 12f), ("PlasmaCapsule", 12f), ("MediGel", 18f), ("OxygenCan", 10f),
+                ("CircuitPart", 13f), ("Helmet1", 6f));
+            EnsureLootTable("ResearchContainerLoot", false, 2, 3,
+                ("QuantumCore", 22f), ("SniperCell", 15f), ("MediKit", 15f), ("OxygenCan", 12f), ("Helmet2", 10f),
+                ("Vest1", 6f), ("Vest2", 8f), ("LightSaberItem", 3f), ("LaserPistolItem", 3f), ("PulseRifleItem", 3f),
+                ("Nebula7Item", 3f), ("PlasmaScatterItem", 3f), ("Helmet3", 2f), ("Vest3", 1f));
+
+            // 로봇 잔해는 줄마다 확률(%)을 따로 굴린다. 자기 무기의 탄약은 항상, 무기는 가끔.
+            EnsureLootTable("MeleeRobotLoot", true, 0, 0, ("LightSaberItem", 10f));
+            EnsureLootTable("PistolRobotLoot", true, 0, 0, ("PistolCell", 100f), ("LaserPistolItem", 10f));
+            EnsureLootTable("RifleRobotLoot", true, 0, 0, ("RifleCell", 100f), ("PulseRifleItem", 10f));
+            EnsureLootTable("SniperRobotLoot", true, 0, 0, ("SniperCell", 100f), ("Nebula7Item", 10f), ("Helmet3", 5f));
+            EnsureLootTable("ShotgunRobotLoot", true, 0, 0, ("PlasmaCapsule", 100f), ("PlasmaScatterItem", 10f));
+        }
+
+        private static void EnsureLootTable(
+            string fileName, bool rollEachEntry, int minCount, int maxCount, params (string item, float weight)[] entries)
+        {
+            string path = $"{LootFolder}/{fileName}.asset";
+            if (AssetDatabase.LoadAssetAtPath<LootTable>(path) != null)
+            {
+                return;
+            }
+
+            var table = ScriptableObject.CreateInstance<LootTable>();
+            var so = new SerializedObject(table);
+            so.FindProperty("_rollEachEntry").boolValue = rollEachEntry;
+            so.FindProperty("_minCount").intValue = minCount;
+            so.FindProperty("_maxCount").intValue = maxCount;
+            SerializedProperty list = so.FindProperty("_entries");
+            list.arraySize = entries.Length;
+            for (int i = 0; i < entries.Length; i++)
+            {
+                SerializedProperty entry = list.GetArrayElementAtIndex(i);
+                entry.FindPropertyRelative("_item").objectReferenceValue = LoadItem(entries[i].item);
+                entry.FindPropertyRelative("_weight").floatValue = entries[i].weight;
+            }
+
+            so.ApplyModifiedPropertiesWithoutUndo();
+            AssetDatabase.CreateAsset(table, path);
+        }
+
+        private static LootTable LoadLoot(string fileName)
+        {
+            return AssetDatabase.LoadAssetAtPath<LootTable>($"{LootFolder}/{fileName}.asset");
+        }
+
         // ---------- 프리팹 ----------
+
+        // 뒤질 수 있는 것(컨테이너, 로봇 잔해, 버린 아이템)의 프리팹. 처음 만들 때만 값을 넣는다.
+        private static void EnsureLootablePrefab(
+            string path, string objectName, Sprite sprite, int layer, Color color, float scale, int sortingOrder, bool blocks,
+            int width, int height, LootTable table, float openTime, float lifetime, bool destroyWhenEmpty)
+        {
+            if (File.Exists(path))
+            {
+                return;
+            }
+
+            var root = new GameObject(objectName);
+            root.layer = layer;
+            root.transform.localScale = new Vector3(scale, scale, 1f);
+
+            var renderer = root.AddComponent<SpriteRenderer>();
+            renderer.sprite = sprite;
+            renderer.color = color;
+            renderer.sortingOrder = sortingOrder;
+
+            if (blocks)
+            {
+                root.AddComponent<BoxCollider2D>();
+            }
+
+            var lootable = new SerializedObject(root.AddComponent<Lootable>());
+            lootable.FindProperty("_width").intValue = width;
+            lootable.FindProperty("_height").intValue = height;
+            lootable.FindProperty("_table").objectReferenceValue = table;
+            lootable.FindProperty("_openTime").floatValue = openTime;
+            lootable.FindProperty("_lifetime").floatValue = lifetime;
+            lootable.FindProperty("_destroyWhenEmpty").boolValue = destroyWhenEmpty;
+            lootable.ApplyModifiedPropertiesWithoutUndo();
+
+            PrefabUtility.SaveAsPrefabAsset(root, path);
+            Object.DestroyImmediate(root);
+        }
 
         // 로봇 5종이 이 프리팹 하나를 쓴다. 종류별 차이는 RobotData가 정한다.
         private static void EnsureRobotPrefab(
@@ -490,6 +695,7 @@ namespace EscapeFromSpace.EditorTools
                 robotObject.ApplyModifiedPropertiesWithoutUndo();
             }
 
+            SetReferenceIfEmpty(robot, "_wreckPrefab", AssetDatabase.LoadAssetAtPath<Lootable>(RobotWreckPrefabPath));
             SetReferenceIfEmpty(robot, "_attack", attack);
             SetReferenceIfEmpty(robot, "_alertMark", alertMark.gameObject);
             SetReferenceIfEmpty(robot, "_health", health);
@@ -637,7 +843,7 @@ namespace EscapeFromSpace.EditorTools
         }
 
         private static void EnsurePlayerPrefab(
-            PlayerData playerData, WeaponData weapon, CombatConfig combatConfig, Sprite square, Sprite circle,
+            PlayerData playerData, CombatConfig combatConfig, Sprite square, Sprite circle,
             int playerLayer, int wallLayer, int enemyLayer)
         {
             bool exists = File.Exists(PlayerPrefabPath);
@@ -729,7 +935,29 @@ namespace EscapeFromSpace.EditorTools
                 shooterObject.ApplyModifiedPropertiesWithoutUndo();
             }
 
-            SetReferenceIfEmpty(shooter, "_weapon", weapon);
+            // 가방: 장비 칸, 가방, 보관함. 시작 장비는 대기실이 생기기 전까지 쓰는 임시 기본 세트다.
+            if (EnsureComponent(root, out PlayerInventory inventory))
+            {
+                var inventoryObject = new SerializedObject(inventory);
+                inventoryObject.FindProperty("_startingWeapon").objectReferenceValue = LoadItem("LaserPistolItem");
+                SerializedProperty starting = inventoryObject.FindProperty("_startingItems");
+                starting.arraySize = 2;
+                starting.GetArrayElementAtIndex(0).FindPropertyRelative("_item").objectReferenceValue = LoadItem("PistolCell");
+                starting.GetArrayElementAtIndex(0).FindPropertyRelative("_count").intValue = 24;
+                starting.GetArrayElementAtIndex(1).FindPropertyRelative("_item").objectReferenceValue = LoadItem("LightSaberItem");
+                starting.GetArrayElementAtIndex(1).FindPropertyRelative("_count").intValue = 1;
+                inventoryObject.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            SetReferenceIfEmpty(inventory, "_health", health);
+
+            EnsureComponent(root, out PlayerInteractor interactor);
+            SetReferenceIfEmpty(interactor, "_input", input);
+            SetReferenceIfEmpty(interactor, "_controller", controller);
+            SetReferenceIfEmpty(interactor, "_health", health);
+            SetReferenceIfEmpty(interactor, "_droppedItemPrefab", AssetDatabase.LoadAssetAtPath<Lootable>(DroppedItemPrefabPath));
+
+            SetReferenceIfEmpty(shooter, "_inventory", inventory);
             SetReferenceIfEmpty(shooter, "_input", input);
             SetReferenceIfEmpty(shooter, "_controller", controller);
             SetReferenceIfEmpty(shooter, "_roll", roll);
@@ -755,15 +983,6 @@ namespace EscapeFromSpace.EditorTools
             SetReferenceIfEmpty(reticle, "_shooter", shooter);
             SetReferenceIfEmpty(reticle, "_input", input);
             SetReferenceIfEmpty(reticle, "_muzzle", muzzle);
-
-            // 가방이 생기기 전까지 쓰는 임시 예비탄. 탄창 2개분.
-            var reserveObject = new SerializedObject(shooter);
-            SerializedProperty reserveAmmo = reserveObject.FindProperty("_reserveAmmo");
-            if (reserveAmmo.intValue == 0)
-            {
-                reserveAmmo.intValue = weapon.MagazineSize * 2;
-                reserveObject.ApplyModifiedPropertiesWithoutUndo();
-            }
 
             PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefabPath);
 
@@ -854,8 +1073,66 @@ namespace EscapeFromSpace.EditorTools
                 SetReferenceIfEmpty(zone, "_player", player.GetComponent<Health>());
             }
 
+            EnsureContainers();
+            EnsureUi(player);
+
             EditorSceneManager.SaveScene(scene, ScenePath);
             AddSceneToBuildSettings();
+        }
+
+        // 컨테이너 초기 배치 (기획서 9.1: 일반 8개, 연구 2개). 처음 한 번만 만들고 이후에는 Scene 뷰에서 옮긴다.
+        // 칸 중심에 놓아야 로봇 길찾기가 그 칸을 막힌 칸으로 읽는다.
+        private static void EnsureContainers()
+        {
+            if (GameObject.Find("Containers") != null)
+            {
+                return;
+            }
+
+            var parent = new GameObject("Containers");
+            var normal = AssetDatabase.LoadAssetAtPath<GameObject>(ContainerPrefabPath);
+            var research = AssetDatabase.LoadAssetAtPath<GameObject>(ResearchContainerPrefabPath);
+
+            Vector2[] normalPositions =
+            {
+                new Vector2(9.5f, 22.5f), new Vector2(15.5f, 16.5f), new Vector2(24.5f, 22.5f), new Vector2(33.5f, 10.5f),
+                new Vector2(37.5f, 16.5f), new Vector2(41.5f, 22.5f), new Vector2(50.5f, 22.5f), new Vector2(21.5f, 10.5f),
+            };
+            Vector2[] researchPositions = { new Vector2(8.5f, 37.5f), new Vector2(52.5f, 37.5f) };
+
+            foreach (Vector2 position in normalPositions)
+            {
+                var container = (GameObject)PrefabUtility.InstantiatePrefab(normal, parent.transform);
+                container.transform.position = position;
+            }
+
+            foreach (Vector2 position in researchPositions)
+            {
+                var container = (GameObject)PrefabUtility.InstantiatePrefab(research, parent.transform);
+                container.transform.position = position;
+            }
+        }
+
+        // 가방 화면과 루팅 칸을 그리는 캔버스. 내용은 InventoryUI가 실행 중에 만든다.
+        private static void EnsureUi(GameObject player)
+        {
+            GameObject canvasObject = GameObject.Find("UI");
+            if (canvasObject == null)
+            {
+                canvasObject = new GameObject("UI");
+                var canvas = canvasObject.AddComponent<Canvas>();
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                var scaler = canvasObject.AddComponent<CanvasScaler>();
+                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                scaler.referenceResolution = new Vector2(1920f, 1080f);
+                scaler.matchWidthOrHeight = 1f;
+            }
+
+            EnsureComponent(canvasObject, out InventoryUI ui);
+            SetReferenceIfEmpty(ui, "_inventory", player.GetComponent<PlayerInventory>());
+            SetReferenceIfEmpty(ui, "_interactor", player.GetComponent<PlayerInteractor>());
+            SetReferenceIfEmpty(ui, "_input", player.GetComponent<PlayerInputReader>());
+            SetReferenceIfEmpty(ui, "_controller", player.GetComponent<PlayerController>());
         }
 
         // 로봇 초기 배치 (기획서 9.1: 화물칸 2~3기, 연구 구역 4~5기).

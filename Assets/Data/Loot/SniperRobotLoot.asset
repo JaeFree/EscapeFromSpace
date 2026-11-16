@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b0011b14866ef54f90d7513faf2f217, type: 3}
+  m_Name: SniperRobotLoot
+  m_EditorClassIdentifier: 
+  _rollEachEntry: 1
+  _minCount: 0
+  _maxCount: 0
+  _entries:
+  - _item: {fileID: 11400000, guid: e54c8ecf001367d4780e628a40d06503, type: 2}
+    _weight: 100
+  - _item: {fileID: 11400000, guid: 29e4757e85932b64a90c85e1c53ad18c, type: 2}
+    _weight: 10
+  - _item: {fileID: 11400000, guid: 8785da8d9f7225c4fba0d8ea0654fcc0, type: 2}
+    _weight: 5

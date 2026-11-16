@@ -42,7 +42,11 @@ namespace EscapeFromSpace
             {
                 for (int x = 0; x < _width; x++)
                 {
-                    _blocked[y * _width + x] = _walls.HasTile(new Vector3Int(_bounds.xMin + x, _bounds.yMin + y, 0));
+                    var cell = new Vector3Int(_bounds.xMin + x, _bounds.yMin + y, 0);
+
+                    // 벽 타일뿐 아니라 컨테이너처럼 벽 레이어에 놓인 것도 막힌 칸으로 본다.
+                    _blocked[y * _width + x] = _walls.HasTile(cell)
+                        || Physics2D.OverlapPoint(_walls.GetCellCenterWorld(cell), _wallMask) != null;
                 }
             }
         }

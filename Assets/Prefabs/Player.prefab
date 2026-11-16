@@ -388,6 +388,8 @@ GameObject:
   - component: {fileID: 722836350339408983}
   - component: {fileID: 8704048253963655506}
   - component: {fileID: 823962864935047637}
+  - component: {fileID: 7978499349794811925}
+  - component: {fileID: 5527545856864171532}
   m_Layer: 6
   m_Name: Player
   m_TagString: Untagged
@@ -535,7 +537,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a494023976fac34c995aec7a5e968a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _weapon: {fileID: 11400000, guid: 618fa4222df496d40b66b07f1a81746b, type: 2}
+  _inventory: {fileID: 7978499349794811925}
   _input: {fileID: 5598884973092948156}
   _controller: {fileID: 3746254566514887690}
   _roll: {fileID: 1751094079760387129}
@@ -549,8 +551,8 @@ MonoBehaviour:
   _hitMarkerPrefab: {fileID: 616239616664432743, guid: 48949187975de3d48b2a7dcf7efc11f0, type: 3}
   _tracerPrefab: {fileID: 6497846089516445128, guid: d8fe86d7bdc2558498f7deb114dc6d69, type: 3}
   _swingArcPrefab: {fileID: 4022509599150442134, guid: c63db6249c0e8cf4aa056c7e657b9460, type: 3}
-  _reserveAmmo: 24
   _ammoInMagazine: 0
+  _reserveAmmo: 24
   _currentRecoil: 0
 --- !u!114 &722836350339408983
 MonoBehaviour:
@@ -597,6 +599,42 @@ MonoBehaviour:
   _health: {fileID: 722836350339408983}
   _data: {fileID: 11400000, guid: fa97fd80059a0ae4ea8b9be42ca10036, type: 2}
   _decalPrefab: {fileID: 7942997457768223166, guid: 506beddbc5078dd4f8a7f36815e3561c, type: 3}
+--- !u!114 &7978499349794811925
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6849949938922056842}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eaf520f8fcc8e774088004ec94670890, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _health: {fileID: 722836350339408983}
+  _startingWeapon: {fileID: 11400000, guid: 0cc70c040a8f9c14fb714389accccf78, type: 2}
+  _startingItems:
+  - _item: {fileID: 11400000, guid: 296d337187f381342931362034901347, type: 2}
+    _count: 24
+  - _item: {fileID: 11400000, guid: a0adc17852cd0be42a89e58a66133e6a, type: 2}
+    _count: 1
+--- !u!114 &5527545856864171532
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6849949938922056842}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94b67818621b0644c9fe2c5ee2299951, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _input: {fileID: 5598884973092948156}
+  _controller: {fileID: 3746254566514887690}
+  _health: {fileID: 722836350339408983}
+  _range: 1.5
+  _droppedItemPrefab: {fileID: 3927865886180665474, guid: 6d57472086a82c2489f1d3c304061576, type: 3}
 --- !u!1 &7698571191336183577
 GameObject:
   m_ObjectHideFlags: 0

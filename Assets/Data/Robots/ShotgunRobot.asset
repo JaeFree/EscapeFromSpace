@@ -15,6 +15,7 @@ MonoBehaviour:
   _displayName: "\uC0F7\uAC74 \uBCF4\uC548 \uB85C\uBD07"
   _color: {r: 0.7, g: 0.2, b: 0.2, a: 1}
   _maxHp: 110
+  _lootTable: {fileID: 11400000, guid: 30700c7174237d84aa11dd2fe4ea74f3, type: 2}
   _attackKind: 2
   _damage: 5
   _pelletCount: 8

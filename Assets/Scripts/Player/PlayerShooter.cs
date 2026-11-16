@@ -5,9 +5,7 @@ namespace EscapeFromSpace
 {
     public class PlayerShooter : MonoBehaviour
     {
-        // 가방과 무기 슬롯이 생기기 전까지 쓰는 임시 연결.
-        // 그때까지는 Play 중에 이 칸에 다른 무기 에셋을 끌어다 놓아 바꾼다.
-        [SerializeField] private WeaponData _weapon;
+        [SerializeField] private PlayerInventory _inventory;
         [SerializeField] private PlayerInputReader _input;
         [SerializeField] private PlayerController _controller;
         [SerializeField] private PlayerRoll _roll;
@@ -18,18 +16,15 @@ namespace EscapeFromSpace
         [SerializeField] private BulletTracer _tracerPrefab;
         [SerializeField] private SwingArc _swingArcPrefab;
 
-        [Header("탄약")]
-        // 가방(11/17)이 생기면 가방의 탄약으로 바꾼다. 그때까지는 여기에 직접 넣는다.
-        [SerializeField, Tooltip("예비탄 (임시)")] private int _reserveAmmo;
-
-        // HUD가 생기기 전까지 Inspector에서 탄창을 보려고 노출한다.
+        // HUD가 생기기 전까지 Inspector에서 보려고 노출한다. 값은 장착한 무기와 가방에서 읽어 온 것이다.
+        [Header("확인용 (읽기 전용)")]
         [SerializeField] private int _ammoInMagazine;
-
-        // 쌓인 반동(도). Inspector에서 보려고 노출한다.
+        [SerializeField] private int _reserveAmmo;
         [SerializeField] private float _currentRecoil;
 
-        // 탄창 상태가 어느 무기의 것인지. Inspector에서 무기를 바꾼 것을 알아채는 데 쓴다.
-        private WeaponData _equipped;
+        // 무기 슬롯에 장착한 아이템. 탄창에 남은 탄은 이 아이템이 기억한다.
+        private ItemStack _equipped;
+        private WeaponData _weapon;
         private float _nextFireTime;
         private float _reloadTimeLeft;
         private CameraShake _cameraShake;
@@ -38,18 +33,18 @@ namespace EscapeFromSpace
         private readonly List<Health> _swingHits = new List<Health>();
 
         public bool IsReloading { get; private set; }
-        public int AmmoInMagazine => _ammoInMagazine;
-        public int ReserveAmmo => _reserveAmmo;
+        public int AmmoInMagazine => _equipped != null ? _equipped.AmmoInMagazine : 0;
+        public int ReserveAmmo => _weapon != null ? _inventory.CountAmmo(_weapon.AmmoItem) : 0;
         public float CurrentRecoil => _currentRecoil;
 
         // 이번 발에 적용되는 퍼짐(±도). 이동 중에는 기본 퍼짐과 쌓인 반동을 더한 전체가 2배가 된다.
-        public float CurrentSpread => (BaseSpread + _currentRecoil) * MoveSpreadScale;
+        public float CurrentSpread => _weapon != null ? (BaseSpread + _currentRecoil) * MoveSpreadScale : 0f;
 
         // 저격총은 우클릭을 누르는 동안 기본 퍼짐만 줄어든다. 반동 누적과 이동 중 2배는 그대로 받는다.
-        public bool IsAiming => _weapon != null && _weapon.Category == WeaponCategory.Sniper && _input.AimHeld;
+        public bool IsAiming => _weapon != null && _weapon.Category == WeaponCategory.Sniper && _input.AimHeld
+            && !_controller.IsBagOpen;
 
         private float BaseSpread => IsAiming ? _weapon.AimSpreadAngle : _weapon.SpreadAngle;
-
         private bool UsesAmmo => _weapon.MagazineSize > 0;
         private float MoveSpreadScale => _input.Move.sqrMagnitude > 0.01f ? 2f : 1f;
 
@@ -58,44 +53,48 @@ namespace EscapeFromSpace
             // 카메라는 씬에 있어서 프리팹에서 연결할 수 없다.
             _cameraShake = Camera.main.GetComponent<CameraShake>();
             _currentRecoil = 0f;
-
-            if (_weapon != null)
-            {
-                _equipped = _weapon;
-                _ammoInMagazine = _weapon.MagazineSize;
-            }
         }
 
         private void Update()
         {
+            ItemStack equipped = _inventory.GetEquipped(EquipSlot.Weapon);
+            if (equipped != _equipped)
+            {
+                OnWeaponChanged(equipped);
+            }
+
+            // 무기 슬롯이 비면(맨손) 공격할 수 없다.
             if (_weapon == null)
             {
+                _ammoInMagazine = 0;
+                _reserveAmmo = 0;
                 return;
             }
 
-            if (_weapon != _equipped)
-            {
-                OnWeaponSwapped();
-            }
+            // 가방을 연 동안에는 좌클릭이 드래그, R이 회전이라 사격과 재장전 시작을 막는다.
+            bool bagOpen = _controller.IsBagOpen;
 
-            UpdateReload();
+            UpdateReload(!bagOpen);
 
             // 반동은 지연 없이 항상 회복한다 (연사 사이에도).
             _currentRecoil = Mathf.Max(0f, _currentRecoil - _weapon.RecoilRecovery * Time.deltaTime);
 
-            if (!_input.FireHeld || !_controller.CanAct || _roll.IsRolling || IsReloading || Time.time < _nextFireTime)
+            _ammoInMagazine = _equipped.AmmoInMagazine;
+            _reserveAmmo = ReserveAmmo;
+
+            if (bagOpen || !_input.FireHeld || !_controller.CanAct || _roll.IsRolling || IsReloading || Time.time < _nextFireTime)
             {
                 return;
             }
 
             if (UsesAmmo)
             {
-                if (_ammoInMagazine <= 0)
+                if (_equipped.AmmoInMagazine <= 0)
                 {
                     return;
                 }
 
-                _ammoInMagazine--;
+                _equipped.AmmoInMagazine--;
             }
 
             _nextFireTime = Time.time + 1f / _weapon.FireRate;
@@ -116,18 +115,17 @@ namespace EscapeFromSpace
             }
         }
 
-        // 가방이 생기기 전까지의 임시 처리. 새 무기는 가득 찬 탄창과 탄창 2개분 예비탄으로 시작한다.
-        private void OnWeaponSwapped()
+        // 가방에서 무기를 바꿔 들었다. 하던 재장전은 취소된다.
+        private void OnWeaponChanged(ItemStack equipped)
         {
-            _equipped = _weapon;
-            _ammoInMagazine = _weapon.MagazineSize;
-            _reserveAmmo = _weapon.MagazineSize * 2;
+            _equipped = equipped;
+            _weapon = equipped != null ? equipped.Data.Weapon : null;
             _currentRecoil = 0f;
             _nextFireTime = 0f;
             IsReloading = false;
         }
 
-        private void UpdateReload()
+        private void UpdateReload(bool canStart)
         {
             // 구르면 재장전이 취소된다. 탄창이 비어 있으면 구르기가 끝난 뒤 아래에서 다시 자동으로 시작한다.
             if (_roll.IsRolling || _controller.IsDead)
@@ -147,13 +145,13 @@ namespace EscapeFromSpace
                 return;
             }
 
-            if (!UsesAmmo || _reserveAmmo <= 0 || _ammoInMagazine >= _weapon.MagazineSize)
+            if (!canStart || !UsesAmmo || _equipped.AmmoInMagazine >= _weapon.MagazineSize || ReserveAmmo <= 0)
             {
                 return;
             }
 
             // 탄을 다 쓰면 클릭 없이 자동으로 재장전한다. 탄이 남아 있으면 R키로만 한다.
-            if (_ammoInMagazine <= 0 || _input.ReloadPressedThisFrame)
+            if (_equipped.AmmoInMagazine <= 0 || _input.ReloadPressedThisFrame)
             {
                 IsReloading = true;
                 _reloadTimeLeft = _weapon.ReloadTime;
@@ -162,10 +160,10 @@ namespace EscapeFromSpace
 
         private void FinishReload()
         {
-            // 남은 탄은 유지하고 모자란 만큼만 예비탄에서 채운다.
-            int loaded = Mathf.Min(_weapon.MagazineSize - _ammoInMagazine, _reserveAmmo);
-            _ammoInMagazine += loaded;
-            _reserveAmmo -= loaded;
+            // 남은 탄은 유지하고 모자란 만큼만 가방의 탄약에서 채운다.
+            int loaded = Mathf.Min(_weapon.MagazineSize - _equipped.AmmoInMagazine, ReserveAmmo);
+            _equipped.AmmoInMagazine += loaded;
+            _inventory.ConsumeAmmo(_weapon.AmmoItem, loaded);
             IsReloading = false;
         }
 

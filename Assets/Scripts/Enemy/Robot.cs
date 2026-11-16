@@ -31,6 +31,7 @@ namespace EscapeFromSpace
         [SerializeField] private SpriteRenderer _body;
         [SerializeField, Tooltip("경계 상태에서 머리 위에 켜는 표시")] private GameObject _alertMark;
         [SerializeField] private LayerMask _wallMask;
+        [SerializeField, Tooltip("부서진 자리에 남는 잔해. 컨테이너처럼 뒤진다")] private Lootable _wreckPrefab;
 
         // Inspector에서 지금 상태를 보려고 노출한다.
         [SerializeField] private State _state;
@@ -438,6 +439,18 @@ namespace EscapeFromSpace
 
         private void OnDied()
         {
+            // 쓰러진 자리에 잔해를 남긴다 (기획서 6.2). 무엇이 나오는지는 로봇 종류마다 다르다.
+            Lootable wreck = Instantiate(_wreckPrefab, transform.position, Quaternion.identity);
+            wreck.name = $"{_data.DisplayName} 잔해";
+            wreck.SetTable(_data.LootTable);
+
+            var wreckRenderer = wreck.GetComponentInChildren<SpriteRenderer>();
+            if (wreckRenderer != null)
+            {
+                // 어느 로봇의 잔해인지 알 수 있게 원래 색을 어둡게 쓴다.
+                wreckRenderer.color = Color.Lerp(_data.Color, Color.black, 0.6f);
+            }
+
             Destroy(gameObject);
         }
     }

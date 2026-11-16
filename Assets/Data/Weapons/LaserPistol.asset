@@ -20,7 +20,9 @@ MonoBehaviour:
   _range: 12
   _magazineSize: 12
   _reloadTime: 1.2
+  _ammoItem: {fileID: 11400000, guid: 296d337187f381342931362034901347, type: 2}
   _spreadAngle: 2
+  _aimSpreadAngle: 0
   _recoilPerShot: 1.5
   _recoilRecovery: 4
   _maxRecoil: 10

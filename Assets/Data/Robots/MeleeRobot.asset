@@ -15,12 +15,14 @@ MonoBehaviour:
   _displayName: "\uADFC\uC811 \uBCF4\uC548 \uB85C\uBD07"
   _color: {r: 1, g: 0.55, b: 0.2, a: 1}
   _maxHp: 70
+  _lootTable: {fileID: 11400000, guid: 77e9c928a92dbf7408511219ccc8e39b, type: 2}
   _attackKind: 0
   _damage: 20
   _pelletCount: 1
   _spreadAngle: 120
   _range: 1.8
   _windupTime: 0
+  _aimLockTime: 0
   _burstCount: 1
   _burstInterval: 0
   _restTime: 1.2

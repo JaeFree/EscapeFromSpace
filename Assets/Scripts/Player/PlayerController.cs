@@ -25,6 +25,9 @@ namespace EscapeFromSpace
         // 재장전은 경직 중에도 이어지므로 CanAct와 따로 본다.
         public bool IsDead => _health.IsDead;
 
+        // 가방 화면이 열려 있는지. 화면(InventoryUI)이 정한다. 열려 있어도 이동은 되고 사격·구르기·재장전만 막는다.
+        public bool IsBagOpen { get; set; }
+
         private void Awake()
         {
             _rigidbody = GetComponent<Rigidbody2D>();

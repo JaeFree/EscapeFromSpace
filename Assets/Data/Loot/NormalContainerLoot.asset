@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b0011b14866ef54f90d7513faf2f217, type: 3}
+  m_Name: NormalContainerLoot
+  m_EditorClassIdentifier: 
+  _rollEachEntry: 0
+  _minCount: 2
+  _maxCount: 3
+  _entries:
+  - _item: {fileID: 11400000, guid: 296d337187f381342931362034901347, type: 2}
+    _weight: 25
+  - _item: {fileID: 11400000, guid: a438c3bbca2766a40a9470f6fcf58342, type: 2}
+    _weight: 12
+  - _item: {fileID: 11400000, guid: 5b4b042c7b4f0b949bdd0ec14ffff1d3, type: 2}
+    _weight: 12
+  - _item: {fileID: 11400000, guid: d313b27335381a0409ba768205341510, type: 2}
+    _weight: 18
+  - _item: {fileID: 11400000, guid: 2dfa3928ef69b8f419f8859735f1a9d6, type: 2}
+    _weight: 10
+  - _item: {fileID: 11400000, guid: c3a357234e1eff747bf6a30ca59083ee, type: 2}
+    _weight: 13
+  - _item: {fileID: 11400000, guid: 1e16ed1506f679848ab2590cb6d708c9, type: 2}
+    _weight: 6

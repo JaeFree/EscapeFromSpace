@@ -15,13 +15,18 @@ namespace EscapeFromSpace
         private InputAction _fire;
         private InputAction _reload;
         private InputAction _aimHold;
+        private InputAction _interact;
+        private InputAction _toggleBag;
 
         public Vector2 Move => _move.ReadValue<Vector2>();
         public Vector2 AimScreenPosition => _aim.ReadValue<Vector2>();
         public bool RollPressedThisFrame => _roll.WasPressedThisFrame();
         public bool FireHeld => _fire.IsPressed();
+        public bool FirePressedThisFrame => _fire.WasPressedThisFrame();
         public bool ReloadPressedThisFrame => _reload.WasPressedThisFrame();
         public bool AimHeld => _aimHold.IsPressed();
+        public bool InteractHeld => _interact.IsPressed();
+        public bool ToggleBagPressedThisFrame => _toggleBag.WasPressedThisFrame();
 
         private void Awake()
         {
@@ -32,6 +37,8 @@ namespace EscapeFromSpace
             _fire = _playerMap.FindAction("Fire", true);
             _reload = _playerMap.FindAction("Reload", true);
             _aimHold = _playerMap.FindAction("AimHold", true);
+            _interact = _playerMap.FindAction("Interact", true);
+            _toggleBag = _playerMap.FindAction("ToggleBag", true);
         }
 
         private void OnEnable()

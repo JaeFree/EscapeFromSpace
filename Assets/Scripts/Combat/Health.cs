@@ -7,7 +7,7 @@ namespace EscapeFromSpace
     {
         [SerializeField] private CombatConfig _config;
 
-        // 방어구가 생기면(11/17) 장착한 장비에서 받아 온다. 그때까지는 공식을 확인하려고 직접 넣는다.
+        // 플레이어는 장착한 헬멧과 방탄복의 합을 PlayerInventory가 넣어 준다. 로봇은 0이다.
         [SerializeField] private int _armor;
 
         // HUD가 생기기 전까지 Inspector에서 현재 HP를 보려고 노출한다.
@@ -28,6 +28,11 @@ namespace EscapeFromSpace
             MaxHp = maxHp;
             _currentHp = maxHp;
             IsDead = false;
+        }
+
+        public void SetArmor(int armor)
+        {
+            _armor = armor;
         }
 
         public void TakeDamage(float attackDamage, Vector2 hitPoint)

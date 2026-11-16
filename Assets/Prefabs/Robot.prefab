@@ -308,6 +308,7 @@ MonoBehaviour:
   _wallMask:
     serializedVersion: 2
     m_Bits: 128
+  _wreckPrefab: {fileID: 7889247501515047988, guid: ad6506681282ced45a6870b8fc53f936, type: 3}
   _state: 0
 --- !u!114 &7518403668505331500
 MonoBehaviour:
