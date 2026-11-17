@@ -29,6 +29,7 @@ namespace EscapeFromSpace
         public bool ReloadPressedThisFrame => _reload.WasPressedThisFrame();
         public bool AimHeld => _aimHold.IsPressed();
         public bool InteractHeld => _interact.IsPressed();
+        public bool InteractPressedThisFrame => _interact.WasPressedThisFrame();
         public bool ToggleBagPressedThisFrame => _toggleBag.WasPressedThisFrame();
         public bool EscapeHeld => _escape.IsPressed();
         public bool ToggleMapPressedThisFrame => _toggleMap.WasPressedThisFrame();

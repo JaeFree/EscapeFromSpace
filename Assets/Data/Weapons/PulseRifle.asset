@@ -29,3 +29,11 @@ MonoBehaviour:
   _weight: 3.5
   _sprite: {fileID: 21300000, guid: cdad4b1893c786143b2f65dcf0cbc89a, type: 3}
   _visualLength: 0.7
+  _fireSound:
+    _clips:
+    - {fileID: 8300000, guid: dc0c4b35f8dd65849b87aacf2406e6c6, type: 3}
+    - {fileID: 8300000, guid: bfb843049c021ad41816bbf6bf77bf38, type: 3}
+    - {fileID: 8300000, guid: ba0ee7d12fdebde45bd9a00dde34b2e4, type: 3}
+    _volume: 0.45
+    _pitch: 1
+    _pitchVariation: 0.06

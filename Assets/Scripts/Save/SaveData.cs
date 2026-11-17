@@ -33,6 +33,12 @@ namespace EscapeFromSpace
         public int MapWidth;
         public int MapHeight;
         public string Explored = string.Empty;
+
+        // 레벨과 테크 트리 (기획서 12장). 죽어도 남는다. Xp는 지금 레벨에서 쌓은 경험치다.
+        public int Level = 1;
+        public int Xp;
+        public int TechPoints;
+        public List<string> UnlockedTech = new List<string>();
     }
 
     // 실행 중의 아이템(ItemStack, InventoryGrid)과 저장 파일의 모양을 서로 바꾼다.

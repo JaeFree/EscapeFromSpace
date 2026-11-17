@@ -13,7 +13,7 @@ namespace EscapeFromSpace.EditorTools
 {
     // 에셋을 자동으로 만든다. Inspector에서 조정한 값을 되돌리지 않도록
     // 이미 있는 에셋·컴포넌트·참조는 건드리지 않고 없는 것만 채운다.
-    public static class ProjectSetup
+    public static partial class ProjectSetup
     {
         private const string SquarePath = "Assets/Art/Placeholder/Square.png";
         private const string CirclePath = "Assets/Art/Placeholder/Circle.png";
@@ -129,6 +129,9 @@ namespace EscapeFromSpace.EditorTools
             EnsurePlayerPrefab(playerData, combatConfig, square, circle, playerLayer, wallLayer, enemyLayer);
             EnsureArt(square);
             FixMeshMaterials();
+            EnsureEffects(circle);
+            EnsureSounds();
+            EnsureProgression();
             AssetDatabase.SaveAssets();
 
             // 레이드 씬을 마지막에 열어 둔다. 메뉴를 돌린 뒤 에디터에 남는 씬이다.
@@ -1402,6 +1405,8 @@ namespace EscapeFromSpace.EditorTools
                 ReplaceSceneArt(pod.GetComponent<SpriteRenderer>(), placeholder, $"{AstronautFolder}/pad.png", 108f);
             }
 
+            EnsureSceneEffects();
+            EnsureSceneAudio("spaceEngineLow_000", 0.15f, null, 0f, 0f);
             EditorSceneManager.SaveScene(scene, ScenePath);
         }
 
@@ -1579,6 +1584,9 @@ namespace EscapeFromSpace.EditorTools
                 SetReferenceIfEmpty(target, "_barSprite", square);
             }
 
+            EnsureTechTerminal(player, canvasObject, lobby, wallLayer);
+            EnsureSceneEffects();
+            EnsureSceneAudio(null, 0f, LobbyMusicPath, 0.3f, 10f);
             EditorSceneManager.SaveScene(scene, LobbyScenePath);
         }
 

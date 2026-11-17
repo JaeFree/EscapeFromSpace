@@ -42,15 +42,15 @@ namespace EscapeFromSpace
         public float OverloadDamagePerSecond => _overloadDamagePerSecond;
         public float MaxHp => _maxHp;
 
-        // 무게에 따른 이동 속도 배율 (기획서 6.4의 표).
-        public float WeightSpeedMultiplier(float weight)
+        // 무게에 따른 이동 속도 배율 (기획서 6.4의 표). 무게 상한은 강화로 늘 수 있어서 쓰는 쪽이 넘겨준다.
+        public float WeightSpeedMultiplier(float weight, float maxWeight)
         {
-            if (_maxWeight <= 0f || _slowStepRatio <= 0f)
+            if (maxWeight <= 0f || _slowStepRatio <= 0f)
             {
                 return 1f;
             }
 
-            float ratio = weight / _maxWeight;
+            float ratio = weight / maxWeight;
             if (ratio < _slowStartRatio)
             {
                 return 1f;

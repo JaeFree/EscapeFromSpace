@@ -32,9 +32,10 @@ namespace EscapeFromSpace
             _rangeLabel = CreateLabel("사격장");
 
             RectTransform summary = UiBuilder.Rect("Summary", transform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-30f, -24f),
-                new Vector2(520f, 50f));
-            _summary = UiBuilder.Text(string.Empty, summary, _fontSize, TextAnchor.UpperRight, Color.white);
-            _summary.gameObject.AddComponent<Outline>().effectColor = Color.black;
+                new Vector2(380f, 56f));
+            UiBuilder.Panel(summary, UiTheme.SlotFill, UiTheme.SlotBorder);
+            _summary = UiBuilder.Text(string.Empty, summary, _fontSize, TextAnchor.MiddleCenter, UiTheme.Accent);
+            _summary.fontStyle = FontStyle.Bold;
 
             BuildConfirm();
         }
@@ -94,9 +95,11 @@ namespace EscapeFromSpace
 
         private RectTransform CreateLabel(string content)
         {
-            RectTransform label = UiBuilder.Rect("Label", transform, Vector2.zero, new Vector2(0.5f, 0f), Vector2.zero, new Vector2(260f, 44f));
-            Text text = UiBuilder.Text(content, label, _fontSize, TextAnchor.MiddleCenter, Color.white);
-            text.gameObject.AddComponent<Outline>().effectColor = Color.black;
+            // 맵 위에 뜨는 이름표. 바닥이나 벽의 색과 섞이지 않게 틀을 두른다.
+            RectTransform label = UiBuilder.Rect("Label", transform, Vector2.zero, new Vector2(0.5f, 0f), Vector2.zero,
+                new Vector2(content.Length * _fontSize + 56f, _fontSize + 22f));
+            UiBuilder.Panel(label, UiTheme.SlotFill, UiTheme.SlotBorder);
+            UiBuilder.Text(content, label, _fontSize, TextAnchor.MiddleCenter, UiTheme.Text);
 
             // 가방 화면과 창고 칸이 이름 위에 그려지도록 맨 뒤에 둔다.
             label.SetAsFirstSibling();
@@ -105,31 +108,21 @@ namespace EscapeFromSpace
 
         private void BuildConfirm()
         {
-            _confirm = UiBuilder.Rect("LaunchConfirm", transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero,
-                new Vector2(4000f, 4000f));
-            UiBuilder.Image(_confirm, new Color(0f, 0f, 0f, 0.6f));
+            _confirm = UiBuilder.Dim("LaunchConfirm", transform);
 
             RectTransform box = UiBuilder.Rect("Box", _confirm, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero,
                 new Vector2(640f, 300f));
-            UiBuilder.Image(box, new Color(0.08f, 0.09f, 0.12f, 0.98f));
+            UiBuilder.Window(box);
 
             RectTransform message = UiBuilder.Rect("Message", box, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -40f),
                 new Vector2(600f, 90f));
-            Text text = UiBuilder.Text("출격하시겠습니까?", message, 42, TextAnchor.MiddleCenter, Color.white);
+            Text text = UiBuilder.Text("출격하시겠습니까?", message, 42, TextAnchor.MiddleCenter, UiTheme.Text);
             text.fontStyle = FontStyle.Bold;
 
-            _confirmButton = CreateButton(box, "확인 (Enter)", -150f, new Color(0.25f, 0.5f, 0.9f));
-            _cancelButton = CreateButton(box, "취소 (Esc)", 150f, new Color(0.35f, 0.37f, 0.42f));
+            var buttonSize = new Vector2(260f, 76f);
+            _confirmButton = UiBuilder.Button("확인 (Enter)", box, new Vector2(0.5f, 0f), new Vector2(-150f, 40f), buttonSize, true);
+            _cancelButton = UiBuilder.Button("취소 (Esc)", box, new Vector2(0.5f, 0f), new Vector2(150f, 40f), buttonSize, false);
             _confirm.gameObject.SetActive(false);
-        }
-
-        private static RectTransform CreateButton(RectTransform box, string label, float x, Color color)
-        {
-            RectTransform button = UiBuilder.Rect(label, box, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(x, 40f),
-                new Vector2(260f, 76f));
-            UiBuilder.Image(button, color);
-            UiBuilder.Text(label, button, 28, TextAnchor.MiddleCenter, Color.white);
-            return button;
         }
     }
 }

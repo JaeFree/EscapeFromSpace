@@ -1,0 +1,294 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9e82aeb405c5234d933e5701a444274, type: 3}
+  m_Name: TechTree
+  m_EditorClassIdentifier: 
+  _maxLevel: 30
+  _xpForFirstLevel: 100
+  _xpGrowthPerLevel: 50
+  _pointsPerLevel: 1
+  _escapeBonusXp: 50
+  _nodes:
+  - _id: dmg1
+    _displayName: "\uD654\uB825 I"
+    _stat: 0
+    _amount: 5
+    _column: 0
+    _row: 1
+    _requires: []
+    _requiredLevel: 1
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+      _count: 2
+  - _id: dmg2
+    _displayName: "\uD654\uB825 II"
+    _stat: 0
+    _amount: 5
+    _column: 1
+    _row: 0
+    _requires:
+    - dmg1
+    _requiredLevel: 3
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+      _count: 3
+  - _id: reload1
+    _displayName: "\uBE60\uB978 \uC190 I"
+    _stat: 3
+    _amount: 10
+    _column: 1
+    _row: 2
+    _requires:
+    - dmg1
+    _requiredLevel: 2
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+      _count: 2
+    - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
+      _count: 1
+  - _id: dmg3
+    _displayName: "\uD654\uB825 III"
+    _stat: 0
+    _amount: 10
+    _column: 2
+    _row: 0
+    _requires:
+    - dmg2
+    _requiredLevel: 6
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+      _count: 4
+    - _item: {fileID: 11400000, guid: 38a41ba3a7a88964db4ab33444f057e5, type: 2}
+      _count: 1
+  - _id: reload2
+    _displayName: "\uBE60\uB978 \uC190 II"
+    _stat: 3
+    _amount: 10
+    _column: 2
+    _row: 2
+    _requires:
+    - reload1
+    _requiredLevel: 5
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
+      _count: 3
+  - _id: dmg4
+    _displayName: "\uACFC\uCDA9\uC804"
+    _stat: 0
+    _amount: 10
+    _column: 3
+    _row: 1
+    _requires:
+    - dmg3
+    - reload2
+    _requiredLevel: 10
+    _pointCost: 2
+    _costs:
+    - _item: {fileID: 11400000, guid: 38a41ba3a7a88964db4ab33444f057e5, type: 2}
+      _count: 3
+  - _id: hp1
+    _displayName: "\uAC15\uD654 \uC2E0\uCCB4 I"
+    _stat: 1
+    _amount: 10
+    _column: 0
+    _row: 4
+    _requires: []
+    _requiredLevel: 1
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+      _count: 2
+  - _id: hp2
+    _displayName: "\uAC15\uD654 \uC2E0\uCCB4 II"
+    _stat: 1
+    _amount: 15
+    _column: 1
+    _row: 3
+    _requires:
+    - hp1
+    _requiredLevel: 3
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+      _count: 3
+  - _id: oxy1
+    _displayName: "\uC0B0\uC18C \uD0F1\uD06C I"
+    _stat: 4
+    _amount: 60
+    _column: 1
+    _row: 5
+    _requires:
+    - hp1
+    _requiredLevel: 2
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+      _count: 1
+    - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
+      _count: 1
+  - _id: hp3
+    _displayName: "\uAC15\uD654 \uC2E0\uCCB4 III"
+    _stat: 1
+    _amount: 25
+    _column: 2
+    _row: 3
+    _requires:
+    - hp2
+    _requiredLevel: 6
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+      _count: 4
+    - _item: {fileID: 11400000, guid: 38a41ba3a7a88964db4ab33444f057e5, type: 2}
+      _count: 1
+  - _id: armor1
+    _displayName: "\uB0B4\uC7A5 \uC7A5\uAC11"
+    _stat: 8
+    _amount: 1
+    _column: 2
+    _row: 4
+    _requires:
+    - hp2
+    _requiredLevel: 5
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+      _count: 3
+    - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
+      _count: 2
+  - _id: oxy2
+    _displayName: "\uC0B0\uC18C \uD0F1\uD06C II"
+    _stat: 4
+    _amount: 90
+    _column: 2
+    _row: 5
+    _requires:
+    - oxy1
+    _requiredLevel: 5
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
+      _count: 3
+  - _id: armor2
+    _displayName: "\uC0DD\uC874 \uBCF8\uB2A5"
+    _stat: 8
+    _amount: 2
+    _column: 3
+    _row: 4
+    _requires:
+    - hp3
+    - oxy2
+    _requiredLevel: 10
+    _pointCost: 2
+    _costs:
+    - _item: {fileID: 11400000, guid: 38a41ba3a7a88964db4ab33444f057e5, type: 2}
+      _count: 3
+  - _id: weight1
+    _displayName: "\uADFC\uB825 I"
+    _stat: 2
+    _amount: 3
+    _column: 0
+    _row: 7
+    _requires: []
+    _requiredLevel: 1
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+      _count: 2
+  - _id: weight2
+    _displayName: "\uADFC\uB825 II"
+    _stat: 2
+    _amount: 4
+    _column: 1
+    _row: 6
+    _requires:
+    - weight1
+    _requiredLevel: 3
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+      _count: 3
+  - _id: move1
+    _displayName: "\uACBD\uB7C9 \uBCF4\uD589 I"
+    _stat: 5
+    _amount: 5
+    _column: 1
+    _row: 8
+    _requires:
+    - weight1
+    _requiredLevel: 2
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+      _count: 1
+    - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
+      _count: 1
+  - _id: weight3
+    _displayName: "\uADFC\uB825 III"
+    _stat: 2
+    _amount: 5
+    _column: 2
+    _row: 6
+    _requires:
+    - weight2
+    _requiredLevel: 6
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+      _count: 4
+    - _item: {fileID: 11400000, guid: 38a41ba3a7a88964db4ab33444f057e5, type: 2}
+      _count: 1
+  - _id: loot1
+    _displayName: "\uB2A5\uC219\uD55C \uC190"
+    _stat: 7
+    _amount: 20
+    _column: 2
+    _row: 7
+    _requires:
+    - weight2
+    _requiredLevel: 4
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
+      _count: 2
+  - _id: roll1
+    _displayName: "\uBBFC\uCCA9"
+    _stat: 6
+    _amount: 15
+    _column: 2
+    _row: 8
+    _requires:
+    - move1
+    _requiredLevel: 5
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
+      _count: 3
+  - _id: move2
+    _displayName: "\uACBD\uB7C9 \uBCF4\uD589 II"
+    _stat: 5
+    _amount: 5
+    _column: 3
+    _row: 7
+    _requires:
+    - weight3
+    - roll1
+    _requiredLevel: 10
+    _pointCost: 2
+    _costs:
+    - _item: {fileID: 11400000, guid: 38a41ba3a7a88964db4ab33444f057e5, type: 2}
+      _count: 3

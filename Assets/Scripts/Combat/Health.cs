@@ -10,6 +10,9 @@ namespace EscapeFromSpace
         // 플레이어는 장착한 헬멧과 방탄복의 합을 PlayerInventory가 넣어 준다. 로봇은 0이다.
         [SerializeField] private int _armor;
 
+        // 장비와 상관없이 더해지는 방어력 (플레이어의 강화). 장비를 바꿔도 남아야 해서 따로 둔다.
+        private int _bonusArmor;
+
         // HUD가 생기기 전까지 Inspector에서 현재 HP를 보려고 노출한다.
         [SerializeField] private float _currentHp;
 
@@ -60,6 +63,22 @@ namespace EscapeFromSpace
             _armor = armor;
         }
 
+        public void SetBonusArmor(int armor)
+        {
+            _bonusArmor = armor;
+        }
+
+        // 최대 HP를 바꾼다 (플레이어의 강화). 늘어난 만큼 현재 HP도 같이 늘어난다.
+        public void SetMaxHp(float maxHp)
+        {
+            if (!IsDead)
+            {
+                _currentHp = Mathf.Clamp(_currentHp + maxHp - MaxHp, 1f, maxHp);
+            }
+
+            MaxHp = maxHp;
+        }
+
         public void TakeDamage(float attackDamage, Vector2 hitPoint)
         {
             if (IsDead || IsInvincible)
@@ -67,7 +86,7 @@ namespace EscapeFromSpace
                 return;
             }
 
-            float damage = DamageCalculator.Calculate(attackDamage, _armor, _config);
+            float damage = DamageCalculator.Calculate(attackDamage, _armor + _bonusArmor, _config);
             _currentHp = Mathf.Max(0f, _currentHp - damage);
             Damaged?.Invoke(damage, hitPoint);
 

@@ -43,6 +43,10 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("손에 든 모습. 총구(칼끝)가 위를 보는 그림")] private Sprite _sprite;
         [SerializeField, Tooltip("칸. 손에 들었을 때 그림의 길이. 사거리나 총구 위치와는 상관없다")] private float _visualLength;
 
+        [Header("소리")]
+        [SerializeField, Tooltip("쏘거나 휘두를 때")] private SoundCue _fireSound = new SoundCue();
+
+        public SoundCue FireSound => _fireSound;
         public string DisplayName => _displayName;
         public WeaponCategory Category => _category;
         public float Damage => _damage;

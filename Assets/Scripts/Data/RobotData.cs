@@ -22,6 +22,7 @@ namespace EscapeFromSpace
         [SerializeField] private float _maxHp;
 
         [SerializeField, Tooltip("부서진 뒤 잔해에서 나오는 것")] private LootTable _lootTable;
+        [SerializeField, Tooltip("부수면 플레이어가 얻는 경험치")] private int _xpReward;
 
         [Header("공격")]
         [SerializeField] private RobotAttackKind _attackKind;
@@ -51,7 +52,12 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("초. 발견한 뒤 멈춰서 바라보는 시간")] private float _alertDuration;
         [SerializeField, Tooltip("초. 추격하다 이 시간 동안 못 찾으면 원래 자리로 돌아간다")] private float _chaseTimeout;
 
+        [Header("소리")]
+        [SerializeField, Tooltip("쏘거나 벨 때")] private SoundCue _attackSound = new SoundCue();
+
+        public SoundCue AttackSound => _attackSound;
         public LootTable LootTable => _lootTable;
+        public int XpReward => _xpReward;
         public string DisplayName => _displayName;
         public Color Color => _color;
         public Sprite Sprite => _sprite;

@@ -6,7 +6,9 @@ namespace EscapeFromSpace
     // 레이드와 대기실에서 항상 보이는 화면 (기획서 9.4): 왼쪽 아래 원 게이지, 가운데 아래 무기칸과 도구칸, 도구칸 위 진행 바, 포드 위 탈출 안내.
     public class HudUI : MonoBehaviour
     {
-        private static readonly Color BackColor = new Color(0.08f, 0.09f, 0.12f, 0.85f);
+        private static readonly Color BackColor = UiTheme.SlotFill;
+        private static readonly Color HurtColor = new Color(0.95f, 0.08f, 0.1f);
+        private static readonly Color ChokeColor = new Color(0.2f, 0.45f, 1f);
         private static readonly Color HpColor = new Color(0.9f, 0.25f, 0.25f);
         private static readonly Color OxygenColor = new Color(0.3f, 0.7f, 1f);
         private static readonly Color WeightColor = new Color(0.95f, 0.8f, 0.3f);
@@ -32,6 +34,13 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("원 게이지의 지름")] private float _gaugeSize = 130f;
         [SerializeField, Tooltip("무기칸과 도구칸 한 변")] private float _slotSize = 100f;
         [SerializeField] private int _fontSize = 20;
+
+        // 화면 가장자리가 물드는 효과. 맞으면 붉게 번쩍이고, HP가 낮으면 붉게, 산소가 모자라면 푸르게 남는다.
+        [Header("화면 가장자리 효과")]
+        [SerializeField, Range(0f, 1f), Tooltip("맞은 순간의 진하기")] private float _hitFlashAlpha = 0.3f;
+        [SerializeField, Tooltip("초. 맞은 뒤 사라지는 시간")] private float _hitFlashDuration = 0.45f;
+        [SerializeField, Range(0f, 1f), Tooltip("HP가 이 비율 아래면 가장자리가 붉게 남는다")] private float _lowHpRatio = 0.3f;
+        [SerializeField, Range(0f, 1f), Tooltip("HP나 산소가 모자랄 때의 진하기")] private float _warningAlpha = 0.18f;
 
         private class Gauge
         {
@@ -63,6 +72,13 @@ namespace EscapeFromSpace
         private Image _escapeBar;
         private RectTransform _actionRoot;
         private InventoryUI _inventoryUi;
+        private Image _vignette;
+        private float _hitFlash;
+
+        // 게이지 위의 레벨과 경험치 바 (기획서 12장)
+        private Text _levelText;
+        private Image _xpBar;
+        private Text _pointText;
 
         private void Awake()
         {
@@ -72,8 +88,44 @@ namespace EscapeFromSpace
             Build();
         }
 
+        private void OnEnable()
+        {
+            _health.Damaged += OnDamaged;
+        }
+
+        private void OnDisable()
+        {
+            _health.Damaged -= OnDamaged;
+        }
+
+        private void OnDamaged(float damage, Vector2 hitPoint)
+        {
+            _hitFlash = 1f;
+        }
+
+        // 가장 급한 것 하나만 보여 준다: 방금 맞음 > HP 부족 > 산소 부족.
+        private void UpdateVignette()
+        {
+            if (_hitFlashDuration > 0f)
+            {
+                _hitFlash = Mathf.Max(0f, _hitFlash - Time.unscaledDeltaTime / _hitFlashDuration);
+            }
+
+            float throb = 0.75f + 0.25f * Mathf.Sin(Time.unscaledTime * 4f);
+            bool lowHp = !_health.IsDead && _health.MaxHp > 0f && _health.CurrentHp / _health.MaxHp < _lowHpRatio;
+            float hurt = Mathf.Max(_hitFlash * _hitFlashAlpha, lowHp ? _warningAlpha * throb : 0f);
+            float choke = _oxygen.IsDraining && _oxygen.IsLow ? _warningAlpha * throb : 0f;
+
+            Color color = hurt >= choke ? HurtColor : ChokeColor;
+            color.a = Mathf.Max(hurt, choke);
+            _vignette.color = color;
+            _vignette.enabled = color.a > 0.005f;
+        }
+
         private void Update()
         {
+            UpdateVignette();
+
             // 가방 화면이 왼쪽을 덮으므로 열려 있는 동안에는 게이지를 그 오른쪽으로 옮긴다.
             float panelWidth = _inventoryUi != null ? _inventoryUi.LeftPanelWidth : 0f;
 
@@ -86,6 +138,7 @@ namespace EscapeFromSpace
             _gaugeRoot.anchoredPosition = new Vector2(panelWidth > 0f ? panelWidth + 24f : 30f, bottom);
 
             UpdateGauges();
+            UpdateLevel();
             UpdateWeapon();
             UpdateTools();
             UpdateBars();
@@ -106,10 +159,25 @@ namespace EscapeFromSpace
             _oxygenGauge.Fill.color = blink ? WarningColor : OxygenColor;
 
             float weight = _inventory.TotalWeight;
-            float ratio = weight / _playerData.MaxWeight;
+            float ratio = weight / _controller.MaxWeight;
             _weightGauge.Fill.fillAmount = ratio;
-            _weightGauge.Value.text = $"{weight:0.0}\n/ {_playerData.MaxWeight:0}kg";
+            _weightGauge.Value.text = $"{weight:0.0}\n/ {_controller.MaxWeight:0}kg";
             _weightGauge.Fill.color = ratio > _playerData.OverloadRatio ? WarningColor : WeightColor;
+        }
+
+        private void UpdateLevel()
+        {
+            PlayerProgress progress = PlayerProgress.Current;
+            if (progress == null)
+            {
+                return;
+            }
+
+            _levelText.text = $"Lv. {progress.Level}";
+            _xpBar.fillAmount = progress.IsMaxLevel ? 1f : progress.Xp / (float)progress.XpToNext;
+
+            // 쓰지 않은 강화 포인트가 있으면 알려 준다.
+            _pointText.text = progress.Points > 0 ? $"강화 포인트 {progress.Points}" : string.Empty;
         }
 
         private void UpdateWeapon()
@@ -120,7 +188,7 @@ namespace EscapeFromSpace
                 _weaponImage.color = BackColor;
                 UiBuilder.SetIcon(_weaponIcon, null, Color.white);
                 _weaponName.text = "맨손";
-                _weaponName.color = Color.gray;
+                _weaponName.color = UiTheme.TextDim;
                 _ammoText.text = string.Empty;
                 return;
             }
@@ -154,9 +222,9 @@ namespace EscapeFromSpace
                 // 가진 것이 없으면 그림도 흐리게 한다.
                 UiBuilder.SetIcon(_toolIcons[i], item != null ? item.Icon : null, has ? Color.white : new Color(1f, 1f, 1f, 0.3f));
                 _toolNames[i].text = item != null ? item.DisplayName : string.Empty;
-                _toolNames[i].color = has ? Color.black : Color.gray;
+                _toolNames[i].color = has ? Color.black : UiTheme.TextDim;
                 _toolCounts[i].text = item != null ? count.ToString() : string.Empty;
-                _toolCounts[i].color = has ? Color.black : Color.gray;
+                _toolCounts[i].color = has ? Color.black : UiTheme.TextDim;
             }
         }
 
@@ -220,11 +288,37 @@ namespace EscapeFromSpace
 
         private void Build()
         {
+            // 화면 가장자리 효과는 다른 화면 요소를 가리지 않게 맨 뒤에 둔다.
+            var vignetteRect = new GameObject("Vignette", typeof(RectTransform)).GetComponent<RectTransform>();
+            vignetteRect.SetParent(transform, false);
+            vignetteRect.anchorMin = Vector2.zero;
+            vignetteRect.anchorMax = Vector2.one;
+            vignetteRect.offsetMin = Vector2.zero;
+            vignetteRect.offsetMax = Vector2.zero;
+            vignetteRect.SetAsFirstSibling();
+            _vignette = UiBuilder.Image(vignetteRect, Color.clear, UiBuilder.VignetteSprite);
+            _vignette.enabled = false;
+
             // 왼쪽 아래: HP, 산소, 무게 원 게이지
             _gaugeRoot = UiBuilder.Rect("Gauges", transform, Vector2.zero, Vector2.zero, new Vector2(30f, 30f), Vector2.zero);
             _hpGauge = CreateGauge("HP", 0, HpColor);
             _oxygenGauge = CreateGauge("산소", 1, OxygenColor);
             _weightGauge = CreateGauge("무게", 2, WeightColor);
+
+            // 게이지 이름 위: 레벨, 경험치 바, 남은 강화 포인트
+            float levelY = _gaugeSize + _fontSize + 26f;
+            RectTransform level = UiBuilder.Rect("Level", _gaugeRoot, Vector2.zero, Vector2.zero, new Vector2(0f, levelY), new Vector2(86f, 30f));
+            _levelText = UiBuilder.Text(string.Empty, level, _fontSize + 2, TextAnchor.MiddleLeft, UiTheme.Accent);
+            _levelText.fontStyle = FontStyle.Bold;
+            UiBuilder.Outline(_levelText);
+
+            _xpBar = UiBuilder.Bar("Xp", _gaugeRoot, Vector2.zero, Vector2.zero, new Vector2(90f, levelY + 6f), new Vector2(170f, 18f),
+                new Color(0.55f, 0.85f, 1f));
+
+            RectTransform points = UiBuilder.Rect("Points", _gaugeRoot, Vector2.zero, Vector2.zero, new Vector2(270f, levelY),
+                new Vector2(180f, 30f));
+            _pointText = UiBuilder.Text(string.Empty, points, _fontSize, TextAnchor.MiddleLeft, UiTheme.Accent);
+            UiBuilder.Outline(_pointText);
 
             // 가운데 아래: 무기칸 1개와 도구칸 3개
             float gap = 10f;
@@ -235,21 +329,23 @@ namespace EscapeFromSpace
 
             RectTransform weapon = UiBuilder.Rect("WeaponSlot", bar, Vector2.zero, Vector2.zero, Vector2.zero,
                 new Vector2(_slotSize, _slotSize));
-            _weaponImage = UiBuilder.Image(weapon, BackColor);
+            _weaponImage = UiBuilder.Panel(weapon, BackColor, UiTheme.PanelBorder);
             _weaponIcon = UiBuilder.Icon(weapon, _slotSize * 0.62f);
             _weaponName = UiBuilder.Text(string.Empty, weapon, _fontSize, TextAnchor.UpperLeft, Color.black);
 
             // 탄창 / 예비탄은 무기칸 위에 작게 (기획서 9.4)
             RectTransform ammo = UiBuilder.Rect("Ammo", weapon, new Vector2(0.5f, 1f), new Vector2(0.5f, 0f), new Vector2(0f, 6f),
                 new Vector2(_slotSize + 60f, _fontSize + 12f));
-            _ammoText = UiBuilder.Text(string.Empty, ammo, _fontSize + 2, TextAnchor.MiddleCenter, Color.white);
+            _ammoText = UiBuilder.Text(string.Empty, ammo, _fontSize + 2, TextAnchor.MiddleCenter, UiTheme.Text);
+            _ammoText.fontStyle = FontStyle.Bold;
+            UiBuilder.Outline(_ammoText);
 
             for (int i = 0; i < PlayerItemUser.SlotCount; i++)
             {
                 float x = _slotSize + 24f + gap + i * (_slotSize + gap);
                 RectTransform slot = UiBuilder.Rect($"ToolSlot {i + 1}", bar, Vector2.zero, Vector2.zero, new Vector2(x, 0f),
                     new Vector2(_slotSize, _slotSize));
-                _toolImages[i] = UiBuilder.Image(slot, BackColor);
+                _toolImages[i] = UiBuilder.Panel(slot, BackColor, UiTheme.SlotBorder);
                 _toolIcons[i] = UiBuilder.Icon(slot, _slotSize * 0.55f);
 
                 _toolNames[i] = UiBuilder.Text(string.Empty, slot, _fontSize - 4, TextAnchor.LowerLeft, Color.black);
@@ -257,9 +353,9 @@ namespace EscapeFromSpace
                 _toolCounts[i].fontStyle = FontStyle.Bold;
 
                 // 누르는 키
-                Text slotKey = UiBuilder.Text((i + 1).ToString(), slot, _fontSize, TextAnchor.UpperLeft, Color.white);
+                Text slotKey = UiBuilder.Text((i + 1).ToString(), slot, _fontSize, TextAnchor.UpperLeft, UiTheme.Accent);
                 slotKey.fontStyle = FontStyle.Bold;
-                slotKey.gameObject.AddComponent<Outline>().effectColor = Color.black;
+                UiBuilder.Outline(slotKey);
             }
 
             // 도구칸 위의 진행 바 두 줄: 아래는 재장전·구르기 쿨타임, 위는 아이템 사용
@@ -275,8 +371,8 @@ namespace EscapeFromSpace
 
             // 탈출 안내: 포드 위에 키와 그 아래 진행 바
             _podHint = UiBuilder.Rect("PodHint", transform, Vector2.zero, new Vector2(0.5f, 0f), Vector2.zero, new Vector2(64f, 64f));
-            UiBuilder.Image(_podHint, BackColor);
-            Text key = UiBuilder.Text("X", _podHint, 36, TextAnchor.MiddleCenter, Color.white);
+            UiBuilder.Panel(_podHint, UiTheme.PanelFill, UiTheme.PanelBorder);
+            Text key = UiBuilder.Text("X", _podHint, 36, TextAnchor.MiddleCenter, UiTheme.Text);
             key.fontStyle = FontStyle.Bold;
             _escapeBar = UiBuilder.Bar("EscapeProgress", _podHint, new Vector2(0.5f, 0f), new Vector2(0.5f, 1f), new Vector2(0f, -6f),
                 new Vector2(160f, 20f), EscapeBarColor);
@@ -287,7 +383,7 @@ namespace EscapeFromSpace
         private Text CreateBarLabel(Image fill)
         {
             Text label = UiBuilder.Text(string.Empty, (RectTransform)fill.transform.parent, _fontSize - 2, TextAnchor.MiddleCenter, Color.white);
-            label.gameObject.AddComponent<Outline>().effectColor = Color.black;
+            UiBuilder.Outline(label);
             return label;
         }
 
@@ -306,13 +402,19 @@ namespace EscapeFromSpace
             fill.fillMethod = Image.FillMethod.Vertical;
             fill.fillOrigin = (int)Image.OriginVertical.Bottom;
 
+            // 게이지가 맵 위에서도 또렷하게 틀의 색으로 고리를 두른다.
+            RectTransform ring = UiBuilder.Rect("Ring", back, Vector2.zero, Vector2.zero, Vector2.zero, size);
+            UiBuilder.Image(ring, UiTheme.PanelBorder, UiBuilder.RingSprite);
+
             Text value = UiBuilder.Text(string.Empty, back, _fontSize + 4, TextAnchor.MiddleCenter, Color.white);
             value.fontStyle = FontStyle.Bold;
-            value.gameObject.AddComponent<Outline>().effectColor = Color.black;
+            UiBuilder.Outline(value);
 
             RectTransform labelRect = UiBuilder.Rect("Label", back, new Vector2(0.5f, 1f), new Vector2(0.5f, 0f), new Vector2(0f, 4f),
                 new Vector2(_gaugeSize, _fontSize + 10f));
-            UiBuilder.Text(label, labelRect, _fontSize, TextAnchor.MiddleCenter, Color.white);
+            Text labelText = UiBuilder.Text(label, labelRect, _fontSize, TextAnchor.MiddleCenter, UiTheme.Text);
+            labelText.fontStyle = FontStyle.Bold;
+            UiBuilder.Outline(labelText);
 
             return new Gauge { Fill = fill, Value = value };
         }

@@ -8,10 +8,15 @@ namespace EscapeFromSpace
         [SerializeField] private PlayerInputReader _input;
         [SerializeField] private PlayerController _controller;
         [SerializeField] private Health _health;
+        [SerializeField] private PlayerProgress _progress;
         [SerializeField, Tooltip("칸. 이 거리 안에 있어야 열 수 있고, 벗어나면 닫힌다")] private float _range = 1.5f;
         [SerializeField] private Lootable _droppedItemPrefab;
 
+        // 뒤지는 소리가 되풀이되는 간격(초)
+        private const float SearchSoundInterval = 0.35f;
+
         private float _holdTime;
+        private float _nextSearchSoundTime;
 
         // 지금 열 수 있는 가장 가까운 대상. 없으면 null.
         public Lootable Target { get; private set; }
@@ -20,7 +25,10 @@ namespace EscapeFromSpace
         public Lootable Opened { get; private set; }
 
         // E를 누르고 있는 진행도 0~1
-        public float HoldProgress => Target != null && Target.OpenTime > 0f ? Mathf.Clamp01(_holdTime / Target.OpenTime) : 0f;
+        public float HoldProgress => Target != null && Target.OpenTime > 0f ? Mathf.Clamp01(_holdTime / OpenTime) : 0f;
+
+        // 지금 대상을 여는 데 걸리는 시간. 강화한 만큼 짧아진다.
+        private float OpenTime => Target.OpenTime * _progress.TimeMultiplier(TechStat.LootSpeed);
 
         private void OnEnable()
         {
@@ -65,16 +73,26 @@ namespace EscapeFromSpace
             if (Target == null || !_input.InteractHeld)
             {
                 _holdTime = 0f;
+                _nextSearchSoundTime = 0f;
                 return;
             }
 
-            _holdTime += Time.deltaTime;
-            if (Target.IsOpened || _holdTime >= Target.OpenTime)
+            // 처음 여는 것은 뒤지는 동안 부스럭거리는 소리가 되풀이된다.
+            if (!Target.IsOpened && Target.OpenTime > 0f && _holdTime >= _nextSearchSoundTime)
             {
+                _nextSearchSoundTime = _holdTime + SearchSoundInterval;
+                Sfx.PlayAt(SfxId.LootSearch, Target.transform.position);
+            }
+
+            _holdTime += Time.deltaTime;
+            if (Target.IsOpened || _holdTime >= OpenTime)
+            {
+                Sfx.PlayAt(SfxId.LootOpen, Target.transform.position);
                 Target.IsOpened = true;
                 Opened = Target;
                 Target = null;
                 _holdTime = 0f;
+                _nextSearchSoundTime = 0f;
             }
         }
 
@@ -118,6 +136,7 @@ namespace EscapeFromSpace
         private void OnDamaged(float damage, Vector2 hitPoint)
         {
             _holdTime = 0f;
+            _nextSearchSoundTime = 0f;
         }
     }
 }

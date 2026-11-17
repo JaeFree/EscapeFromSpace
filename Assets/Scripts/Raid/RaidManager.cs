@@ -41,6 +41,9 @@ namespace EscapeFromSpace
 
         // 결과 화면에 쓰는 값. 끝나는 순간에 계산해 둔다.
         public int CarriedValue { get; private set; }
+
+        // 이번 판에 얻은 경험치 (로봇 처치 + 탈출 보너스)
+        public int XpGained { get; private set; }
         public ItemStack SecuredItem { get; private set; }
 
         // 대기실에서 들어왔으면 거기서 고른 장비로 시작한다. 씬을 바로 Play했으면 가방의 테스트용 장비를 쓴다.
@@ -79,6 +82,11 @@ namespace EscapeFromSpace
             if (open != _activePod.IsOpen)
             {
                 _activePod.SetOpen(open);
+                if (open)
+                {
+                    // 어느 포드인지 소리로 알 수 없게 위치 없이 낸다.
+                    Sfx.Play(SfxId.PodOpen);
+                }
             }
 
             UpdateEscape();
@@ -135,11 +143,24 @@ namespace EscapeFromSpace
         private void Finish(RaidOutcome outcome)
         {
             Outcome = outcome;
+            Sfx.Play(outcome == RaidOutcome.Escaped ? SfxId.EscapeSuccess : SfxId.PlayerDeath);
             ReachablePod = null;
             _holdTime = 0f;
             _controller.IsMovementLocked = false;
             CarriedValue = _inventory.TotalValue(outcome == RaidOutcome.Escaped);
             SecuredItem = _inventory.SecureBox.Items.Count > 0 ? _inventory.SecureBox.Items[0] : null;
+
+            // 탈출하면 경험치를 더 받는다. 죽어도 로봇을 부숴 얻은 경험치는 남는다.
+            PlayerProgress progress = PlayerProgress.Current;
+            if (progress != null)
+            {
+                if (outcome == RaidOutcome.Escaped)
+                {
+                    progress.AddXp(progress.Tree.EscapeBonusXp);
+                }
+
+                XpGained = progress.XpGained;
+            }
 
             // 대기실에서 들어온 판만 저장한다. 죽었으면 보관함만 남는다.
             if (GameSession.RaidFromLobby)

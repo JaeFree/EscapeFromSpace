@@ -78,6 +78,7 @@ namespace EscapeFromSpace
 
             _using = item;
             _useTimeLeft = item.UseTime;
+            Sfx.PlayAt(SfxId.ItemUseStart, transform.position);
         }
 
         private void UpdateUse()
@@ -104,11 +105,13 @@ namespace EscapeFromSpace
             if (item.HealAmount > 0f)
             {
                 _health.Heal(item.HealAmount);
+                Sfx.PlayAt(SfxId.HealDone, transform.position);
             }
 
             if (item.OxygenSeconds > 0f)
             {
                 _oxygen.Add(item.OxygenSeconds);
+                Sfx.PlayAt(SfxId.OxygenCan, transform.position);
             }
 
             _inventory.ConsumeAmmo(item, 1);

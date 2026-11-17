@@ -64,25 +64,28 @@ namespace EscapeFromSpace
 
             int seconds = Mathf.FloorToInt(_raid.ElapsedTime);
             string time = $"걸린 시간  {seconds / 60}:{seconds % 60:00}";
+            PlayerProgress progress = PlayerProgress.Current;
+            string xp = progress != null ? $"\n경험치  +{_raid.XpGained}  (레벨 {progress.Level})" : string.Empty;
 
             if (_raid.Outcome == RaidOutcome.Escaped)
             {
                 _title.text = "탈출 성공";
                 _title.color = new Color(0.4f, 1f, 0.55f);
-                _body.text = $"{time}\n가지고 나온 가치  {_raid.CarriedValue}";
+                _body.text = $"{time}\n가지고 나온 가치  {_raid.CarriedValue}{xp}";
             }
             else
             {
                 string secured = _raid.SecuredItem != null ? _raid.SecuredItem.Data.DisplayName : "없음";
                 _title.text = "사망";
                 _title.color = new Color(1f, 0.35f, 0.35f);
-                _body.text = $"{time}\n잃은 가치  {_raid.CarriedValue}\n보관함으로 지킨 것  {secured}";
+                _body.text = $"{time}\n잃은 가치  {_raid.CarriedValue}\n보관함으로 지킨 것  {secured}{xp}";
             }
         }
 
         // 대기실에서 들어온 판이면 대기실로 돌아간다. 레이드 씬을 바로 Play했으면 같은 씬을 다시 불러 처음부터 한다.
         private void Leave()
         {
+            Sfx.Play(SfxId.UiConfirm);
             Time.timeScale = 1f;
             if (GameSession.RaidFromLobby)
             {
@@ -96,13 +99,11 @@ namespace EscapeFromSpace
 
         private void Build()
         {
-            _root = UiBuilder.Rect("ResultScreen", transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero,
-                new Vector2(4000f, 4000f));
-            UiBuilder.Image(_root, new Color(0f, 0f, 0f, 0.7f));
+            _root = UiBuilder.Dim("ResultScreen", transform);
 
             RectTransform box = UiBuilder.Rect("Box", _root, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero,
                 new Vector2(640f, 440f));
-            UiBuilder.Image(box, new Color(0.08f, 0.09f, 0.12f, 0.98f));
+            UiBuilder.Window(box);
 
             RectTransform title = UiBuilder.Rect("Title", box, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -30f),
                 new Vector2(600f, 90f));
@@ -110,14 +111,12 @@ namespace EscapeFromSpace
             _title.fontStyle = FontStyle.Bold;
 
             RectTransform body = UiBuilder.Rect("Body", box, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 10f),
-                new Vector2(560f, 170f));
-            _body = UiBuilder.Text(string.Empty, body, 30, TextAnchor.MiddleCenter, Color.white);
+                new Vector2(560f, 200f));
+            _body = UiBuilder.Text(string.Empty, body, 30, TextAnchor.MiddleCenter, UiTheme.Text);
             _body.lineSpacing = 1.3f;
 
-            _button = UiBuilder.Rect("Button", box, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 34f),
-                new Vector2(320f, 76f));
-            UiBuilder.Image(_button, new Color(0.25f, 0.5f, 0.9f));
-            _buttonText = UiBuilder.Text(string.Empty, _button, 28, TextAnchor.MiddleCenter, Color.white);
+            _button = UiBuilder.Button("Button", box, new Vector2(0.5f, 0f), new Vector2(0f, 34f), new Vector2(320f, 76f), true);
+            _buttonText = _button.GetComponentInChildren<Text>();
 
             _root.gameObject.SetActive(false);
         }

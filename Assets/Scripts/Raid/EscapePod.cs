@@ -9,6 +9,7 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("칸. 이 크기의 구역 안에 있어야 카운트가 간다")] private Vector2 _zoneSize = new Vector2(2f, 2f);
         [SerializeField] private Color _closedColor = new Color(0.22f, 0.23f, 0.26f);
         [SerializeField] private Color _openColor = new Color(0.25f, 0.85f, 0.45f);
+        [SerializeField, Tooltip("열려 있는 동안에만 켜는 빛. 비우면 없다")] private GameObject _openEffect;
 
         public bool IsOpen { get; private set; }
 
@@ -17,6 +18,10 @@ namespace EscapeFromSpace
         {
             IsOpen = open;
             _renderer.color = open ? _openColor : _closedColor;
+            if (_openEffect != null)
+            {
+                _openEffect.SetActive(open);
+            }
         }
 
         public bool Contains(Vector2 position)

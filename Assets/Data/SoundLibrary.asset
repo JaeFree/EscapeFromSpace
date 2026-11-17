@@ -1,0 +1,227 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8b2b6b6746c22b49a2490968d16e9e0, type: 3}
+  m_Name: SoundLibrary
+  m_EditorClassIdentifier: 
+  _masterVolume: 0.8
+  _fullVolumeDistance: 4
+  _hearingDistance: 22
+  _footstep:
+    _clips:
+    - {fileID: 8300000, guid: 354e5d55e1978bf489857486ddf97d14, type: 3}
+    - {fileID: 8300000, guid: 9eee49e7aac91ff46a958bef830d45eb, type: 3}
+    - {fileID: 8300000, guid: 37d78c2bf9ba4d8469ace4bbead03f6e, type: 3}
+    - {fileID: 8300000, guid: 7523267ffae382042a28514dae23fa30, type: 3}
+    - {fileID: 8300000, guid: c071018ba186bd6468bf5656545cd935, type: 3}
+    _volume: 0.3
+    _pitch: 1
+    _pitchVariation: 0.12
+  _roll:
+    _clips:
+    - {fileID: 8300000, guid: 3f0ff23886787f3499da49afce047e51, type: 3}
+    - {fileID: 8300000, guid: a459924ebf2f6e546a312cc105926fb8, type: 3}
+    _volume: 0.6
+    _pitch: 1
+    _pitchVariation: 0.08
+  _reloadStart:
+    _clips:
+    - {fileID: 8300000, guid: ddda4bbe640b89f469afa98fde6f7bc8, type: 3}
+    _volume: 0.6
+    _pitch: 1
+    _pitchVariation: 0.03
+  _reloadEnd:
+    _clips:
+    - {fileID: 8300000, guid: 0804ca03f583abf40b86cce981aaf844, type: 3}
+    _volume: 0.7
+    _pitch: 0.9
+    _pitchVariation: 0.03
+  _playerHurt:
+    _clips:
+    - {fileID: 8300000, guid: f434434890d66f54e995d0f0da786c7d, type: 3}
+    - {fileID: 8300000, guid: 853b7d37aa597d54ab33cb832290f06f, type: 3}
+    - {fileID: 8300000, guid: e252bafffc3141d4d9a1823e3c8b727c, type: 3}
+    _volume: 0.8
+    _pitch: 1
+    _pitchVariation: 0.08
+  _playerDeath:
+    _clips:
+    - {fileID: 8300000, guid: eeec656176aae1f429330ec08621402b, type: 3}
+    _volume: 0.9
+    _pitch: 0.8
+    _pitchVariation: 0
+  _itemUseStart:
+    _clips:
+    - {fileID: 8300000, guid: 7c3eae84389c968439c0d638f8aa0c8c, type: 3}
+    _volume: 0.6
+    _pitch: 1
+    _pitchVariation: 0.05
+  _healDone:
+    _clips:
+    - {fileID: 8300000, guid: ae6cdf9bba14b284a916bf55b3b2bbc7, type: 3}
+    _volume: 0.6
+    _pitch: 1
+    _pitchVariation: 0.03
+  _oxygenCan:
+    _clips:
+    - {fileID: 8300000, guid: 015fee571277c1d4687c7f7dfe7ec1a8, type: 3}
+    _volume: 0.6
+    _pitch: 1
+    _pitchVariation: 0.03
+  _oxygenWarning:
+    _clips:
+    - {fileID: 8300000, guid: cfd80f4d3094d2a4eb42aaed07b7ca8d, type: 3}
+    _volume: 0.35
+    _pitch: 1
+    _pitchVariation: 0
+  _wallImpact:
+    _clips:
+    - {fileID: 8300000, guid: 2af6338ff788b2e448619e1cd653c43a, type: 3}
+    - {fileID: 8300000, guid: f4be9b629fc59dd44ba3ad185f3c2d8e, type: 3}
+    - {fileID: 8300000, guid: 4bf6ab15f26122e40850a8796d520ef5, type: 3}
+    _volume: 0.35
+    _pitch: 1
+    _pitchVariation: 0.12
+  _robotHit:
+    _clips:
+    - {fileID: 8300000, guid: 3d53e2c504c55c649b3fb400e0b70197, type: 3}
+    - {fileID: 8300000, guid: fc687e1591b4a6946a06740fe73de754, type: 3}
+    - {fileID: 8300000, guid: aebe28b722ccb95469fc66c66196fe7e, type: 3}
+    _volume: 0.5
+    _pitch: 1
+    _pitchVariation: 0.1
+  _robotDestroyed:
+    _clips:
+    - {fileID: 8300000, guid: 7cb6523f55afaac4f8fc4cad2fdfc85c, type: 3}
+    - {fileID: 8300000, guid: 206047e7b2872cb48a582fc6e0553d30, type: 3}
+    _volume: 0.85
+    _pitch: 1
+    _pitchVariation: 0.08
+  _robotAlert:
+    _clips:
+    - {fileID: 8300000, guid: 1a02976c574c7cb46b8deb279ff79db7, type: 3}
+    _volume: 0.6
+    _pitch: 1.1
+    _pitchVariation: 0.03
+  _robotCharge:
+    _clips:
+    - {fileID: 8300000, guid: 7538fd7d92f26c04bb947c2eecc92f5d, type: 3}
+    _volume: 0.6
+    _pitch: 0.9
+    _pitchVariation: 0.03
+  _robotAimLock:
+    _clips:
+    - {fileID: 8300000, guid: 97e120e794d294840b9f180d450f6acb, type: 3}
+    _volume: 0.7
+    _pitch: 1.2
+    _pitchVariation: 0
+  _lootSearch:
+    _clips:
+    - {fileID: 8300000, guid: 2feb6e33b7f7db646a4cba85312260a0, type: 3}
+    _volume: 0.45
+    _pitch: 1
+    _pitchVariation: 0.12
+  _lootOpen:
+    _clips:
+    - {fileID: 8300000, guid: 2cb4d5773e47af543b28ef918d5dc2b7, type: 3}
+    _volume: 0.6
+    _pitch: 1
+    _pitchVariation: 0.03
+  _bagOpen:
+    _clips:
+    - {fileID: 8300000, guid: 2a2dd8f9e32f7c04a8f0659f9a742fe4, type: 3}
+    _volume: 0.5
+    _pitch: 1
+    _pitchVariation: 0.03
+  _bagClose:
+    _clips:
+    - {fileID: 8300000, guid: e3808b2a23ab646408a0f3ab64f49762, type: 3}
+    _volume: 0.5
+    _pitch: 1
+    _pitchVariation: 0.03
+  _itemPick:
+    _clips:
+    - {fileID: 8300000, guid: 6983823d51ae7e04b981b6346bdfeac4, type: 3}
+    _volume: 0.5
+    _pitch: 1.1
+    _pitchVariation: 0.05
+  _itemPlace:
+    _clips:
+    - {fileID: 8300000, guid: 2c33ca07603a76a43987088d34ec3d53, type: 3}
+    _volume: 0.55
+    _pitch: 1
+    _pitchVariation: 0.05
+  _itemRefuse:
+    _clips:
+    - {fileID: 8300000, guid: 5b14b42e55b27a64f8846b1f19ce3c44, type: 3}
+    _volume: 0.5
+    _pitch: 1
+    _pitchVariation: 0
+  _itemDropToWorld:
+    _clips:
+    - {fileID: 8300000, guid: 1948c653866a21f4090f9fc490c0adda, type: 3}
+    _volume: 0.55
+    _pitch: 0.9
+    _pitchVariation: 0.05
+  _podOpen:
+    _clips:
+    - {fileID: 8300000, guid: 24920346daf4d744aa3f0cb63a6edfd3, type: 3}
+    _volume: 0.7
+    _pitch: 1
+    _pitchVariation: 0
+  _escapeSuccess:
+    _clips:
+    - {fileID: 8300000, guid: 3b0c5caa06f98b34f867bf5cfb53b6dd, type: 3}
+    _volume: 0.8
+    _pitch: 1
+    _pitchVariation: 0
+  _uiPrompt:
+    _clips:
+    - {fileID: 8300000, guid: d6843b6ed30dcba4aaed8e4af134d7ff, type: 3}
+    _volume: 0.6
+    _pitch: 1
+    _pitchVariation: 0
+  _uiConfirm:
+    _clips:
+    - {fileID: 8300000, guid: 5da759c1e95dd3f4d80109ff2f0d81a6, type: 3}
+    _volume: 0.6
+    _pitch: 1
+    _pitchVariation: 0
+  _uiCancel:
+    _clips:
+    - {fileID: 8300000, guid: afe17fdc310cad14c961a75b6396debf, type: 3}
+    _volume: 0.6
+    _pitch: 1
+    _pitchVariation: 0
+  _mapOpen:
+    _clips:
+    - {fileID: 8300000, guid: 7457025905e56734daff40061ec45182, type: 3}
+    _volume: 0.5
+    _pitch: 1
+    _pitchVariation: 0
+  _mapClose:
+    _clips:
+    - {fileID: 8300000, guid: 3518b065563b7fc48b28aa49d4602997, type: 3}
+    _volume: 0.5
+    _pitch: 1
+    _pitchVariation: 0
+  _portalLaunch:
+    _clips:
+    - {fileID: 8300000, guid: ba4c3e56a7ff97e4c9932fe2f1888db6, type: 3}
+    _volume: 0.8
+    _pitch: 1
+    _pitchVariation: 0
+  _levelUp:
+    _clips:
+    - {fileID: 8300000, guid: ae6cdf9bba14b284a916bf55b3b2bbc7, type: 3}
+    _volume: 0.7
+    _pitch: 1.25
+    _pitchVariation: 0

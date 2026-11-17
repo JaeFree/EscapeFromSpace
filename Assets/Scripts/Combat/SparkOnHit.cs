@@ -21,6 +21,7 @@ namespace EscapeFromSpace
         private void OnDamaged(float damage, Vector2 hitPoint)
         {
             Instantiate(_sparkPrefab, hitPoint, Quaternion.identity);
+            Sfx.PlayAt(SfxId.RobotHit, hitPoint);
         }
     }
 }

@@ -393,6 +393,7 @@ GameObject:
   - component: {fileID: 6747939482751122609}
   - component: {fileID: 6630869076064193616}
   - component: {fileID: 4589062689406364107}
+  - component: {fileID: 7745152265639516529}
   m_Layer: 6
   m_Name: Player
   m_TagString: Untagged
@@ -512,7 +513,9 @@ MonoBehaviour:
   _shooter: {fileID: 6759398714086557480}
   _inventory: {fileID: 7978499349794811925}
   _health: {fileID: 722836350339408983}
+  _progress: {fileID: 7745152265639516529}
   _aimPivot: {fileID: 460640815210042848}
+  _minAimDistance: 3
 --- !u!114 &1751094079760387129
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -529,6 +532,7 @@ MonoBehaviour:
   _input: {fileID: 5598884973092948156}
   _controller: {fileID: 3746254566514887690}
   _health: {fileID: 722836350339408983}
+  _progress: {fileID: 7745152265639516529}
 --- !u!114 &6759398714086557480
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -553,8 +557,10 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   _hitMarkerPrefab: {fileID: 616239616664432743, guid: 48949187975de3d48b2a7dcf7efc11f0, type: 3}
+  _progress: {fileID: 7745152265639516529}
   _tracerPrefab: {fileID: 6497846089516445128, guid: d8fe86d7bdc2558498f7deb114dc6d69, type: 3}
   _swingArcPrefab: {fileID: 4022509599150442134, guid: c63db6249c0e8cf4aa056c7e657b9460, type: 3}
+  _muzzleFlashPrefab: {fileID: 9101662046475331876, guid: 6cbbcd8ed7493ea4ba0e003ca1986e70, type: 3}
   _ammoInMagazine: 0
   _reserveAmmo: 24
   _currentRecoil: 0
@@ -638,6 +644,7 @@ MonoBehaviour:
   _input: {fileID: 5598884973092948156}
   _controller: {fileID: 3746254566514887690}
   _health: {fileID: 722836350339408983}
+  _progress: {fileID: 7745152265639516529}
   _range: 1.5
   _droppedItemPrefab: {fileID: 3927865886180665474, guid: 6d57472086a82c2489f1d3c304061576, type: 3}
 --- !u!114 &6747939482751122609
@@ -655,6 +662,7 @@ MonoBehaviour:
   _config: {fileID: 11400000, guid: 35be1393733f0404aada9e05b1ea6b0f, type: 2}
   _health: {fileID: 722836350339408983}
   _inventory: {fileID: 7978499349794811925}
+  _progress: {fileID: 7745152265639516529}
 --- !u!114 &6630869076064193616
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -699,7 +707,8 @@ MonoBehaviour:
   _muzzle: {fileID: 5996404191028197726}
   _unarmedSprite: {fileID: 21300000, guid: 818be6e3a0ef6b544b290648400e42c4, type: 3}
   _armedSprite: {fileID: 21300000, guid: 24ad57456ffeda64a84dca4ac2df6c1a, type: 3}
-  _handOffset: 0.2
+  _handPosition: {x: 0.3, y: -0.26}
+  _gripInset: 0.08
   _stepsPerUnit: 1.1
   _swayAngle: 7
   _bobScale: 0.05
@@ -707,6 +716,19 @@ MonoBehaviour:
   _rollTumbles: 2
   _rollSquash: 0.6
   _swingDuration: 0.15
+--- !u!114 &7745152265639516529
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6849949938922056842}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abc1d4e12c294334abf75ab3d3f538fe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _tree: {fileID: 11400000, guid: 4e025a21f1f491e428ff04649118c6db, type: 2}
 --- !u!1 &7698571191336183577
 GameObject:
   m_ObjectHideFlags: 0

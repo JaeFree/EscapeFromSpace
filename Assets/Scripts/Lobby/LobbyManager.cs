@@ -107,6 +107,7 @@ namespace EscapeFromSpace
             {
                 IsConfirming = true;
                 _controller.IsMovementLocked = true;
+                Sfx.Play(SfxId.UiPrompt);
             }
         }
 
@@ -119,6 +120,7 @@ namespace EscapeFromSpace
 
             _leaving = true;
             IsConfirming = false;
+            Sfx.Play(SfxId.PortalLaunch);
             Save();
             GameSession.StartRaid();
             SceneManager.LoadScene(_raidSceneName);
@@ -127,6 +129,11 @@ namespace EscapeFromSpace
         // 대기실에 그대로 남는다. 포탈 위에 서 있어도 다시 묻지 않게 표시해 둔다.
         public void CancelLaunch()
         {
+            if (IsConfirming)
+            {
+                Sfx.Play(SfxId.UiCancel);
+            }
+
             IsConfirming = false;
             _declined = true;
             _controller.IsMovementLocked = false;

@@ -8,6 +8,7 @@ namespace EscapeFromSpace
         [SerializeField] private PlayerInputReader _input;
         [SerializeField] private PlayerController _controller;
         [SerializeField] private Health _health;
+        [SerializeField] private PlayerProgress _progress;
 
         private Vector2 _direction;
         private float _remainingDistance;
@@ -60,8 +61,9 @@ namespace EscapeFromSpace
             _remainingDistance = _data.RollDistance;
             _invincibleTimeLeft = _data.RollInvincibleDuration;
             _health.IsInvincible = true;
-            CooldownRemaining = _data.RollCooldown;
+            CooldownRemaining = _data.RollCooldown * _progress.TimeMultiplier(TechStat.RollCooldown);
             IsRolling = true;
+            Sfx.PlayAt(SfxId.Roll, transform.position);
         }
     }
 }

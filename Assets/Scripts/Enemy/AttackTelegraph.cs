@@ -8,6 +8,7 @@ namespace EscapeFromSpace
         private const int FanSliceCount = 12;
 
         [SerializeField] private LineRenderer _line;
+        [SerializeField, Tooltip("조준선이 닿는 곳에 찍히는 점. 비우면 없다")] private SpriteRenderer _endDot;
         [SerializeField] private MeshFilter _fanFilter;
         [SerializeField] private MeshRenderer _fanRenderer;
         [SerializeField] private Color _color = new Color(1f, 0.2f, 0.2f, 1f);
@@ -16,6 +17,8 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("따라오는 동안의 굵기와 진하기")] private float _trackingWidth = 0.03f;
         [SerializeField, Range(0f, 1f)] private float _trackingAlpha = 0.45f;
         [SerializeField, Tooltip("방향이 고정된 뒤의 굵기")] private float _lockedWidth = 0.07f;
+        [SerializeField, Tooltip("닿는 곳의 점 크기 (따라오는 동안)")] private float _trackingDotSize = 0.3f;
+        [SerializeField, Tooltip("닿는 곳의 점 크기 (고정된 뒤)")] private float _lockedDotSize = 0.55f;
 
         [Header("충전 범위")]
         [SerializeField, Range(0f, 1f)] private float _fanStartAlpha = 0.08f;
@@ -55,12 +58,22 @@ namespace EscapeFromSpace
             _line.endWidth = width;
             _line.startColor = color;
             _line.endColor = color;
+
+            if (_endDot != null)
+            {
+                float size = locked ? _lockedDotSize : _trackingDotSize;
+                _endDot.enabled = true;
+                _endDot.color = color;
+                _endDot.transform.position = to;
+                _endDot.transform.localScale = new Vector3(size, size, 1f);
+            }
         }
 
         // progress 0~1. 충전이 찰수록 진해진다.
         public void ShowFan(Vector2 direction, float angleDegrees, float radius, float progress)
         {
             _line.enabled = false;
+            HideDot();
 
             if (_fanMesh == null || !Mathf.Approximately(angleDegrees, _fanAngle) || !Mathf.Approximately(radius, _fanRadius))
             {
@@ -83,6 +96,15 @@ namespace EscapeFromSpace
         {
             _line.enabled = false;
             _fanRenderer.enabled = false;
+            HideDot();
+        }
+
+        private void HideDot()
+        {
+            if (_endDot != null)
+            {
+                _endDot.enabled = false;
+            }
         }
 
         // 부채꼴 오브젝트의 +X가 쏘는 방향이다.

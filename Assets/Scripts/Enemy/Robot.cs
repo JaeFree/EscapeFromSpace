@@ -33,6 +33,7 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("경계 상태에서 머리 위에 켜는 표시")] private GameObject _alertMark;
         [SerializeField] private LayerMask _wallMask;
         [SerializeField, Tooltip("부서진 자리에 남는 잔해. 컨테이너처럼 뒤진다")] private Lootable _wreckPrefab;
+        [SerializeField, Tooltip("부서질 때 터지는 효과. 비우면 없다")] private GameObject _explosionPrefab;
 
         // Inspector에서 지금 상태를 보려고 노출한다.
         [SerializeField] private State _state;
@@ -433,6 +434,10 @@ namespace EscapeFromSpace
             _state = state;
             _stateTime = 0f;
             _alertMark.SetActive(state == State.Alert);
+            if (state == State.Alert)
+            {
+                Sfx.PlayAt(SfxId.RobotAlert, Position);
+            }
         }
 
         // 순찰에서 벗어나는 순간의 자리를 기억한다. 복귀 중에 다시 벗어날 때는 처음 자리를 유지한다.
@@ -458,6 +463,18 @@ namespace EscapeFromSpace
                 wreckRenderer.color = Color.Lerp(_data.Color, Color.black, 0.25f);
             }
 
+            if (_explosionPrefab != null)
+            {
+                Instantiate(_explosionPrefab, transform.position, Quaternion.identity);
+            }
+
+            // 로봇을 부수는 것은 플레이어뿐이다.
+            if (PlayerProgress.Current != null)
+            {
+                PlayerProgress.Current.AddXp(_data.XpReward);
+            }
+
+            Sfx.PlayAt(SfxId.RobotDestroyed, Position);
             Destroy(gameObject);
         }
     }

@@ -8,12 +8,14 @@ namespace EscapeFromSpace
         [SerializeField] private RaidConfig _config;
         [SerializeField] private Health _health;
         [SerializeField] private PlayerInventory _inventory;
+        [SerializeField] private PlayerProgress _progress;
 
         private float _helmetBonus;
+        private float _warningTimeLeft;
 
         // 남은 산소(초)
         public float Current { get; private set; }
-        public float Max => _config.BaseOxygenSeconds + _helmetBonus;
+        public float Max => _config.BaseOxygenSeconds + _helmetBonus + _progress.Bonus(TechStat.Oxygen);
         public bool IsSuffocating => Current <= 0f;
         public bool IsLow => Current <= _config.OxygenWarningSeconds;
 
@@ -41,6 +43,12 @@ namespace EscapeFromSpace
         {
             if (_health.IsDead || !IsDraining)
             {
+                // 대기실에서는 늘 가득 차 있다. 산소를 강화하면 늘어난 양이 바로 보인다.
+                if (!IsDraining)
+                {
+                    Current = Max;
+                }
+
                 return;
             }
 
@@ -48,6 +56,25 @@ namespace EscapeFromSpace
             if (Current <= 0f)
             {
                 _health.TakeRawDamage(_config.SuffocationDamagePerSecond * Time.deltaTime);
+            }
+
+            UpdateWarning();
+        }
+
+        // 산소가 얼마 안 남으면 경고음이 되풀이된다. 질식 중에는 더 급하게 울린다.
+        private void UpdateWarning()
+        {
+            if (!IsLow)
+            {
+                _warningTimeLeft = 0f;
+                return;
+            }
+
+            _warningTimeLeft -= Time.deltaTime;
+            if (_warningTimeLeft <= 0f)
+            {
+                _warningTimeLeft = IsSuffocating ? _config.SuffocationBeepInterval : _config.OxygenWarningBeepInterval;
+                Sfx.Play(SfxId.OxygenWarning);
             }
         }
 

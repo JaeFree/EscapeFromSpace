@@ -18,6 +18,7 @@ MonoBehaviour:
   _visualSize: 1
   _maxHp: 60
   _lootTable: {fileID: 11400000, guid: b4ee989d2301e584ba04262c2a9e1acf, type: 2}
+  _xpReward: 10
   _attackKind: 1
   _damage: 8
   _pelletCount: 1
@@ -38,3 +39,9 @@ MonoBehaviour:
   _hearingRadius: 8
   _alertDuration: 0.6
   _chaseTimeout: 5
+  _attackSound:
+    _clips:
+    - {fileID: 8300000, guid: 007d48d7344b4a141811167ab369ea09, type: 3}
+    _volume: 0.45
+    _pitch: 0.85
+    _pitchVariation: 0.05

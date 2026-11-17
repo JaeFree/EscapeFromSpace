@@ -13,8 +13,10 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("사격이 맞는 레이어 (벽, 적)")] private LayerMask _hitMask;
         [SerializeField] private LayerMask _wallMask;
         [SerializeField] private GameObject _hitMarkerPrefab;
+        [SerializeField] private PlayerProgress _progress;
         [SerializeField] private BulletTracer _tracerPrefab;
         [SerializeField] private SwingArc _swingArcPrefab;
+        [SerializeField, Tooltip("쏠 때 총구에 잠깐 번쩍이는 빛. 비우면 없다")] private GameObject _muzzleFlashPrefab;
 
         // Inspector에서 보려고 노출한다. 값은 장착한 무기와 가방에서 읽어 온 것이다.
         [Header("확인용 (읽기 전용)")]
@@ -27,6 +29,7 @@ namespace EscapeFromSpace
         private WeaponData _weapon;
         private float _nextFireTime;
         private float _reloadTimeLeft;
+        private float _reloadDuration;
         private CameraShake _cameraShake;
 
         // 한 번 휘두를 때 같은 대상을 두 번 맞히지 않으려고 쓴다. 매번 새로 만들지 않게 재사용한다.
@@ -35,8 +38,11 @@ namespace EscapeFromSpace
         public bool IsReloading { get; private set; }
 
         // 재장전 진행도 0~1과 남은 시간. HUD의 진행 바가 읽는다.
-        public float ReloadProgress => IsReloading && _weapon != null && _weapon.ReloadTime > 0f
-            ? Mathf.Clamp01(1f - _reloadTimeLeft / _weapon.ReloadTime) : 0f;
+        public float ReloadProgress => IsReloading && _weapon != null && _reloadDuration > 0f
+            ? Mathf.Clamp01(1f - _reloadTimeLeft / _reloadDuration) : 0f;
+        // 한 발의 피해. 무기의 피해에 강화한 비율을 더한다.
+        private float Damage => _weapon.Damage * (1f + _progress.Bonus(TechStat.Damage) / 100f);
+
         public float ReloadTimeLeft => IsReloading ? Mathf.Max(0f, _reloadTimeLeft) : 0f;
         public int AmmoInMagazine => _equipped != null ? _equipped.AmmoInMagazine : 0;
 
@@ -175,7 +181,10 @@ namespace EscapeFromSpace
             if (_equipped.AmmoInMagazine <= 0 || _input.ReloadPressedThisFrame)
             {
                 IsReloading = true;
-                _reloadTimeLeft = _weapon.ReloadTime;
+                // 강화한 만큼 재장전이 빨라진다.
+                _reloadDuration = _weapon.ReloadTime * _progress.TimeMultiplier(TechStat.ReloadSpeed);
+                _reloadTimeLeft = _reloadDuration;
+                Sfx.PlayAt(SfxId.ReloadStart, transform.position);
             }
         }
 
@@ -186,6 +195,7 @@ namespace EscapeFromSpace
             _equipped.AmmoInMagazine += loaded;
             _inventory.ConsumeAmmo(_weapon.AmmoItem, loaded);
             IsReloading = false;
+            Sfx.PlayAt(SfxId.ReloadEnd, transform.position);
         }
 
         // 근접 무기는 플레이어 앞쪽 부채꼴 안의 대상을 모두 맞힌다. 무기의 퍼짐 값이 부채꼴 전체 각이다.
@@ -193,6 +203,7 @@ namespace EscapeFromSpace
         {
             LastSwingTime = Time.time;
             Vector2 center = transform.position;
+            Sfx.PlayAt(_weapon.FireSound, center);
             Vector2 aim = _controller.AimDirection;
             float halfAngle = _weapon.SpreadAngle * 0.5f;
 
@@ -229,7 +240,7 @@ namespace EscapeFromSpace
 
                 _swingHits.Add(health);
                 Instantiate(_hitMarkerPrefab, hitPoint, Quaternion.identity);
-                health.TakeDamage(_weapon.Damage, hitPoint);
+                health.TakeDamage(Damage, hitPoint);
             }
         }
 
@@ -260,11 +271,21 @@ namespace EscapeFromSpace
             if (blocked.collider != null)
             {
                 Instantiate(_hitMarkerPrefab, blocked.point, Quaternion.identity);
+                Sfx.PlayAt(SfxId.WallImpact, blocked.point);
                 return;
             }
 
             // 총소리. 벽에 막혀 탄이 못 나간 경우와 광선검은 소리를 내지 않는다.
             GunNoise.Emit(center);
+            Sfx.PlayAt(_weapon.FireSound, muzzle);
+            if (_muzzleFlashPrefab != null)
+            {
+                Instantiate(_muzzleFlashPrefab, muzzle, _muzzle.rotation);
+            }
+
+            // 총은 손에 있어서 몸 중심에서 본 조준 방향과 나란히 쏘면 마우스 옆으로 빗나간다. 총구에서 겨누는 점을 향해 쏜다.
+            Vector2 toAim = _controller.AimPoint - muzzle;
+            Vector2 aim = toAim.sqrMagnitude > 0.0001f ? toAim.normalized : _controller.AimDirection;
 
             float moveScale = MoveSpreadScale;
             bool isFan = _weapon.Category == WeaponCategory.Shotgun;
@@ -277,7 +298,7 @@ namespace EscapeFromSpace
             for (int i = 0; i < _weapon.PelletCount; i++)
             {
                 float angle = isFan ? fanCenter + Random.Range(-fanHalf, fanHalf) : Random.Range(-spread, spread);
-                Vector2 direction = Quaternion.Euler(0f, 0f, angle) * _controller.AimDirection;
+                Vector2 direction = Quaternion.Euler(0f, 0f, angle) * aim;
                 FirePellet(muzzle, direction);
             }
         }
@@ -299,7 +320,12 @@ namespace EscapeFromSpace
             var health = hit.collider.GetComponentInParent<Health>();
             if (health != null)
             {
-                health.TakeDamage(_weapon.Damage, hit.point);
+                health.TakeDamage(Damage, hit.point);
+            }
+            else
+            {
+                // 로봇이 맞는 소리는 로봇 쪽(SparkOnHit)이 낸다.
+                Sfx.PlayAt(SfxId.WallImpact, hit.point);
             }
         }
     }

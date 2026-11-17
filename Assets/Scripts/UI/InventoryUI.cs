@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace EscapeFromSpace
@@ -12,9 +13,9 @@ namespace EscapeFromSpace
         private const float Padding = 18f;
         private const int MaxBagRows = 7;
 
-        private static readonly Color PanelColor = new Color(0.08f, 0.09f, 0.12f, 0.92f);
-        private static readonly Color CellColor = new Color(0.22f, 0.24f, 0.29f, 1f);
-        private static readonly Color SecureCellColor = new Color(0.2f, 0.33f, 0.26f, 1f);
+        // 판과 칸의 색은 맵의 벽·바닥과 겹치지 않게 UiTheme에서 정한다 (2026-11-17 사용자 결정).
+        private static readonly Color CellColor = UiTheme.Cell;
+        private static readonly Color SecureCellColor = UiTheme.SecureCell;
         private static readonly Color CanDropColor = new Color(0.3f, 1f, 0.4f, 0.35f);
         private static readonly Color CannotDropColor = new Color(1f, 0.3f, 0.3f, 0.35f);
         private static readonly string[] EquipLabels = { "헬멧", "방탄복", "무기" };
@@ -88,6 +89,26 @@ namespace EscapeFromSpace
         private bool _originRotated;
         private bool _originIsEquip;
         private EquipSlot _originSlot;
+
+        // 묶음 나누기 (2026-11-17 사용자 결정). 우클릭하면 수량을 고르는 창이 뜨고, 고른 만큼이 마우스에 붙는다.
+        // 나눈 것은 버튼을 누르고 있지 않아도 붙어 있고, 다음 좌클릭으로 놓는다.
+        private RectTransform _splitPanel;
+        private RectTransform _splitBar;
+        private Image _splitFill;
+        private Text _splitTitle;
+        private Text _splitCountText;
+        private RectTransform _splitMinus;
+        private RectTransform _splitPlus;
+        private RectTransform _splitConfirm;
+        private RectTransform _splitCancel;
+        private ItemStack _splitSource;
+        private GridView _splitView;
+        private int _splitCount;
+        private bool _splitBarDragging;
+
+        // 나눈 것을 들고 있는 동안, 못 놓으면 도로 합칠 원래 묶음
+        private ItemStack _mergeBack;
+        private bool _carried;
 
         public bool IsOpen => _isOpen;
 
@@ -210,6 +231,7 @@ namespace EscapeFromSpace
 
                 _isOpen = true;
                 _dirty = true;
+                Sfx.Play(SfxId.BagOpen);
             }
 
             if (!ReferenceEquals(opened, _shownLootable))
@@ -246,6 +268,11 @@ namespace EscapeFromSpace
             _shownLootable = null;
             _lootView.Grid = null;
             _lootView.Owner = null;
+            if (_isOpen)
+            {
+                Sfx.Play(SfxId.BagClose);
+            }
+
             _isOpen = false;
         }
 
@@ -297,11 +324,25 @@ namespace EscapeFromSpace
         private void UpdateDrag()
         {
             Vector2 mouse = _input.AimScreenPosition;
+            Mouse pointer = Mouse.current;
+            Keyboard keyboard = Keyboard.current;
+            bool rightClicked = pointer != null && pointer.rightButton.wasPressedThisFrame;
+
+            if (_splitSource != null)
+            {
+                _highlight.gameObject.SetActive(false);
+                UpdateSplit(mouse, pointer, keyboard);
+                return;
+            }
 
             if (_held == null)
             {
                 _highlight.gameObject.SetActive(false);
-                if (_input.FirePressedThisFrame)
+                if (rightClicked)
+                {
+                    TryOpenSplit(FindTarget(mouse), mouse);
+                }
+                else if (_input.FirePressedThisFrame)
                 {
                     TryPickUp(FindTarget(mouse));
                 }
@@ -310,6 +351,14 @@ namespace EscapeFromSpace
             }
 
             MoveToScreenPoint(_heldView, mouse);
+
+            // 나눈 것을 들고 있을 때 우클릭이나 Esc는 취소다. 원래 묶음에 도로 합친다.
+            if (_carried && (rightClicked || (keyboard != null && keyboard.escapeKey.wasPressedThisFrame)))
+            {
+                Sfx.Play(SfxId.ItemPlace);
+                ReturnToOrigin();
+                return;
+            }
 
             // 가방을 연 상태에서 R은 회전이다.
             if (_input.ReloadPressedThisFrame && _held.Data.Width != _held.Data.Height)
@@ -321,10 +370,172 @@ namespace EscapeFromSpace
             DropTarget target = FindTarget(mouse);
             ShowHighlight(target);
 
-            if (!_input.FireHeld)
+            if (_carried ? _input.FirePressedThisFrame : !_input.FireHeld)
             {
                 Drop(target);
             }
+        }
+
+        // ---------- 묶음 나누기 ----------
+
+        private void TryOpenSplit(DropTarget target, Vector2 mouse)
+        {
+            if (target.Kind != TargetKind.Grid)
+            {
+                return;
+            }
+
+            // 2개 이상 쌓인 묶음만 나눌 수 있다.
+            ItemStack stack = target.View.Grid.GetAt(target.X, target.Y);
+            if (stack == null || !stack.IsStackable || stack.Count < 2)
+            {
+                if (stack != null)
+                {
+                    Sfx.Play(SfxId.ItemRefuse);
+                }
+
+                return;
+            }
+
+            _splitSource = stack;
+            _splitView = target.View;
+            _splitCount = stack.Count / 2;
+            _splitBarDragging = false;
+            _splitTitle.text = $"{stack.Data.DisplayName} 나누기";
+            _splitPanel.gameObject.SetActive(true);
+            _splitPanel.SetAsLastSibling();
+
+            // 마우스 오른쪽에 띄우되 화면 밖으로 나가지 않게 한다.
+            MoveToScreenPoint(_splitPanel, mouse);
+            Rect screen = ((RectTransform)transform).rect;
+            Vector2 size = _splitPanel.sizeDelta;
+            Vector3 position = _splitPanel.localPosition;
+            position.x = Mathf.Clamp(position.x + 20f, screen.xMin + 10f, screen.xMax - size.x - 10f);
+            position.y = Mathf.Clamp(position.y, screen.yMin + size.y * 0.5f + 10f, screen.yMax - size.y * 0.5f - 10f);
+            _splitPanel.localPosition = position;
+
+            RefreshSplit();
+            Sfx.Play(SfxId.UiPrompt);
+        }
+
+        private void UpdateSplit(Vector2 mouse, Mouse pointer, Keyboard keyboard)
+        {
+            // 창이 떠 있는 사이에 묶음이 사라지거나 줄었으면(재장전 등) 닫는다.
+            if (_splitView.Grid == null || !_splitView.Grid.Contains(_splitSource) || _splitSource.Count < 2)
+            {
+                CloseSplit();
+                return;
+            }
+
+            int max = _splitSource.Count - 1;
+            int count = Mathf.Clamp(_splitCount, 1, max);
+            bool clicked = _input.FirePressedThisFrame;
+
+            // 막대를 누르거나 끌어서 수량을 고른다.
+            if (clicked && Contains(_splitBar, mouse))
+            {
+                _splitBarDragging = true;
+            }
+
+            if (!_input.FireHeld)
+            {
+                _splitBarDragging = false;
+            }
+
+            if (_splitBarDragging
+                && RectTransformUtility.ScreenPointToLocalPointInRectangle(_splitBar, mouse, UiCamera, out Vector2 local))
+            {
+                float ratio = Mathf.Clamp01(local.x / _splitBar.sizeDelta.x);
+                count = Mathf.Clamp(Mathf.RoundToInt(ratio * _splitSource.Count), 1, max);
+            }
+
+            // 한 개씩: − / + 버튼, 마우스 휠, 좌우 화살표
+            int step = 0;
+            if (clicked && Contains(_splitMinus, mouse))
+            {
+                step = -1;
+            }
+            else if (clicked && Contains(_splitPlus, mouse))
+            {
+                step = 1;
+            }
+
+            if (pointer != null)
+            {
+                float wheel = pointer.scroll.ReadValue().y;
+                step += wheel > 0f ? 1 : wheel < 0f ? -1 : 0;
+            }
+
+            if (keyboard != null)
+            {
+                step += keyboard.rightArrowKey.wasPressedThisFrame ? 1 : 0;
+                step -= keyboard.leftArrowKey.wasPressedThisFrame ? 1 : 0;
+            }
+
+            count = Mathf.Clamp(count + step, 1, max);
+            if (count != _splitCount)
+            {
+                _splitCount = count;
+                RefreshSplit();
+            }
+
+            bool enter = keyboard != null && (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame);
+            bool escape = keyboard != null && keyboard.escapeKey.wasPressedThisFrame;
+            bool rightClicked = pointer != null && pointer.rightButton.wasPressedThisFrame;
+
+            if (enter || (clicked && Contains(_splitConfirm, mouse)))
+            {
+                ConfirmSplit();
+            }
+            else if (escape || rightClicked || (clicked && (Contains(_splitCancel, mouse) || !Contains(_splitPanel, mouse))))
+            {
+                Sfx.Play(SfxId.UiCancel);
+                CloseSplit();
+            }
+        }
+
+        private void RefreshSplit()
+        {
+            _splitCountText.text = $"{_splitCount} / {_splitSource.Count}";
+            _splitFill.fillAmount = _splitCount / (float)_splitSource.Count;
+        }
+
+        // 고른 만큼을 떼어 마우스에 붙인다. 원래 묶음은 제자리에 남는다.
+        private void ConfirmSplit()
+        {
+            ItemStack source = _splitSource;
+            GridView view = _splitView;
+            int count = Mathf.Clamp(_splitCount, 1, source.Count - 1);
+            CloseSplit();
+
+            (int x, int y) = view.Grid.PositionOf(source);
+            source.Count -= count;
+
+            _held = new ItemStack(source.Data, count) { Rotated = source.Rotated };
+            _originView = view;
+            _originX = x;
+            _originY = y;
+            _originRotated = source.Rotated;
+            _originIsEquip = false;
+            _mergeBack = source;
+            _carried = true;
+
+            RebuildHeldView();
+            _dirty = true;
+            Sfx.Play(SfxId.ItemPick);
+        }
+
+        private void CloseSplit()
+        {
+            _splitSource = null;
+            _splitView = null;
+            _splitBarDragging = false;
+            _splitPanel.gameObject.SetActive(false);
+        }
+
+        private bool Contains(RectTransform rect, Vector2 screenPoint)
+        {
+            return RectTransformUtility.RectangleContainsScreenPoint(rect, screenPoint, UiCamera);
         }
 
         private void TryPickUp(DropTarget target)
@@ -379,6 +590,7 @@ namespace EscapeFromSpace
 
             RebuildHeldView();
             _dirty = true;
+            Sfx.Play(SfxId.ItemPick);
         }
 
         private bool CanDrop(DropTarget target)
@@ -421,6 +633,10 @@ namespace EscapeFromSpace
         {
             if (!CanDrop(target))
             {
+                // 제자리에 도로 놓은 것은 거절이 아니다.
+                bool sameSpot = target.Kind == TargetKind.Grid && !_originIsEquip && target.View == _originView
+                    && target.X == _originX && target.Y == _originY;
+                Sfx.Play(sameSpot || target.Kind == TargetKind.None ? SfxId.ItemPlace : SfxId.ItemRefuse);
                 ReturnToOrigin();
                 return;
             }
@@ -432,6 +648,7 @@ namespace EscapeFromSpace
                 case TargetKind.Outside:
                     held.Rotated = false;
                     _interactor.DropToWorld(held);
+                    Sfx.Play(SfxId.ItemDropToWorld);
                     break;
 
                 case TargetKind.Grid:
@@ -466,6 +683,11 @@ namespace EscapeFromSpace
                     break;
             }
 
+            if (target.Kind != TargetKind.Outside)
+            {
+                Sfx.Play(SfxId.ItemPlace);
+            }
+
             EndDrag();
         }
 
@@ -478,7 +700,12 @@ namespace EscapeFromSpace
 
             _held.Rotated = _originRotated;
 
-            if (_originIsEquip)
+            // 나눈 것은 원래 묶음에 도로 합친다. 그 묶음이 사라졌으면 아래의 보통 경로로 간다.
+            if (_mergeBack != null && _originView.Grid != null && _originView.Grid.Contains(_mergeBack))
+            {
+                _mergeBack.Count += _held.Count;
+            }
+            else if (_originIsEquip)
             {
                 _inventory.SetEquipped(_originSlot, _held);
             }
@@ -497,6 +724,7 @@ namespace EscapeFromSpace
 
         private void CancelDrag()
         {
+            CloseSplit();
             ReturnToOrigin();
         }
 
@@ -509,6 +737,8 @@ namespace EscapeFromSpace
 
             _held = null;
             _originView = null;
+            _mergeBack = null;
+            _carried = false;
             _heldView.gameObject.SetActive(false);
             _highlight.gameObject.SetActive(false);
             _inventory.NotifyChanged();
@@ -618,7 +848,7 @@ namespace EscapeFromSpace
             float height = Padding * 2f + LabelHeight * 2f + CellPitch * (1 + MaxBagRows) + 20f;
             _bagPanel = CreateRect("BagPanel", root, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(24f, 0f),
                 new Vector2(width, height));
-            _bagPanel.gameObject.AddComponent<Image>().color = PanelColor;
+            UiBuilder.Window(_bagPanel);
 
             float y = -Padding;
             for (int i = 0; i < 3; i++)
@@ -627,7 +857,7 @@ namespace EscapeFromSpace
                 CreateText(EquipLabels[i], _bagPanel, new Vector2(x, y), new Vector2(_cellSize, LabelHeight), _labelFontSize, TextAnchor.MiddleCenter);
                 _equipCells[i] = CreateRect($"Equip {EquipLabels[i]}", _bagPanel, new Vector2(0f, 1f), new Vector2(0f, 1f),
                     new Vector2(x, y - LabelHeight), new Vector2(_cellSize, _cellSize));
-                _equipCells[i].gameObject.AddComponent<Image>().color = CellColor;
+                UiBuilder.Cell(_equipCells[i], CellColor);
             }
 
             y -= LabelHeight + CellPitch + 20f;
@@ -648,10 +878,15 @@ namespace EscapeFromSpace
                     new Vector2(Padding + CellPitch * 3f + 12f, y), Vector2.zero),
             };
 
+            // 보관함 아래의 빈 자리에 조작 안내를 둔다.
+            Text help = CreateText("우클릭\n묶음 나누기", _bagPanel, new Vector2(Padding + CellPitch * 3f + 12f, y - CellPitch - 4f),
+                new Vector2(_cellSize, 60f), 18, TextAnchor.UpperCenter);
+            help.color = UiTheme.TextDim;
+
             // 루팅 칸: 대상의 위쪽에 뜬다. 크기는 열 때 대상에 맞춘다.
             _lootPanel = CreateRect("LootPanel", root, Vector2.zero, new Vector2(0.5f, 0f), Vector2.zero, Vector2.zero);
             _lootPanel.anchorMax = Vector2.zero;
-            _lootPanel.gameObject.AddComponent<Image>().color = PanelColor;
+            UiBuilder.Window(_lootPanel);
             _lootView = new GridView
             {
                 CellTint = CellColor,
@@ -660,14 +895,14 @@ namespace EscapeFromSpace
 
             _highlight = CreateRect("Highlight", _bagView.Root, new Vector2(0f, 1f), new Vector2(0f, 1f), Vector2.zero,
                 new Vector2(_cellSize, _cellSize));
-            _highlight.gameObject.AddComponent<Image>();
+            _highlight.gameObject.AddComponent<Image>().raycastTarget = false;
             _highlight.gameObject.SetActive(false);
 
             // "E" 안내와 그 아래의 진행 바
             _hint = CreateRect("InteractHint", root, Vector2.zero, new Vector2(0.5f, 0f), Vector2.zero, new Vector2(60f, 60f));
             _hint.anchorMax = Vector2.zero;
-            _hint.gameObject.AddComponent<Image>().color = PanelColor;
-            CreateText("E", _hint, Vector2.zero, new Vector2(60f, 60f), 32, TextAnchor.MiddleCenter);
+            UiBuilder.Panel(_hint, UiTheme.PanelFill, UiTheme.PanelBorder);
+            CreateText("E", _hint, Vector2.zero, new Vector2(60f, 60f), 32, TextAnchor.MiddleCenter).fontStyle = FontStyle.Bold;
             _hintFill = UiBuilder.Bar("HoldProgress", _hint, new Vector2(0.5f, 0f), new Vector2(0.5f, 1f), new Vector2(0f, -6f),
                 new Vector2(120f, 18f), new Color(1f, 0.9f, 0.3f));
             _hint.gameObject.SetActive(false);
@@ -679,8 +914,39 @@ namespace EscapeFromSpace
             _heldView.anchorMax = Vector2.zero;
             _heldView.gameObject.SetActive(false);
 
+            BuildSplitPanel(root);
+
             _bagPanel.gameObject.SetActive(false);
             _lootPanel.gameObject.SetActive(false);
+        }
+
+        // 나눌 수량을 고르는 작은 창: 이름, 수량 막대, − 수량 +, 확인과 취소
+        private void BuildSplitPanel(RectTransform root)
+        {
+            var size = new Vector2(380f, 262f);
+            _splitPanel = CreateRect("SplitPanel", root, new Vector2(0.5f, 0.5f), new Vector2(0f, 0.5f), Vector2.zero, size);
+            UiBuilder.Window(_splitPanel);
+
+            _splitTitle = CreateText(string.Empty, _splitPanel, new Vector2(20f, -12f), new Vector2(size.x - 40f, 36f), 24, TextAnchor.MiddleCenter);
+            _splitTitle.color = UiTheme.Accent;
+            _splitTitle.fontStyle = FontStyle.Bold;
+
+            _splitFill = UiBuilder.Bar("Amount", _splitPanel, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -56f),
+                new Vector2(size.x - 40f, 34f), UiTheme.Accent);
+            _splitBar = (RectTransform)_splitFill.transform.parent;
+
+            var stepSize = new Vector2(56f, 46f);
+            _splitMinus = UiBuilder.Button("−", _splitPanel, new Vector2(0.5f, 1f), new Vector2(-130f, -108f), stepSize, false);
+            _splitPlus = UiBuilder.Button("+", _splitPanel, new Vector2(0.5f, 1f), new Vector2(130f, -108f), stepSize, false);
+            _splitCountText = CreateText(string.Empty, _splitPanel, new Vector2(size.x * 0.5f - 95f, -108f), new Vector2(190f, 46f), 28,
+                TextAnchor.MiddleCenter);
+            _splitCountText.fontStyle = FontStyle.Bold;
+
+            var buttonSize = new Vector2(160f, 50f);
+            _splitConfirm = UiBuilder.Button("확인", _splitPanel, new Vector2(0.5f, 0f), new Vector2(-88f, 26f), buttonSize, true);
+            _splitCancel = UiBuilder.Button("취소", _splitPanel, new Vector2(0.5f, 0f), new Vector2(88f, 26f), buttonSize, false);
+
+            _splitPanel.gameObject.SetActive(false);
         }
 
         private void Redraw()
@@ -741,7 +1007,7 @@ namespace EscapeFromSpace
                 {
                     RectTransform cell = CreateRect("Cell", view.Root, new Vector2(0f, 1f), new Vector2(0f, 1f),
                         new Vector2(x * CellPitch, -y * CellPitch), new Vector2(_cellSize, _cellSize));
-                    cell.gameObject.AddComponent<Image>().color = view.CellTint;
+                    UiBuilder.Cell(cell, view.CellTint);
                 }
             }
 
@@ -780,7 +1046,7 @@ namespace EscapeFromSpace
         private RectTransform CreateItemView(ItemStack stack, RectTransform parent, Vector2 position, Vector2 size)
         {
             RectTransform view = CreateRect(stack.Data.DisplayName, parent, new Vector2(0f, 1f), new Vector2(0f, 1f), position, size);
-            view.gameObject.AddComponent<Image>().color = stack.Data.Color;
+            UiBuilder.Cell(view, stack.Data.Color);
 
             // 그림은 이름과 수량 아래에 깔린다.
             Image icon = UiBuilder.Icon(view, Mathf.Min(size.x, size.y) * 0.62f);
@@ -833,7 +1099,7 @@ namespace EscapeFromSpace
             text.fontSize = fontSize;
             text.alignment = alignment;
             text.text = content;
-            text.color = Color.white;
+            text.color = UiTheme.Text;
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
             text.verticalOverflow = VerticalWrapMode.Truncate;
             text.raycastTarget = false;

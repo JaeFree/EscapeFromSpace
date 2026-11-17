@@ -22,6 +22,10 @@ namespace EscapeFromSpace
         [SerializeField] private BulletTracer _tracerPrefab;
         [SerializeField] private SwingArc _swingArcPrefab;
         [SerializeField] private AttackTelegraph _telegraph;
+        [SerializeField, Tooltip("쏠 때 몸 앞에 잠깐 번쩍이는 빛. 비우면 없다")] private GameObject _muzzleFlashPrefab;
+
+        // 조준선이 고정되는 순간을 소리로 한 번만 알린다.
+        private bool _lockAnnounced;
 
         private RobotData _data;
         private Health _player;
@@ -98,6 +102,8 @@ namespace EscapeFromSpace
             {
                 _phase = Phase.Windup;
                 _timer = _data.WindupTime;
+                _lockAnnounced = false;
+                Sfx.PlayAt(SfxId.RobotCharge, transform.position);
                 UpdateTelegraph();
             }
             else
@@ -121,6 +127,11 @@ namespace EscapeFromSpace
             if (_timer > _data.AimLockTime)
             {
                 _aimDirection = DirectionToPlayer();
+            }
+            else if (!_lockAnnounced && _data.AimLockTime > 0f && _data.AttackKind == RobotAttackKind.Sniper)
+            {
+                _lockAnnounced = true;
+                Sfx.PlayAt(SfxId.RobotAimLock, transform.position);
             }
 
             if (_timer <= 0f)
@@ -197,6 +208,14 @@ namespace EscapeFromSpace
             if (_data.WindupTime <= 0f)
             {
                 _aimDirection = DirectionToPlayer();
+            }
+
+            Vector2 origin = transform.position;
+            Sfx.PlayAt(_data.AttackSound, origin);
+            if (_muzzleFlashPrefab != null && _data.AttackKind != RobotAttackKind.Melee)
+            {
+                float angle = Mathf.Atan2(_aimDirection.y, _aimDirection.x) * Mathf.Rad2Deg;
+                Instantiate(_muzzleFlashPrefab, origin + _aimDirection * MuzzleOffset, Quaternion.Euler(0f, 0f, angle));
             }
 
             switch (_data.AttackKind)

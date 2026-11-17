@@ -30,3 +30,7 @@ MonoBehaviour:
     _weight: 13
   - _item: {fileID: 11400000, guid: 1e16ed1506f679848ab2590cb6d708c9, type: 2}
     _weight: 6
+  - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+    _weight: 20
+  - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
+    _weight: 8

@@ -12,6 +12,9 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("산소가 0일 때 초당 HP 감소")] private float _suffocationDamagePerSecond;
         [SerializeField, Tooltip("초. 산소가 이만큼 남으면 게이지가 빨갛게 깜빡인다")] private float _oxygenWarningSeconds;
 
+        [SerializeField, Tooltip("초. 산소가 얼마 안 남았을 때 경고음이 울리는 간격")] private float _oxygenWarningBeepInterval = 2.5f;
+        [SerializeField, Tooltip("초. 질식 중에 경고음이 울리는 간격")] private float _suffocationBeepInterval = 0.8f;
+
         [Header("탈출 포드")]
         [FormerlySerializedAs("_escapeCountdown")]
         [SerializeField, Tooltip("초. 포드 안에서 탈출 키를 누르고 있어야 하는 시간")] private float _escapeHoldTime;
@@ -21,6 +24,8 @@ namespace EscapeFromSpace
         public float BaseOxygenSeconds => _baseOxygenSeconds;
         public float SuffocationDamagePerSecond => _suffocationDamagePerSecond;
         public float OxygenWarningSeconds => _oxygenWarningSeconds;
+        public float OxygenWarningBeepInterval => _oxygenWarningBeepInterval;
+        public float SuffocationBeepInterval => _suffocationBeepInterval;
         public float EscapeHoldTime => _escapeHoldTime;
         public float PodOpenDelay => _podOpenDelay;
         public bool PodsAlwaysOpen => _podsAlwaysOpen;

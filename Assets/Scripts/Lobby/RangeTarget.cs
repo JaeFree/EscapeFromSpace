@@ -14,6 +14,7 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("칸. 놓인 자리에서 위로 이만큼 갔다가 돌아온다. 음수면 아래로")] private float _travel = 3f;
         [SerializeField, Tooltip("칸/초")] private float _speed = 2f;
         [SerializeField, Tooltip("초. 부서지고 다시 생길 때까지")] private float _respawnDelay = 2f;
+        [SerializeField, Tooltip("부서질 때 터지는 효과. 비우면 없다")] private GameObject _explosionPrefab;
 
         [Header("머리 위 HP 바")]
         [SerializeField, Tooltip("칸. 가로, 세로")] private Vector2 _barSize = new Vector2(0.9f, 0.12f);
@@ -113,6 +114,12 @@ namespace EscapeFromSpace
         {
             _respawnTimeLeft = _respawnDelay;
             SetVisible(false);
+            if (_explosionPrefab != null)
+            {
+                Instantiate(_explosionPrefab, transform.position, Quaternion.identity);
+            }
+
+            Sfx.PlayAt(SfxId.RobotDestroyed, transform.position);
         }
 
         private void SetVisible(bool visible)
