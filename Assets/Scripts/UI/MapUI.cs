@@ -42,6 +42,16 @@ namespace EscapeFromSpace
 
         public bool IsOpen => _isOpen;
 
+        // 설정 메뉴가 열릴 때, Esc로 닫을 때
+        public void Close()
+        {
+            if (_isOpen)
+            {
+                _isOpen = false;
+                Sfx.Play(SfxId.MapClose);
+            }
+        }
+
         // 맵의 크기는 MapExplorer의 Awake에서 정해진다. 그 뒤에 읽으려고 Start에서 만든다.
         private void Start()
         {

@@ -24,9 +24,7 @@ namespace EscapeFromSpace.EditorTools
             EnsureItem("EnergyCrystal", "에너지 결정", ItemCategory.Loot, materialColor, 0.4f, 120, 10, 1);
             EnsureItemDatabase();
 
-            SetReferenceIfEmpty(LoadItem("Alloy"), "_icon", EnsureAlloySprite());
-            SetReferenceIfEmpty(LoadItem("NanoFiber"), "_icon", EnsureFiberSprite());
-            SetReferenceIfEmpty(LoadItem("EnergyCrystal"), "_icon", EnsureCrystalSprite());
+            EnsureMaterialIcons();
 
             if (isNew)
             {
@@ -189,51 +187,6 @@ namespace EscapeFromSpace.EditorTools
             Color color = Color.Lerp(fill, outline, Mathf.Clamp01(distance / 0.04f + 1f));
             color.a = 1f - Mathf.Clamp01((distance - 0.06f) / 0.04f + 0.5f);
             return color;
-        }
-
-        // 강화 합금: 육각 금속 덩이
-        private static Sprite EnsureAlloySprite()
-        {
-            return EnsureEffectSprite(ItemArtFolder + "/Alloy.png", 64, (ColorAt)((x, y) =>
-            {
-                float hex = Mathf.Max(Mathf.Abs(x) * 0.866f + Mathf.Abs(y) * 0.5f, Mathf.Abs(y)) - 0.72f;
-                Color fill = Color.Lerp(new Color(0.42f, 0.48f, 0.6f), new Color(0.8f, 0.86f, 0.95f), Mathf.InverseLerp(-0.7f, 0.7f, y));
-
-                // 안쪽에 한 겹 더 밝은 선을 넣어 깎은 면처럼 보이게 한다.
-                if (hex > -0.3f && hex < -0.22f)
-                {
-                    fill = Color.Lerp(fill, Color.white, 0.5f);
-                }
-
-                return Shape(hex, fill);
-            }));
-        }
-
-        // 나노 섬유: 감아 놓은 실타래
-        private static Sprite EnsureFiberSprite()
-        {
-            return EnsureEffectSprite(ItemArtFolder + "/NanoFiber.png", 64, (ColorAt)((x, y) =>
-            {
-                float radius = Mathf.Sqrt(x * x + y * y);
-                float ring = Mathf.Abs(radius - 0.52f) - 0.26f;
-                float strand = 0.5f + 0.5f * Mathf.Sin(Mathf.Atan2(y, x) * 9f + radius * 14f);
-                Color fill = Color.Lerp(new Color(0.12f, 0.55f, 0.5f), new Color(0.55f, 1f, 0.85f), strand);
-                return Shape(ring, fill);
-            }));
-        }
-
-        // 에너지 결정: 마름모 보석
-        private static Sprite EnsureCrystalSprite()
-        {
-            return EnsureEffectSprite(ItemArtFolder + "/EnergyCrystal.png", 64, (ColorAt)((x, y) =>
-            {
-                float diamond = (Mathf.Abs(x) / 0.58f + Mathf.Abs(y) / 0.86f - 1f) * 0.48f;
-
-                // 네 면의 밝기를 달리해 깎인 보석처럼 보이게 한다.
-                float shade = (x < 0f ? 0.25f : 0f) + (y > 0f ? 0.45f : 0f);
-                Color fill = Color.Lerp(new Color(0.6f, 0.2f, 0.85f), new Color(1f, 0.75f, 1f), shade);
-                return Shape(diamond, fill);
-            }));
         }
 
         // 강화 단말기: 어두운 몸체에 푸른 화면과 호박색 단추

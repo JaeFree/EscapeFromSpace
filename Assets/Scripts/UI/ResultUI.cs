@@ -17,7 +17,20 @@ namespace EscapeFromSpace
         private Text _title;
         private Text _body;
         private Text _buttonText;
+        private RectTransform _xpRoot;
+        private Image _xpBar;
+        private Text _xpLevel;
+        private Text _xpCount;
         private bool _shown;
+
+        public bool IsShown => _shown;
+
+        // 경험치 바 연출: 들어올 때의 값에서 시작해 얻은 만큼 채운다.
+        private int _animLevel;
+        private float _animXp;
+        private float _animRemaining;
+        private float _animDelay;
+        private float _levelPulse;
 
         private void Awake()
         {
@@ -39,6 +52,8 @@ namespace EscapeFromSpace
 
                 return;
             }
+
+            AnimateXp(Time.unscaledDeltaTime);
 
             // 게임이 멈춰 있어도 입력은 들어온다. 버튼을 누르거나 Enter를 누르면 넘어간다.
             Mouse mouse = Mouse.current;
@@ -65,7 +80,8 @@ namespace EscapeFromSpace
             int seconds = Mathf.FloorToInt(_raid.ElapsedTime);
             string time = $"걸린 시간  {seconds / 60}:{seconds % 60:00}";
             PlayerProgress progress = PlayerProgress.Current;
-            string xp = progress != null ? $"\n경험치  +{_raid.XpGained}  (레벨 {progress.Level})" : string.Empty;
+            string xp = progress != null ? $"\n경험치  +{_raid.XpGained}" : string.Empty;
+            StartXpAnimation(progress);
 
             if (_raid.Outcome == RaidOutcome.Escaped)
             {
@@ -80,6 +96,72 @@ namespace EscapeFromSpace
                 _title.color = new Color(1f, 0.35f, 0.35f);
                 _body.text = $"{time}\n잃은 가치  {_raid.CarriedValue}\n보관함으로 지킨 것  {secured}{xp}";
             }
+        }
+
+        private void StartXpAnimation(PlayerProgress progress)
+        {
+            _xpRoot.gameObject.SetActive(progress != null);
+            if (progress == null)
+            {
+                return;
+            }
+
+            _animLevel = progress.StartLevel;
+            _animXp = progress.StartXp;
+            _animRemaining = _raid.XpGained;
+            _animDelay = 0.5f;
+            DrawXp(progress.Tree);
+        }
+
+        // 바가 한 번 차는 데 약 1초. 얻은 경험치가 많아 레벨이 여러 번 올라도 한 칸씩 보여 준다.
+        private void AnimateXp(float deltaTime)
+        {
+            PlayerProgress progress = PlayerProgress.Current;
+            if (progress == null)
+            {
+                return;
+            }
+
+            TechTree tree = progress.Tree;
+            if (_levelPulse > 0f)
+            {
+                _levelPulse = Mathf.Max(0f, _levelPulse - deltaTime);
+                _xpLevel.rectTransform.localScale = Vector3.one * (1f + _levelPulse * 1.2f);
+            }
+
+            if (_animDelay > 0f)
+            {
+                _animDelay -= deltaTime;
+                return;
+            }
+
+            if (_animRemaining <= 0f || _animLevel >= tree.MaxLevel)
+            {
+                return;
+            }
+
+            float need = tree.XpToNext(_animLevel);
+            float step = Mathf.Min(_animRemaining, need * deltaTime);
+            _animXp += step;
+            _animRemaining -= step;
+            if (_animXp >= need - 0.001f)
+            {
+                _animXp = 0f;
+                _animLevel++;
+                _levelPulse = 0.25f;
+                Sfx.Play(SfxId.LevelUp);
+            }
+
+            DrawXp(tree);
+        }
+
+        private void DrawXp(TechTree tree)
+        {
+            bool max = _animLevel >= tree.MaxLevel;
+            int need = tree.XpToNext(_animLevel);
+            _xpBar.fillAmount = max ? 1f : _animXp / need;
+            _xpLevel.text = $"Lv. {_animLevel}";
+            _xpCount.text = max ? "MAX" : $"{Mathf.FloorToInt(_animXp)} / {need}";
         }
 
         // 대기실에서 들어온 판이면 대기실로 돌아간다. 레이드 씬을 바로 Play했으면 같은 씬을 다시 불러 처음부터 한다.
@@ -102,7 +184,7 @@ namespace EscapeFromSpace
             _root = UiBuilder.Dim("ResultScreen", transform);
 
             RectTransform box = UiBuilder.Rect("Box", _root, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero,
-                new Vector2(640f, 440f));
+                new Vector2(640f, 520f));
             UiBuilder.Window(box);
 
             RectTransform title = UiBuilder.Rect("Title", box, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -30f),
@@ -110,10 +192,23 @@ namespace EscapeFromSpace
             _title = UiBuilder.Text(string.Empty, title, 60, TextAnchor.MiddleCenter, Color.white);
             _title.fontStyle = FontStyle.Bold;
 
-            RectTransform body = UiBuilder.Rect("Body", box, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 10f),
+            RectTransform body = UiBuilder.Rect("Body", box, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 40f),
                 new Vector2(560f, 200f));
             _body = UiBuilder.Text(string.Empty, body, 30, TextAnchor.MiddleCenter, UiTheme.Text);
             _body.lineSpacing = 1.3f;
+
+            // 본문 아래: 레벨과 경험치 바
+            _xpRoot = UiBuilder.Rect("Xp", box, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 136f), new Vector2(560f, 44f));
+            RectTransform level = UiBuilder.Rect("Level", _xpRoot, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), Vector2.zero,
+                new Vector2(110f, 44f));
+            _xpLevel = UiBuilder.Text(string.Empty, level, 30, TextAnchor.MiddleCenter, UiTheme.Accent);
+            _xpLevel.fontStyle = FontStyle.Bold;
+            _xpBar = UiBuilder.Bar("Bar", _xpRoot, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(120f, 0f),
+                new Vector2(440f, 26f), new Color(0.55f, 0.85f, 1f));
+            RectTransform count = UiBuilder.Rect("Count", _xpRoot, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(120f, 0f),
+                new Vector2(440f, 26f));
+            _xpCount = UiBuilder.Text(string.Empty, count, 20, TextAnchor.MiddleCenter, Color.white);
+            UiBuilder.Outline(_xpCount);
 
             _button = UiBuilder.Button("Button", box, new Vector2(0.5f, 0f), new Vector2(0f, 34f), new Vector2(320f, 76f), true);
             _buttonText = _button.GetComponentInChildren<Text>();

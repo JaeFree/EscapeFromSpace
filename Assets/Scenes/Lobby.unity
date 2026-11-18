@@ -4796,6 +4796,7 @@ GameObject:
   - component: {fileID: 1354815785}
   - component: {fileID: 1354815789}
   - component: {fileID: 1354815790}
+  - component: {fileID: 1354815791}
   m_Layer: 0
   m_Name: UI
   m_TagString: Untagged
@@ -4956,6 +4957,19 @@ MonoBehaviour:
   _labelOffset: 0.8
   _nodeSize: {x: 214, y: 68}
   _nodePitch: {x: 250, y: 82}
+--- !u!114 &1354815791
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1354815783}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a85b0fde15856f843bc617100197bc37, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _buttonSize: 72
 --- !u!1 &1469966676
 GameObject:
   m_ObjectHideFlags: 0

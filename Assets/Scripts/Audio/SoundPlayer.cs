@@ -27,6 +27,7 @@ namespace EscapeFromSpace
         private readonly Dictionary<SoundCue, float> _lastPlayTime = new Dictionary<SoundCue, float>();
         private AudioSource[] _voices;
         private AudioSource _ambienceSource;
+        private float _ambienceBaseVolume;
         private AudioSource _musicSource;
         private AudioClip _nextMusic;
         private float _nextMusicVolume;
@@ -89,9 +90,13 @@ namespace EscapeFromSpace
                 PlayMusicFromStart();
             }
 
+            // 설정 메뉴에서 음량을 바꾸면 깔려 있는 소리에도 바로 들려야 한다.
+            _ambienceSource.volume = _ambienceBaseVolume * MixVolume(VolumeChannel.Ambience);
+
             float target = changing ? 0f : 1f;
             if (Mathf.Approximately(_musicFade, target) && !changing)
             {
+                _musicSource.volume = _musicFade * _playingMusicVolume * MixVolume(VolumeChannel.Music);
                 return;
             }
 
@@ -110,7 +115,13 @@ namespace EscapeFromSpace
                 }
             }
 
-            _musicSource.volume = _musicFade * _playingMusicVolume * _library.MasterVolume;
+            _musicSource.volume = _musicFade * _playingMusicVolume * MixVolume(VolumeChannel.Music);
+        }
+
+        // 에셋의 전체 음량(밸런싱용) × 설정 메뉴의 전체 음량 × 설정 메뉴의 갈래 음량
+        private float MixVolume(VolumeChannel channel)
+        {
+            return _library.MasterVolume * GameSettings.Get(VolumeChannel.Master) * GameSettings.Get(channel);
         }
 
         private void SetMusic(AudioClip clip, float volume, float startTime)
@@ -138,7 +149,8 @@ namespace EscapeFromSpace
 
         private void SetAmbience(AudioClip clip, float volume)
         {
-            _ambienceSource.volume = volume * _library.MasterVolume;
+            _ambienceBaseVolume = volume;
+            _ambienceSource.volume = volume * MixVolume(VolumeChannel.Ambience);
             if (_ambienceSource.clip == clip && _ambienceSource.isPlaying)
             {
                 return;
@@ -211,7 +223,7 @@ namespace EscapeFromSpace
             _nextVoice = (_nextVoice + 1) % VoiceCount;
 
             voice.clip = cue.PickClip();
-            voice.volume = cue.Volume * volumeScale * _library.MasterVolume;
+            voice.volume = cue.Volume * volumeScale * MixVolume(VolumeChannel.Effects);
             voice.pitch = cue.PickPitch();
             voice.panStereo = pan;
             voice.Play();

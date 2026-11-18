@@ -138,6 +138,15 @@ namespace EscapeFromSpace
         // 끌고 있는 아이템은 어느 칸에도 없다. 그 사이에 저장하면 빠지므로 대기실이 이 값을 본다.
         public bool IsDragging => _held != null;
 
+        // 수량 창이 떠 있거나 나눈 묶음을 들고 있으면 Esc는 그것을 취소하는 데 쓰인다.
+        public bool IsHandlingEscape => _splitSource != null || _carried;
+
+        // 설정 메뉴가 열릴 때 가방과 루팅 칸을 닫는다.
+        public void Close()
+        {
+            CloseAll();
+        }
+
         private float CellPitch => _cellSize + CellGap;
         private float LabelHeight => _labelFontSize + 14f;
         private float CountHeight => _countFontSize + 8f;

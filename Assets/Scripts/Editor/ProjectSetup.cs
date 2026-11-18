@@ -1551,6 +1551,9 @@ namespace EscapeFromSpace.EditorTools
             EnsureComponent(canvasObject, out LobbyUI lobbyUi);
             SetReferenceIfEmpty(lobbyUi, "_lobby", lobby);
 
+            // 설정 메뉴 (기획서 13.1). 같은 캔버스의 다른 화면을 스스로 찾는다.
+            EnsureComponent(canvasObject, out SettingsUI _);
+
             // 대기실에도 레이드와 같은 HUD를 둔다 (2026-11-16 사용자 결정). 탈출 포드가 없으므로 RaidManager 칸은 비워 둔다.
             if (EnsureComponent(canvasObject, out HudUI hud))
             {
@@ -1831,6 +1834,8 @@ namespace EscapeFromSpace.EditorTools
 
             EnsureComponent(canvasObject, out ResultUI result);
             SetReferenceIfEmpty(result, "_raid", raid);
+
+            EnsureComponent(canvasObject, out SettingsUI _);
 
             if (EnsureComponent(canvasObject, out MapUI mapUi))
             {

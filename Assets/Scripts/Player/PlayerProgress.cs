@@ -40,6 +40,10 @@ namespace EscapeFromSpace
         // 이 씬에 들어온 뒤 얻은 경험치. 결과 화면에 쓴다.
         public int XpGained { get; private set; }
 
+        // 이 씬에 들어왔을 때의 레벨과 경험치. 결과 화면이 여기서부터 바를 채워 올린다.
+        public int StartLevel { get; private set; } = 1;
+        public int StartXp { get; private set; }
+
         private SaveData State
         {
             get
@@ -68,6 +72,8 @@ namespace EscapeFromSpace
         private void Awake()
         {
             Current = this;
+            StartLevel = Level;
+            StartXp = Xp;
         }
 
         private void OnDestroy()
