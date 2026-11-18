@@ -10,8 +10,20 @@ namespace EscapeFromSpace
         [SerializeField] private Color _closedColor = new Color(0.22f, 0.23f, 0.26f);
         [SerializeField] private Color _openColor = new Color(0.25f, 0.85f, 0.45f);
         [SerializeField, Tooltip("열려 있는 동안에만 켜는 빛. 비우면 없다")] private GameObject _openEffect;
+        [SerializeField, Tooltip("켜면 레버(PodLever)를 당겨야 열린다 (2026-11-18 사용자 결정)")] private bool _requiresLever;
 
         public bool IsOpen { get; private set; }
+
+        // 레버가 필요 없는 포드는 처음부터 풀려 있다.
+        public bool IsUnlocked => !_requiresLever || _leverPulled;
+        public bool RequiresLever => _requiresLever;
+
+        private bool _leverPulled;
+
+        public void Unlock()
+        {
+            _leverPulled = true;
+        }
 
         // 꺼진 포드와 아직 안 열린 포드는 똑같이 보인다. 열리기 전에는 어느 쪽이 작동하는지 알 수 없다.
         public void SetOpen(bool open)

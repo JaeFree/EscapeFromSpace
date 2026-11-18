@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e30df89cd24d3b4080673414a123f7a, type: 3}
+  m_Name: Stock2
+  m_EditorClassIdentifier: 
+  _displayName: "\uAC1C\uBA38\uB9AC\uD310 II"
+  _category: 7
+  _color: {r: 0.45, g: 0.48, b: 0.56, a: 1}
+  _icon: {fileID: 21300000, guid: 9b516b22d689c0348b05aa6eb747d60c, type: 3}
+  _width: 1
+  _height: 1
+  _weight: 0.5
+  _value: 250
+  _maxStack: 1
+  _defaultCount: 1
+  _cannotSell: 0
+  _weapon: {fileID: 0}
+  _armor: 0
+  _extraBagRows: 0
+  _extraOxygenSeconds: 0
+  _attachmentSlot: 0
+  _recoilMultiplier: 0.65
+  _spreadMultiplier: 1
+  _moveSpreadScale: 0
+  _aimSpreadMultiplier: 1
+  _laserSight: 0
+  _healAmount: 0
+  _useTime: 0
+  _oxygenSeconds: 0

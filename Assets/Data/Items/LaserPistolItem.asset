@@ -15,7 +15,7 @@ MonoBehaviour:
   _displayName: "\uB808\uC774\uC800 \uD53C\uC2A4\uD1A8"
   _category: 4
   _color: {r: 0.85, g: 0.85, b: 0.9, a: 1}
-  _icon: {fileID: 21300000, guid: 2c54b3d533647f048af3d2cfcd8463f1, type: 3}
+  _icon: {fileID: 21300000, guid: 9f186702e9c5c9e45a76fb957e7c1790, type: 3}
   _width: 1
   _height: 1
   _weight: 1

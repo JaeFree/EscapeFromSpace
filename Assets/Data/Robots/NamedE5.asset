@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 487827a83d89cb14c8b9086714a5435c, type: 3}
+  m_Name: NamedE5
+  m_EditorClassIdentifier: 
+  _displayName: "\uC6A9\uC811\uACF5 E-5"
+  _color: {r: 1, g: 0.55, b: 0.2, a: 1}
+  _sprite: {fileID: 21300000, guid: adecdb54e4f7a88458bcc72f949588e2, type: 3}
+  _visualSize: 1.5
+  _maxHp: 280
+  _lootTable: {fileID: 11400000, guid: 28d864a075070894f826389e0ff2eccc, type: 2}
+  _xpReward: 40
+  _isNamed: 1
+  _namedId: E5
+  _bodyTint: {r: 1, g: 0.85, b: 0.35, a: 1}
+  _wreckSize: {x: 3, y: 2}
+  _attackKind: 0
+  _damage: 20
+  _pelletCount: 1
+  _spreadAngle: 120
+  _range: 1.8
+  _windupTime: 0
+  _aimLockTime: 0
+  _burstCount: 1
+  _burstInterval: 0
+  _restTime: 1.2
+  _patrolSpeed: 2.5
+  _chaseSpeed: 4.5
+  _turnSpeed: 360
+  _sweepAngle: 45
+  _sweepSpeed: 30
+  _sightDistance: 8
+  _sightAngle: 120
+  _hearingRadius: 8
+  _alertDuration: 0.6
+  _chaseTimeout: 5
+  _attackSound:
+    _clips:
+    - {fileID: 8300000, guid: 320afd6ba0ac5bb43b796c7a1676f4b8, type: 3}
+    _volume: 0.5
+    _pitch: 0.75
+    _pitchVariation: 0.05

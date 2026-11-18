@@ -1,95 +1,231 @@
+using UnityEngine;
+
 namespace EscapeFromSpace.EditorTools
 {
-    // 회색 박스 맵의 벽 배치. 씬을 처음 만들 때만 쓰이고, 이후 수정은 Tile Palette로 한다.
+    // 정거장 맵의 초기 배치 (기획서 15장, 2026-11-18 사용자 결정: 약 140×100칸, 8구역).
+    // 씬을 처음 만들 때(또는 옛 60×40 맵을 바꿀 때)만 쓰이고, 이후 수정은 Tile Palette와 Scene 뷰로 한다.
+    // 좌표는 칸 번호이고 사각형은 양 끝 칸을 포함한다.
     public static class StationLayout
     {
-        public const int Width = 60;
-        public const int Height = 40;
+        public const int Width = 140;
+        public const int Height = 100;
 
-        // 도킹 구역 중앙
-        public const float SpawnX = 30f;
-        public const float SpawnY = 4.5f;
+        // 도킹 구역 가운데
+        public const float SpawnX = 70f;
+        public const float SpawnY = 9f;
+
+        public struct Zone
+        {
+            public string Id;
+            public string Name;
+            public RectInt Area;
+
+            public Zone(string id, string name, int x0, int y0, int x1, int y1)
+            {
+                Id = id;
+                Name = name;
+                Area = new RectInt(x0, y0, x1 - x0 + 1, y1 - y0 + 1);
+            }
+        }
+
+        // 구역 (네임드 로봇의 탐색 범위, 방문 퀘스트, 전체 맵의 이름에 쓴다)
+        public static readonly Zone[] Zones =
+        {
+            new Zone("Docking", "도킹 구역", 58, 3, 81, 16),
+            new Zone("Cargo", "화물칸", 46, 27, 93, 55),
+            new Zone("Quarters", "침실", 4, 27, 37, 56),
+            new Zone("Medbay", "의무실", 4, 67, 37, 95),
+            new Zone("Lab", "연구소", 46, 67, 93, 95),
+            new Zone("Security", "보안실", 102, 67, 135, 95),
+            new Zone("Engine", "기관실", 102, 27, 127, 57),
+            new Zone("Power", "동력 구역", 100, 3, 135, 16),
+        };
+
+        // 방과 복도 (벽을 파낸다)
+        private static readonly RectInt[] Rooms =
+        {
+            R(58, 3, 81, 16), R(4, 4, 14, 14), R(100, 3, 135, 16),
+            R(6, 20, 135, 23),
+            R(66, 17, 73, 19), R(8, 15, 11, 19), R(115, 17, 118, 19),
+            R(46, 27, 93, 55), R(66, 24, 73, 26),
+            R(4, 27, 37, 56), R(18, 24, 21, 26),
+            R(102, 27, 127, 57), R(112, 24, 115, 26),
+            R(38, 39, 45, 42), R(94, 39, 101, 42),
+            R(131, 37, 136, 47), R(128, 40, 130, 43),
+            R(6, 60, 135, 63),
+            R(18, 57, 21, 59), R(68, 56, 71, 59), R(112, 58, 115, 59),
+            R(4, 67, 37, 95), R(18, 64, 21, 66),
+            R(46, 67, 93, 95), R(58, 64, 61, 66), R(78, 64, 81, 66),
+            R(102, 67, 135, 95), R(116, 64, 119, 66),
+            R(38, 80, 45, 83), R(94, 80, 101, 83),
+        };
+
+        // 엄폐물과 칸막이 (벽을 다시 세운다). 구역마다 분위기에 맞는 덩어리로 둔다 (그림은 18장 단계에서 입힌다).
+        public static readonly RectInt[] Blocks =
+        {
+            // 도킹
+            R(62, 8, 63, 9), R(76, 8, 77, 9),
+            // 화물칸: 상자 더미와 긴 선반
+            R(52, 32, 54, 34), R(60, 44, 62, 46), R(74, 32, 76, 33), R(84, 46, 86, 48), R(66, 39, 73, 40),
+            R(52, 48, 53, 51), R(88, 30, 89, 33), R(78, 52, 80, 53),
+            // 침실: 2층 침대 줄
+            R(8, 32, 14, 33), R(8, 40, 14, 41), R(8, 48, 14, 49), R(24, 32, 30, 33), R(24, 40, 30, 41), R(24, 48, 30, 49),
+            // 의무실: 진료 침대, 격리실 벽
+            R(8, 72, 9, 75), R(14, 72, 15, 75), R(26, 72, 27, 75), R(32, 72, 33, 75), R(26, 86, 37, 86), R(26, 87, 26, 95),
+            // 연구소: 실험대, 샘플 수조, 서버실 벽
+            R(52, 72, 57, 73), R(52, 78, 57, 79), R(66, 72, 71, 73), R(66, 78, 71, 79), R(80, 72, 85, 73), R(80, 78, 85, 79),
+            R(66, 88, 67, 89), R(74, 88, 75, 89), R(58, 84, 58, 95), R(46, 84, 58, 84),
+            // 보안실: 감시 책상, 무기고 벽, 검문 게이트
+            R(108, 72, 118, 73), R(124, 67, 124, 80), R(108, 84, 110, 85), R(118, 84, 120, 85), R(128, 88, 129, 89),
+            // 기관실: 엔진 4기와 굵은 배관
+            R(108, 32, 112, 36), R(118, 32, 122, 36), R(108, 46, 112, 50), R(118, 46, 122, 50), R(104, 41, 125, 41),
+            // 동력 구역: 발전기
+            R(104, 7, 107, 10), R(112, 7, 115, 10), R(122, 7, 125, 10), R(130, 7, 132, 12),
+        };
+
+        // 칸막이에 낸 문 (다시 파낸다)
+        private static readonly RectInt[] Doors =
+        {
+            R(30, 86, 32, 86), R(52, 84, 54, 84), R(124, 73, 124, 75), R(110, 41, 112, 41), R(118, 41, 120, 41),
+        };
+
+        public static readonly Vector2[] NormalContainers =
+        {
+            V(60, 14), V(79, 4),
+            V(48, 29), V(48, 53), V(57, 38), V(70, 48), V(82, 28), V(91, 53), V(91, 36), V(63, 29),
+            V(5, 35), V(5, 51), V(22, 30), V(35, 45), V(35, 28),
+            V(5, 69), V(20, 93), V(35, 69),
+            V(103, 28), V(126, 56), V(115, 44), V(103, 52),
+            V(101, 15), V(134, 4),
+        };
+
+        public static readonly Vector2[] ResearchContainers =
+        {
+            V(35, 93),
+            V(47, 94), V(92, 69), V(62, 93),
+            V(134, 69), V(104, 93),
+        };
+
+        // 동력 구역의 연구 컨테이너는 동력 셀이 나올 수 있는 표를 쓴다 (기획서 14.5).
+        public static readonly Vector2[] PowerResearchContainers = { V(118, 4), V(127, 14) };
+
+        public struct Patrol
+        {
+            public string Robot;
+            public Vector2[] Points;
+
+            public Patrol(string robot, params Vector2[] points)
+            {
+                Robot = robot;
+                Points = points;
+            }
+        }
+
+        // 구역별 일반 로봇. 저격 로봇은 움직이지 않고, 두 번째 점은 훑는 방향의 중심만 정한다.
+        public static readonly (string zone, Patrol[] robots)[] Robots =
+        {
+            ("Cargo", new[]
+            {
+                new Patrol("MeleeRobot", V(50, 40), V(64, 36), V(64, 50)),
+                new Patrol("PistolRobot", V(78, 40), V(90, 40), V(90, 50)),
+                new Patrol("MeleeRobot", V(56, 53), V(75, 54)),
+                new Patrol("PistolRobot", V(70, 30), V(86, 30)),
+            }),
+            ("Quarters", new[]
+            {
+                new Patrol("PistolRobot", V(17, 30), V(17, 53)),
+                new Patrol("MeleeRobot", V(6, 44), V(33, 44)),
+                new Patrol("PistolRobot", V(33, 36), V(33, 53)),
+                new Patrol("MeleeRobot", V(22, 36), V(22, 52)),
+            }),
+            ("Medbay", new[]
+            {
+                new Patrol("PistolRobot", V(10, 80), V(30, 80)),
+                new Patrol("ShotgunRobot", V(20, 70), V(20, 90)),
+                new Patrol("PistolRobot", V(6, 90), V(17, 90)),
+                new Patrol("ShotgunRobot", V(30, 90), V(34, 88)),
+            }),
+            ("Lab", new[]
+            {
+                new Patrol("RifleRobot", V(50, 75), V(62, 75), V(62, 69)),
+                new Patrol("ShotgunRobot", V(76, 75), V(90, 75)),
+                new Patrol("SniperRobot", V(91, 85), V(70, 75)),
+                new Patrol("RifleRobot", V(62, 85), V(84, 85)),
+                new Patrol("ShotgunRobot", V(51, 88), V(55, 92)),
+            }),
+            ("Security", new[]
+            {
+                new Patrol("RifleRobot", V(105, 78), V(121, 78)),
+                new Patrol("SniperRobot", V(133, 93), V(110, 75)),
+                new Patrol("RifleRobot", V(112, 90), V(122, 90)),
+                new Patrol("SniperRobot", V(103, 69), V(120, 85)),
+                new Patrol("RifleRobot", V(128, 70), V(132, 78)),
+            }),
+            ("Engine", new[]
+            {
+                new Patrol("MeleeRobot", V(105, 30), V(105, 54)),
+                new Patrol("RifleRobot", V(115, 30), V(115, 54)),
+                new Patrol("MeleeRobot", V(125, 30), V(125, 54)),
+                new Patrol("RifleRobot", V(104, 44), V(126, 44)),
+            }),
+            ("Power", new[]
+            {
+                new Patrol("RifleRobot", V(102, 12), V(128, 12)),
+                new Patrol("ShotgunRobot", V(110, 4), V(120, 4)),
+                new Patrol("RifleRobot", V(118, 13), V(134, 14)),
+                new Patrol("ShotgunRobot", V(102, 4), V(108, 13)),
+            }),
+        };
+
+        // 탈출 포드 3곳 (2026-11-18 사용자 결정: 모두 작동, 연구소 포드는 레버로 연다)
+        public static readonly Vector2 WestPod = new Vector2(9.5f, 9.5f);
+        public static readonly Vector2 EastPod = new Vector2(134f, 42.5f);
+        public static readonly Vector2 LabPod = new Vector2(89.5f, 92.5f);
+        public static readonly Vector2 LabLever = V(48, 92);
 
         public static bool[,] BuildWalls()
         {
             var walls = new bool[Width, Height];
+            Set(walls, new RectInt(0, 0, Width, Height), true);
+            foreach (RectInt room in Rooms)
+            {
+                Set(walls, room, false);
+            }
 
-            // 외벽
-            Fill(walls, 0, 0, Width - 1, 0);
-            Fill(walls, 0, Height - 1, Width - 1, Height - 1);
-            Fill(walls, 0, 0, 0, Height - 1);
-            Fill(walls, Width - 1, 0, Width - 1, Height - 1);
+            foreach (RectInt block in Blocks)
+            {
+                Set(walls, block, true);
+            }
 
-            // 도킹 구역(남쪽): x 20~39, y 1~7. 양옆은 막는다.
-            Fill(walls, 1, 1, 19, 7);
-            Fill(walls, 40, 1, 58, 7);
-
-            // 도킹 구역 ↔ 화물칸 격벽과 문
-            Fill(walls, 1, 8, 58, 8);
-            Clear(walls, 28, 8, 31, 8);
-
-            // 서쪽 탈출 포드 방: x 1~6, y 14~20
-            Fill(walls, 1, 9, 7, 13);
-            Fill(walls, 1, 21, 7, 24);
-            Fill(walls, 7, 14, 7, 20);
-            Clear(walls, 7, 16, 7, 18);
-
-            // 동쪽 탈출 포드 방: x 53~58, y 14~20
-            Fill(walls, 52, 9, 58, 13);
-            Fill(walls, 52, 21, 58, 24);
-            Fill(walls, 52, 14, 52, 20);
-            Clear(walls, 52, 16, 52, 18);
-
-            // 화물칸(중앙, x 8~51, y 9~24) 안의 격벽과 화물
-            Fill(walls, 20, 9, 20, 14);
-            Fill(walls, 39, 19, 39, 24);
-            Fill(walls, 14, 12, 15, 13);
-            Fill(walls, 26, 11, 27, 12);
-            Fill(walls, 30, 15, 31, 16);
-            Fill(walls, 45, 12, 46, 13);
-            Fill(walls, 22, 18, 23, 19);
-            Fill(walls, 18, 21, 19, 22);
-            Fill(walls, 34, 21, 35, 22);
-            Fill(walls, 44, 18, 45, 19);
-            Fill(walls, 11, 17, 12, 18);
-
-            // 화물칸 ↔ 연구 구역 격벽과 문 2개
-            Fill(walls, 1, 25, 58, 25);
-            Clear(walls, 13, 25, 16, 25);
-            Clear(walls, 43, 25, 46, 25);
-
-            // 연구 구역(북쪽, x 1~58, y 26~38) 안의 격벽과 엄폐물
-            Fill(walls, 29, 30, 30, 38);
-            Fill(walls, 5, 32, 12, 32);
-            Fill(walls, 47, 32, 54, 32);
-            Fill(walls, 10, 28, 12, 29);
-            Fill(walls, 20, 33, 21, 35);
-            Fill(walls, 38, 33, 39, 35);
-            Fill(walls, 22, 28, 23, 29);
-            Fill(walls, 36, 28, 37, 29);
-            Fill(walls, 50, 35, 51, 36);
-            Fill(walls, 7, 35, 8, 36);
+            foreach (RectInt door in Doors)
+            {
+                Set(walls, door, false);
+            }
 
             return walls;
         }
 
-        private static void Fill(bool[,] walls, int x0, int y0, int x1, int y1)
+        private static RectInt R(int x0, int y0, int x1, int y1)
         {
-            Set(walls, x0, y0, x1, y1, true);
+            return new RectInt(x0, y0, x1 - x0 + 1, y1 - y0 + 1);
         }
 
-        private static void Clear(bool[,] walls, int x0, int y0, int x1, int y1)
+        // 칸 중심 (칸 가운데에 놓아야 로봇 길찾기가 그 칸을 막힌 칸으로 읽는다)
+        private static Vector2 V(int x, int y)
         {
-            Set(walls, x0, y0, x1, y1, false);
+            return new Vector2(x + 0.5f, y + 0.5f);
         }
 
-        private static void Set(bool[,] walls, int x0, int y0, int x1, int y1, bool value)
+        private static void Set(bool[,] walls, RectInt rect, bool value)
         {
-            for (int x = x0; x <= x1; x++)
+            for (int x = rect.xMin; x < rect.xMax; x++)
             {
-                for (int y = y0; y <= y1; y++)
+                for (int y = rect.yMin; y < rect.yMax; y++)
                 {
-                    walls[x, y] = value;
+                    if (x >= 0 && y >= 0 && x < Width && y < Height)
+                    {
+                        walls[x, y] = value;
+                    }
                 }
             }
         }

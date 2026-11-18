@@ -34,6 +34,16 @@ namespace EscapeFromSpace
         }
         public float OpenTime => _openTime;
 
+        // 네임드 잔해처럼 프리팹과 다른 크기의 루팅 칸이 필요할 때. 처음 쓰기 전에 불러야 한다.
+        public void SetSize(int width, int height)
+        {
+            if (_grid == null && width > 0 && height > 0)
+            {
+                _width = width;
+                _height = height;
+            }
+        }
+
         // 화면에서 아이템을 끌고 있는 동안에는 비어도 사라지지 않는다. 못 놓았을 때 돌아올 자리다.
         public bool KeepAlive { get; set; }
 

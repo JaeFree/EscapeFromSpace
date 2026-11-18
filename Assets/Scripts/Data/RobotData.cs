@@ -24,6 +24,12 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("부서진 뒤 잔해에서 나오는 것")] private LootTable _lootTable;
         [SerializeField, Tooltip("부수면 플레이어가 얻는 경험치")] private int _xpReward;
 
+        [Header("네임드 (기획서 15.2)")]
+        [SerializeField, Tooltip("켜면 머리 위에 이름과 HP 바가 늘 보이고, 퀘스트의 네임드 처치로 센다")] private bool _isNamed;
+        [SerializeField, Tooltip("퀘스트·저장에서 이 네임드를 가리키는 이름. 정한 뒤에는 바꾸지 않는다")] private string _namedId;
+        [SerializeField, Tooltip("그림에 곱하는 색. 네임드는 금빛")] private Color _bodyTint = Color.white;
+        [SerializeField, Tooltip("잔해의 루팅 칸 크기. 0이면 잔해 프리팹 그대로 (3×1)")] private Vector2Int _wreckSize;
+
         [Header("공격")]
         [SerializeField] private RobotAttackKind _attackKind;
         [SerializeField, Tooltip("한 발(펠릿 하나)의 피해")] private float _damage;
@@ -58,6 +64,9 @@ namespace EscapeFromSpace
         public SoundCue AttackSound => _attackSound;
         public LootTable LootTable => _lootTable;
         public int XpReward => _xpReward;
+        public bool IsNamed => _isNamed;
+        public string NamedId => _namedId;
+        public Vector2Int WreckSize => _wreckSize;
         public string DisplayName => _displayName;
         public Color Color => _color;
         public Sprite Sprite => _sprite;
@@ -73,7 +82,7 @@ namespace EscapeFromSpace
             }
 
             body.sprite = _sprite;
-            body.color = Color.white;
+            body.color = _bodyTint;
             Vector2 size = _sprite.bounds.size;
             float scale = _visualSize / Mathf.Max(size.x, size.y);
             body.transform.localScale = new Vector3(scale, scale, 1f);

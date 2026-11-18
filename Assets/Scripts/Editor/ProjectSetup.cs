@@ -132,6 +132,14 @@ namespace EscapeFromSpace.EditorTools
             EnsureEffects(circle);
             EnsureSounds();
             EnsureProgression();
+            EnsurePixelItemArt();
+            EnsureMerchants();
+            EnsureAttachments();
+            EnsureWorkshop();
+            EnsureNamedRobots();
+            EnsurePixelTiles();
+            EnsurePixelContainers();
+            EnsureQuestDatabase();
             AssetDatabase.SaveAssets();
 
             // 레이드 씬을 마지막에 열어 둔다. 메뉴를 돌린 뒤 에디터에 남는 씬이다.
@@ -1358,6 +1366,12 @@ namespace EscapeFromSpace.EditorTools
 
             CameraFollow follow = EnsureCameraAndLight(new Vector2(StationLayout.SpawnX, StationLayout.SpawnY));
 
+            // 2026-11-18 맵 확장: 옛 60×40 맵이면 새 배치로 바꾼다.
+            if (IsOldStation())
+            {
+                ClearOldStation();
+            }
+
             GameObject grid = GameObject.Find("Grid");
             if (grid == null)
             {
@@ -1371,7 +1385,9 @@ namespace EscapeFromSpace.EditorTools
             }
 
             EnsureWallColliders();
+            EnsureZones();
             EnsureRobotZones(wallLayer);
+            EnsureNamedGroups();
 
             // 사격 확인용 표적은 로봇으로 대체했다. 예전에 만든 씬에 남아 있으면 지운다.
             GameObject oldTargets = GameObject.Find("TestTargets");
@@ -1397,6 +1413,10 @@ namespace EscapeFromSpace.EditorTools
             EnsureContainers();
             RaidManager raid = EnsureRaid(player);
             EnsureUi(player, raid);
+            EnsurePodLever(player);
+            RefreshPodLists(raid);
+            EnsureRaidQuests(player, GameObject.Find("UI"));
+            EnsureStationArt();
 
             // 탈출 포드는 착륙장 모양. 열림·닫힘 색은 EscapePod가 그 위에 칠한다.
             var placeholder = AssetDatabase.LoadAssetAtPath<Sprite>(SquarePath);
@@ -1588,6 +1608,10 @@ namespace EscapeFromSpace.EditorTools
             }
 
             EnsureTechTerminal(player, canvasObject, lobby, wallLayer);
+            EnsureLobbyNpcs(player, canvasObject, lobby, wallLayer);
+            EnsureHangar(wallTile, floorTile);
+            EnsureLobbyArt();
+            EnsureLobbyQuests(player, canvasObject, wallLayer);
             EnsureSceneEffects();
             EnsureSceneAudio(null, 0f, LobbyMusicPath, 0.3f, 10f);
             EditorSceneManager.SaveScene(scene, LobbyScenePath);
@@ -1696,27 +1720,7 @@ namespace EscapeFromSpace.EditorTools
             }
 
             var parent = new GameObject("Containers");
-            var normal = AssetDatabase.LoadAssetAtPath<GameObject>(ContainerPrefabPath);
-            var research = AssetDatabase.LoadAssetAtPath<GameObject>(ResearchContainerPrefabPath);
-
-            Vector2[] normalPositions =
-            {
-                new Vector2(9.5f, 22.5f), new Vector2(15.5f, 16.5f), new Vector2(24.5f, 22.5f), new Vector2(33.5f, 10.5f),
-                new Vector2(37.5f, 16.5f), new Vector2(41.5f, 22.5f), new Vector2(50.5f, 22.5f), new Vector2(21.5f, 10.5f),
-            };
-            Vector2[] researchPositions = { new Vector2(8.5f, 37.5f), new Vector2(52.5f, 37.5f) };
-
-            foreach (Vector2 position in normalPositions)
-            {
-                var container = (GameObject)PrefabUtility.InstantiatePrefab(normal, parent.transform);
-                container.transform.position = position;
-            }
-
-            foreach (Vector2 position in researchPositions)
-            {
-                var container = (GameObject)PrefabUtility.InstantiatePrefab(research, parent.transform);
-                container.transform.position = position;
-            }
+            BuildStationContainers(parent.transform);
         }
 
         // 가방 화면과 루팅 칸을 그리는 캔버스. 내용은 InventoryUI가 실행 중에 만든다.
@@ -1728,8 +1732,7 @@ namespace EscapeFromSpace.EditorTools
             {
                 podParent = new GameObject("EscapePods");
                 var square = AssetDatabase.LoadAssetAtPath<Sprite>(SquarePath);
-                CreatePod(podParent.transform, "WestPod", new Vector2(4f, 17.5f), square);
-                CreatePod(podParent.transform, "EastPod", new Vector2(56f, 17.5f), square);
+                BuildStationPods(podParent.transform, square);
             }
 
             GameObject raidObject = GameObject.Find("RaidManager");
@@ -1836,6 +1839,7 @@ namespace EscapeFromSpace.EditorTools
             SetReferenceIfEmpty(result, "_raid", raid);
 
             EnsureComponent(canvasObject, out SettingsUI _);
+            EnsureComponent(canvasObject, out NamedRobotUI _);
 
             if (EnsureComponent(canvasObject, out MapUI mapUi))
             {
@@ -1883,23 +1887,7 @@ namespace EscapeFromSpace.EditorTools
             }
 
             var parent = new GameObject("Robots");
-
-            BuildRobotZone(parent.transform, "CargoZone", grid, new[]
-            {
-                ("MeleeRobot", new[] { new Vector2(10.5f, 10.5f), new Vector2(17.5f, 10.5f), new Vector2(17.5f, 15.5f) }),
-                ("PistolRobot", new[] { new Vector2(23.5f, 14.5f), new Vector2(28.5f, 14.5f), new Vector2(28.5f, 21.5f) }),
-                ("PistolRobot", new[] { new Vector2(42.5f, 10.5f), new Vector2(49.5f, 10.5f), new Vector2(49.5f, 16.5f) }),
-            });
-
-            // 저격 로봇은 움직이지 않는다. 두 번째 점은 훑는 방향의 중심만 정한다.
-            BuildRobotZone(parent.transform, "ResearchZone", grid, new[]
-            {
-                ("MeleeRobot", new[] { new Vector2(15.5f, 27.5f), new Vector2(26.5f, 27.5f), new Vector2(26.5f, 31.5f) }),
-                ("PistolRobot", new[] { new Vector2(33.5f, 27.5f), new Vector2(44.5f, 27.5f), new Vector2(44.5f, 31.5f) }),
-                ("RifleRobot", new[] { new Vector2(25.5f, 36.5f), new Vector2(14.5f, 36.5f), new Vector2(14.5f, 33.5f) }),
-                ("ShotgunRobot", new[] { new Vector2(33.5f, 36.5f), new Vector2(44.5f, 36.5f), new Vector2(44.5f, 33.5f) }),
-                ("SniperRobot", new[] { new Vector2(56.5f, 37.5f), new Vector2(44.5f, 30.5f) }),
-            });
+            BuildStationRobots(parent.transform, grid);
         }
 
         private static void BuildRobotZone(

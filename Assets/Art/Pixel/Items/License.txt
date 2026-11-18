@@ -1,0 +1,9 @@
+These sprites were cropped (and, for the "_Hand" files, rotated) from CC0 (public domain) packs on OpenGameArt:
+
+- Guns, helmets, vests, quantum core: "Futuristic Guns, Weapons and Items" by knekko, CC0
+  https://opengameart.org/content/futuristic-guns-weapons-and-items
+- Circuit part (Module3), power cell (Module), security key (USBstick), oxygen recycler (Mask),
+  navigation core (EEG), plasma igniter (Redeye): "Cybericons" by knekko, CC0
+  https://opengameart.org/content/cybericons
+
+CC0 1.0 Universal: https://creativecommons.org/publicdomain/zero/1.0/

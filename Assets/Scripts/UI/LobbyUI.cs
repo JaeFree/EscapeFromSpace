@@ -32,7 +32,7 @@ namespace EscapeFromSpace
             _rangeLabel = CreateLabel("사격장");
 
             RectTransform summary = UiBuilder.Rect("Summary", transform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-30f, -24f),
-                new Vector2(380f, 56f));
+                new Vector2(600f, 56f));
             UiBuilder.Panel(summary, UiTheme.SlotFill, UiTheme.SlotBorder);
             _summary = UiBuilder.Text(string.Empty, summary, _fontSize, TextAnchor.MiddleCenter, UiTheme.Accent);
             _summary.fontStyle = FontStyle.Bold;
@@ -50,7 +50,8 @@ namespace EscapeFromSpace
                 Place(_rangeLabel, _shootingRange.position);
             }
 
-            _summary.text = $"보유 총 가치  {_lobby.TotalValue}";
+            int credits = GameSession.Data != null ? GameSession.Data.Credits : 0;
+            _summary.text = $"보유 총 가치  {_lobby.TotalValue}     크레딧  {credits:N0}";
 
             UpdateConfirm();
         }

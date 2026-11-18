@@ -15,6 +15,10 @@ namespace EscapeFromSpace
         // 격자 안의 칸. 장비 칸에서는 X가 칸 번호(헬멧 0, 방탄복 1, 무기 2)다.
         public int X;
         public int Y;
+
+        // 무기에 단 부착물의 아이템 이름 (부위 순서, 빈 부위는 빈 글자). 탄창에 든 탄 종류 (빈 글자면 기본 탄약).
+        public List<string> Attachments = new List<string>();
+        public string LoadedAmmo = string.Empty;
     }
 
     // 저장 파일 하나의 내용 (기획서 7장 대기실 창고, 9.2 전체 맵).
@@ -39,6 +43,23 @@ namespace EscapeFromSpace
         public int Xp;
         public int TechPoints;
         public List<string> UnlockedTech = new List<string>();
+
+        // 상인과 퀘스트 (기획서 14·16장). 죽어도 남는다.
+        public int Credits;
+        public List<string> CompletedQuests = new List<string>();
+
+        // 진행 중인 퀘스트의 센 횟수 (QuestIds[i]의 횟수가 QuestCounts[i]). JsonUtility가 사전을 저장하지 못해 두 목록으로 둔다.
+        public List<string> QuestIds = new List<string>();
+        public List<int> QuestCounts = new List<int>();
+
+        // 한 번이라도 부순 네임드의 Id (네임드 모두 처치 퀘스트)
+        public List<string> KilledNamed = new List<string>();
+
+        // 장거리 탈출 포드에 설치한 부품 (한 개마다 한 줄, 기획서 14.5)
+        public List<string> InstalledParts = new List<string>();
+
+        public bool SeenPrologue;
+        public bool SeenEnding;
     }
 
     // 실행 중의 아이템(ItemStack, InventoryGrid)과 저장 파일의 모양을 서로 바꾼다.
@@ -54,7 +75,44 @@ namespace EscapeFromSpace
                 Rotated = stack.Rotated,
                 X = x,
                 Y = y,
+                Attachments = SaveAttachments(stack),
+                LoadedAmmo = stack.LoadedAmmo != null ? stack.LoadedAmmo.name : string.Empty,
             };
+        }
+
+        private static List<string> SaveAttachments(ItemStack stack)
+        {
+            var list = new List<string>();
+            if (stack.Attachments != null)
+            {
+                foreach (ItemData attachment in stack.Attachments)
+                {
+                    list.Add(attachment != null ? attachment.name : string.Empty);
+                }
+            }
+
+            return list;
+        }
+
+        private static void LoadAttachments(ItemStack stack, SavedItem saved, ItemDatabase items)
+        {
+            if (!string.IsNullOrEmpty(saved.LoadedAmmo))
+            {
+                stack.LoadedAmmo = items.Find(saved.LoadedAmmo);
+            }
+
+            if (stack.Attachments == null || saved.Attachments == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < saved.Attachments.Count && i < stack.Attachments.Length; i++)
+            {
+                if (!string.IsNullOrEmpty(saved.Attachments[i]))
+                {
+                    stack.Attachments[i] = items.Find(saved.Attachments[i]);
+                }
+            }
         }
 
         public static ItemStack ToStack(SavedItem saved, ItemDatabase items)
@@ -65,11 +123,13 @@ namespace EscapeFromSpace
                 return null;
             }
 
-            return new ItemStack(data, saved.Count)
+            var stack = new ItemStack(data, saved.Count)
             {
                 AmmoInMagazine = saved.AmmoInMagazine,
                 Rotated = saved.Rotated,
             };
+            LoadAttachments(stack, saved, items);
+            return stack;
         }
 
         public static void Capture(InventoryGrid grid, List<SavedItem> target)

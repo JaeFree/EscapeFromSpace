@@ -1,0 +1,119 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7ec21d21555a604181a764eb6ee5f31, type: 3}
+  m_Name: Workshop
+  m_EditorClassIdentifier: 
+  _id: Workshop
+  _displayName: "\uC624\uD1A0"
+  _title: "\uC81C\uC791\uC18C"
+  _greeting: "\uACA9\uB0A9\uACE0\uC758 \uC7A5\uAC70\uB9AC \uD0C8\uCD9C \uD3EC\uB4DC,
+    \uBD24\uC9C0? \uC800\uAC78 \uACE0\uCE58\uBA74 \uC5EC\uAE30\uC11C \uB098\uAC08
+    \uC218 \uC788\uC5B4.\n\n\uC7AC\uB8CC\uB9CC \uAC00\uC838\uC624\uBA74 \uBB34\uAE30\uB4E0
+    \uBD80\uD488\uC774\uB4E0 \uB0B4\uAC00 \uB9CC\uB4E4\uC5B4 \uC904\uAC8C."
+  _tint: {r: 1, g: 0.9, b: 0.4, a: 1}
+  _offers: []
+  _recipes:
+  - _output: {fileID: 11400000, guid: 0cc70c040a8f9c14fb714389accccf78, type: 2}
+    _count: 0
+    _inputs:
+    - _item: {fileID: 11400000, guid: c3a357234e1eff747bf6a30ca59083ee, type: 2}
+      _count: 1
+    _unlockQuest: 
+  - _output: {fileID: 11400000, guid: a0adc17852cd0be42a89e58a66133e6a, type: 2}
+    _count: 0
+    _inputs:
+    - _item: {fileID: 11400000, guid: c3a357234e1eff747bf6a30ca59083ee, type: 2}
+      _count: 2
+    _unlockQuest: 
+  - _output: {fileID: 11400000, guid: 4f92090567f8b794a926dca12908ae29, type: 2}
+    _count: 0
+    _inputs:
+    - _item: {fileID: 11400000, guid: c3a357234e1eff747bf6a30ca59083ee, type: 2}
+      _count: 4
+    _unlockQuest: 
+  - _output: {fileID: 11400000, guid: 37f129a85fec79244b5a073d7e2aaea7, type: 2}
+    _count: 0
+    _inputs:
+    - _item: {fileID: 11400000, guid: c3a357234e1eff747bf6a30ca59083ee, type: 2}
+      _count: 3
+    - _item: {fileID: 11400000, guid: 90fe216fd7cb176478376393f8da71d9, type: 2}
+      _count: 1
+    _unlockQuest: 
+  - _output: {fileID: 11400000, guid: 29e4757e85932b64a90c85e1c53ad18c, type: 2}
+    _count: 0
+    _inputs:
+    - _item: {fileID: 11400000, guid: c3a357234e1eff747bf6a30ca59083ee, type: 2}
+      _count: 2
+    - _item: {fileID: 11400000, guid: 90fe216fd7cb176478376393f8da71d9, type: 2}
+      _count: 2
+    _unlockQuest: 
+  - _output: {fileID: 11400000, guid: 0713c958a8bce7f41821685e17cbfe43, type: 2}
+    _count: 0
+    _inputs:
+    - _item: {fileID: 11400000, guid: 296d337187f381342931362034901347, type: 2}
+      _count: 12
+    - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
+      _count: 1
+    _unlockQuest: Q13
+  - _output: {fileID: 11400000, guid: 6f7c147c7433db548adc49b8c0ff3040, type: 2}
+    _count: 0
+    _inputs:
+    - _item: {fileID: 11400000, guid: a438c3bbca2766a40a9470f6fcf58342, type: 2}
+      _count: 30
+    - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
+      _count: 1
+    _unlockQuest: Q13
+  - _output: {fileID: 11400000, guid: 04ceb33bae4fd1d469d4dd7c65123450, type: 2}
+    _count: 0
+    _inputs:
+    - _item: {fileID: 11400000, guid: e54c8ecf001367d4780e628a40d06503, type: 2}
+      _count: 5
+    - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
+      _count: 1
+    _unlockQuest: Q13
+  - _output: {fileID: 11400000, guid: ee3dfbd57ba71124aa1ce8be10d5f079, type: 2}
+    _count: 0
+    _inputs:
+    - _item: {fileID: 11400000, guid: 5b4b042c7b4f0b949bdd0ec14ffff1d3, type: 2}
+      _count: 6
+    - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
+      _count: 1
+    _unlockQuest: Q13
+  - _output: {fileID: 11400000, guid: 75a16a42af2ddc44380107c023648b92, type: 2}
+    _count: 0
+    _inputs:
+    - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+      _count: 4
+    - _item: {fileID: 11400000, guid: c3a357234e1eff747bf6a30ca59083ee, type: 2}
+      _count: 1
+    _unlockQuest: Q05
+  - _output: {fileID: 11400000, guid: c47c911b6dcc4744e9508b768fdcea88, type: 2}
+    _count: 0
+    _inputs:
+    - _item: {fileID: 11400000, guid: 595c3beca9ae44c44a392926ddc58c21, type: 2}
+      _count: 1
+    - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+      _count: 6
+    - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
+      _count: 4
+    _unlockQuest: Q06
+  - _output: {fileID: 11400000, guid: 847464edc15e1f046bdfa2fece8ee86d, type: 2}
+    _count: 0
+    _inputs:
+    - _item: {fileID: 11400000, guid: 38a41ba3a7a88964db4ab33444f057e5, type: 2}
+      _count: 3
+    - _item: {fileID: 11400000, guid: 90fe216fd7cb176478376393f8da71d9, type: 2}
+      _count: 1
+    _unlockQuest: Q13
+  _buysItems: 0
+  _equipmentSellRate: 0.5
+  _priceSources: []

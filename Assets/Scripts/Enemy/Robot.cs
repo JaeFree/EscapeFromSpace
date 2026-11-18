@@ -52,7 +52,45 @@ namespace EscapeFromSpace
         private float _sweepOffset;
         private float _sweepDirection = 1f;
 
+        // 네임드 무리 (기획서 15.2): 자기 구역 안에서만 탐색하고, 호위는 우두머리를 따라다닌다.
+        private ZoneArea _zone;
+        private Robot _leader;
+        private Vector2 _followOffset;
+        private float _followRepath;
+
+        private static readonly System.Collections.Generic.List<Robot> NamedRobots = new System.Collections.Generic.List<Robot>();
+
+        // 네임드 로봇 목록. 이름과 HP 바를 그리는 화면이 읽는다.
+        public static System.Collections.Generic.IReadOnlyList<Robot> Named => NamedRobots;
+
+        // 로봇이 부서질 때 알린다. 퀘스트의 처치 조건이 듣는다.
+        public static event System.Action<RobotData> AnyDestroyed;
+
         public RobotData Data => _data;
+        public Health Health => _health;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            NamedRobots.Clear();
+            AnyDestroyed = null;
+        }
+
+        public void ConfineTo(ZoneArea zone)
+        {
+            _zone = zone;
+        }
+
+        public void Follow(Robot leader, Vector2 offset)
+        {
+            _leader = leader;
+            _followOffset = offset;
+        }
+
+        private bool InZone(Vector2 position)
+        {
+            return _zone == null || _zone.Contains(position);
+        }
 
         // 순찰 속도가 0인 로봇(저격)은 걷지 않고 제자리에서 좌우로 훑는다.
         private bool IsStationary => _data.PatrolSpeed <= 0f;
@@ -92,6 +130,10 @@ namespace EscapeFromSpace
             _motor.Speed = data.PatrolSpeed;
             _attack.Initialize(data, player);
             _state = State.Patrol;
+            if (data.IsNamed && !NamedRobots.Contains(this))
+            {
+                NamedRobots.Add(this);
+            }
         }
 
         private void OnEnable()
@@ -106,6 +148,7 @@ namespace EscapeFromSpace
             _health.Died -= OnDied;
             _health.Damaged -= OnDamaged;
             GunNoise.Fired -= OnGunNoise;
+            NamedRobots.Remove(this);
         }
 
         private void Update()
@@ -159,6 +202,13 @@ namespace EscapeFromSpace
                 return;
             }
 
+            // 호위는 웨이포인트 대신 우두머리 둘레의 자리로 간다. 우두머리가 부서지면 원래 순찰로 돌아간다.
+            if (_leader != null)
+            {
+                FollowLeader();
+                return;
+            }
+
             if (_motor.IsMoving || _waypoints.Length < 2)
             {
                 return;
@@ -184,6 +234,22 @@ namespace EscapeFromSpace
             {
                 // 이 웨이포인트로는 길이 없다. 잠시 뒤 다음 웨이포인트를 시도한다.
                 _repathTimeLeft = RepathDelay;
+            }
+        }
+
+        private void FollowLeader()
+        {
+            _followRepath -= Time.deltaTime;
+            if (_followRepath > 0f)
+            {
+                return;
+            }
+
+            _followRepath = 0.5f;
+            Vector2 target = (Vector2)_leader.transform.position + _followOffset;
+            if (Vector2.Distance(Position, target) > 1.2f)
+            {
+                _motor.MoveTo(target);
             }
         }
 
@@ -287,6 +353,14 @@ namespace EscapeFromSpace
 
         private void BeginChase(Vector2 target)
         {
+            // 구역에 묶인 로봇은 구역 밖으로 쫓아가지 않고 자리로 돌아간다.
+            if (!InZone(target))
+            {
+                RememberReturnPosition();
+                BeginReturn();
+                return;
+            }
+
             RememberReturnPosition();
             SetState(State.Chase);
             _chaseTarget = target;
@@ -380,7 +454,7 @@ namespace EscapeFromSpace
         // 기획서 5.2: 거리, 시야각, 벽 세 조건을 모두 만족해야 보인다.
         private bool CanSeePlayer(bool checkAngle)
         {
-            if (!IsPlayerAlive)
+            if (!IsPlayerAlive || !InZone(PlayerPosition))
             {
                 return false;
             }
@@ -401,7 +475,7 @@ namespace EscapeFromSpace
 
         private void OnGunNoise(Vector2 position)
         {
-            if (_data != null && Vector2.Distance(Position, position) <= _data.HearingRadius)
+            if (_data != null && Vector2.Distance(Position, position) <= _data.HearingRadius && InZone(position))
             {
                 Investigate(position);
             }
@@ -410,7 +484,7 @@ namespace EscapeFromSpace
         private void OnDamaged(float damage, Vector2 hitPoint)
         {
             // 맞은 자리가 아니라 쏜 쪽(플레이어)이 있는 곳으로 간다.
-            if (_data != null && IsPlayerAlive)
+            if (_data != null && IsPlayerAlive && InZone(PlayerPosition))
             {
                 Investigate(PlayerPosition);
             }
@@ -454,6 +528,7 @@ namespace EscapeFromSpace
             // 쓰러진 자리에 잔해를 남긴다 (기획서 6.2). 무엇이 나오는지는 로봇 종류마다 다르다.
             Lootable wreck = Instantiate(_wreckPrefab, transform.position, Quaternion.identity);
             wreck.name = $"{_data.DisplayName} 잔해";
+            wreck.SetSize(_data.WreckSize.x, _data.WreckSize.y);
             wreck.SetTable(_data.LootTable);
 
             var wreckRenderer = wreck.GetComponentInChildren<SpriteRenderer>();
@@ -475,6 +550,7 @@ namespace EscapeFromSpace
             }
 
             Sfx.PlayAt(SfxId.RobotDestroyed, Position);
+            AnyDestroyed?.Invoke(_data);
             Destroy(gameObject);
         }
     }

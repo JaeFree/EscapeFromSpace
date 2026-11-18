@@ -21,11 +21,18 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("로봇이 찾고 공격할 대상")] private Health _player;
         [SerializeField] private Spawn[] _spawns;
 
+        [Header("네임드 무리 (기획서 15.2)")]
+        [SerializeField, Tooltip("켜면 이 무리는 아래 구역 안에서만 보고 듣고 쫓는다")] private bool _confineToZone;
+        [SerializeField] private ZoneArea _zone;
+        [SerializeField, Tooltip("켜면 첫 번째 로봇이 우두머리이고 나머지는 그 둘레를 따라다닌다")] private bool _escortsFollowFirst;
+
         // WallGrid가 Awake에서 벽을 읽은 뒤에 로봇을 만든다.
         private void Start()
         {
-            foreach (Spawn spawn in _spawns)
+            Robot leader = null;
+            for (int i = 0; i < _spawns.Length; i++)
             {
+                Spawn spawn = _spawns[i];
                 if (spawn.Data == null || spawn.Waypoints == null || spawn.Waypoints.Length == 0)
                 {
                     continue;
@@ -34,6 +41,24 @@ namespace EscapeFromSpace
                 Robot robot = Instantiate(_robotPrefab, spawn.Waypoints[0].position, Quaternion.identity, transform);
                 robot.name = spawn.Data.DisplayName;
                 robot.Initialize(spawn.Data, spawn.Waypoints, _grid, _player);
+                if (_confineToZone)
+                {
+                    robot.ConfineTo(_zone);
+                }
+
+                if (_escortsFollowFirst)
+                {
+                    if (leader == null)
+                    {
+                        leader = robot;
+                    }
+                    else
+                    {
+                        // 우두머리 둘레에 고르게 흩어져 따라간다.
+                        float angle = (i - 1) * 2f * Mathf.PI / Mathf.Max(1, _spawns.Length - 1);
+                        robot.Follow(leader, new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * 1.6f);
+                    }
+                }
             }
         }
 

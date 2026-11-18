@@ -41,7 +41,9 @@ namespace EscapeFromSpace
         public float ReloadProgress => IsReloading && _weapon != null && _reloadDuration > 0f
             ? Mathf.Clamp01(1f - _reloadTimeLeft / _reloadDuration) : 0f;
         // 한 발의 피해. 무기의 피해에 강화한 비율을 더한다.
-        private float Damage => _weapon.Damage * (1f + _progress.Bonus(TechStat.Damage) / 100f);
+        // 고출력 탄약이 든 탄창이면 그 배율도 곱한다 (기획서 16장).
+        private float Damage => _weapon.Damage * (1f + _progress.Bonus(TechStat.Damage) / 100f)
+            * (_equipped != null && _equipped.LoadedAmmo != null ? _equipped.LoadedAmmo.AmmoDamageMultiplier : 1f);
 
         public float ReloadTimeLeft => IsReloading ? Mathf.Max(0f, _reloadTimeLeft) : 0f;
         public int AmmoInMagazine => _equipped != null ? _equipped.AmmoInMagazine : 0;
@@ -51,7 +53,15 @@ namespace EscapeFromSpace
 
         // 사격장에서는 탄창이 줄지 않는다. 줄지 않으니 재장전도 하지 않아 가방의 탄약이 그대로 남는다.
         public bool HasInfiniteAmmo { get; set; }
-        public int ReserveAmmo => _weapon != null ? _inventory.CountAmmo(_weapon.AmmoItem) : 0;
+        // 예비탄은 기본 탄약과 고출력 탄약을 합해 보여 준다.
+        public int ReserveAmmo => _weapon != null ? _inventory.CountAmmo(_weapon.AmmoItem) + HighReserve : 0;
+        private int HighReserve => _weapon.HighAmmoItem != null ? _inventory.CountAmmo(_weapon.HighAmmoItem) : 0;
+
+        // 탄창에 든 탄의 종류. null이면 기본 탄약이다.
+        public ItemData LoadedAmmo => _equipped != null ? _equipped.LoadedAmmo : null;
+
+        // 다음 재장전에 넣을 탄. 고출력 탄약이 있으면 그것부터 쓴다.
+        private ItemData PreferredAmmo => HighReserve > 0 ? _weapon.HighAmmoItem : _weapon.AmmoItem;
         public float CurrentRecoil => _currentRecoil;
 
         // 근접 무기를 마지막으로 휘두른 시각(Time.time). 휘두르는 모습을 그리는 쪽(PlayerVisual)이 읽는다.
@@ -64,9 +74,15 @@ namespace EscapeFromSpace
         public bool IsAiming => _weapon != null && _weapon.Category == WeaponCategory.Sniper && _input.AimHeld
             && !_controller.IsBagOpen;
 
-        private float BaseSpread => IsAiming ? _weapon.AimSpreadAngle : _weapon.SpreadAngle;
+        // 부착물(기획서 17장)이 기본 퍼짐, 조준 퍼짐, 이동 중 배율, 반동을 줄인다.
+        private float BaseSpread => IsAiming ? _weapon.AimSpreadAngle * _equipped.AimSpreadMultiplier : _weapon.SpreadAngle * _equipped.SpreadMultiplier;
+        private float RecoilPerShot => _weapon.RecoilPerShot * _equipped.RecoilMultiplier;
+
+        // 조준 레이저를 그리는 쪽(LaserSight)이 읽는다.
+        public bool HasLaserSight => _equipped != null && _equipped.HasLaserSight;
+        public Transform Muzzle => _muzzle;
         private bool UsesAmmo => _weapon.MagazineSize > 0;
-        private float MoveSpreadScale => _input.Move.sqrMagnitude > 0.01f ? 2f : 1f;
+        private float MoveSpreadScale => _input.Move.sqrMagnitude > 0.01f ? _equipped.MoveSpreadScale : 1f;
 
         private void Awake()
         {
@@ -135,10 +151,10 @@ namespace EscapeFromSpace
             }
 
             // 반동은 쏜 뒤에 쌓인다. 첫 발은 기본 퍼짐만 받는다.
-            _currentRecoil = Mathf.Min(_currentRecoil + _weapon.RecoilPerShot, _weapon.MaxRecoil);
+            _currentRecoil = Mathf.Min(_currentRecoil + RecoilPerShot, _weapon.MaxRecoil);
             if (_cameraShake != null)
             {
-                _cameraShake.AddRecoil(_weapon.RecoilPerShot);
+                _cameraShake.AddRecoil(RecoilPerShot);
             }
         }
 
@@ -172,7 +188,9 @@ namespace EscapeFromSpace
                 return;
             }
 
-            if (!canStart || !UsesAmmo || _equipped.AmmoInMagazine >= _weapon.MagazineSize || ReserveAmmo <= 0)
+            // 탄창이 가득 차 있어도 더 좋은 탄으로 바꿔 넣을 수 있으면 R로 재장전한다.
+            bool canSwitch = _equipped.AmmoInMagazine > 0 && PreferredAmmo != (_equipped.LoadedAmmo != null ? _equipped.LoadedAmmo : _weapon.AmmoItem);
+            if (!canStart || !UsesAmmo || ReserveAmmo <= 0 || (_equipped.AmmoInMagazine >= _weapon.MagazineSize && !canSwitch))
             {
                 return;
             }
@@ -191,9 +209,25 @@ namespace EscapeFromSpace
         private void FinishReload()
         {
             // 남은 탄은 유지하고 모자란 만큼만 가방의 탄약에서 채운다.
-            int loaded = Mathf.Min(_weapon.MagazineSize - _equipped.AmmoInMagazine, ReserveAmmo);
+            // 다른 종류의 탄이 남아 있으면 가방으로 돌려주고 새 탄으로 채운다. 가방에 자리가 없으면 원래 종류로 채운다.
+            ItemData current = _equipped.LoadedAmmo != null ? _equipped.LoadedAmmo : _weapon.AmmoItem;
+            ItemData ammo = PreferredAmmo;
+            if (ammo != current && _equipped.AmmoInMagazine > 0)
+            {
+                if (_inventory.TryAddToBag(current, _equipped.AmmoInMagazine))
+                {
+                    _equipped.AmmoInMagazine = 0;
+                }
+                else
+                {
+                    ammo = current;
+                }
+            }
+
+            int loaded = Mathf.Min(_weapon.MagazineSize - _equipped.AmmoInMagazine, _inventory.CountAmmo(ammo));
             _equipped.AmmoInMagazine += loaded;
-            _inventory.ConsumeAmmo(_weapon.AmmoItem, loaded);
+            _equipped.LoadedAmmo = ammo == _weapon.AmmoItem ? null : ammo;
+            _inventory.ConsumeAmmo(ammo, loaded);
             IsReloading = false;
             Sfx.PlayAt(SfxId.ReloadEnd, transform.position);
         }
@@ -292,7 +326,7 @@ namespace EscapeFromSpace
 
             // 샷건의 퍼짐 값은 부채꼴 전체 각이다. 반동은 부채꼴의 중심 방향을 흔들고, 펠릿은 그 안에서 따로 흩어진다.
             float fanCenter = isFan ? Random.Range(-_currentRecoil, _currentRecoil) * moveScale : 0f;
-            float fanHalf = _weapon.SpreadAngle * 0.5f * moveScale;
+            float fanHalf = _weapon.SpreadAngle * _equipped.SpreadMultiplier * 0.5f * moveScale;
             float spread = CurrentSpread;
 
             for (int i = 0; i < _weapon.PelletCount; i++)

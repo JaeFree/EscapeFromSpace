@@ -39,6 +39,12 @@ namespace EscapeFromSpace
         [Header("가방")]
         [SerializeField, Tooltip("kg")] private float _weight;
 
+        [Header("고출력 탄약")]
+        [SerializeField, Tooltip("이 무기의 고출력 탄약 (기획서 16장). 가방에 있으면 재장전할 때 먼저 넣는다")] private ItemData _highAmmoItem;
+
+        [Header("총기 부착물")]
+        [SerializeField, Tooltip("켜면 부착물 5부위를 달 수 있다 (기획서 17장: AR, 샷건, 저격총)")] private bool _acceptsAttachments;
+
         [Header("모양")]
         [SerializeField, Tooltip("손에 든 모습. 총구(칼끝)가 위를 보는 그림")] private Sprite _sprite;
         [SerializeField, Tooltip("칸. 손에 들었을 때 그림의 길이. 사거리나 총구 위치와는 상관없다")] private float _visualLength;
@@ -56,6 +62,8 @@ namespace EscapeFromSpace
         public int MagazineSize => _magazineSize;
         public float ReloadTime => _reloadTime;
         public ItemData AmmoItem => _ammoItem;
+        public bool AcceptsAttachments => _acceptsAttachments;
+        public ItemData HighAmmoItem => _highAmmoItem;
         public float SpreadAngle => _spreadAngle;
         public float AimSpreadAngle => _aimSpreadAngle;
         public float RecoilPerShot => _recoilPerShot;

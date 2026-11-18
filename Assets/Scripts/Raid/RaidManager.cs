@@ -22,7 +22,6 @@ namespace EscapeFromSpace
         [SerializeField] private ItemDatabase _items;
         [SerializeField] private MapExplorer _map;
 
-        private EscapePod _activePod;
         private float _holdTime;
 
         // 사격이나 구르기로 취소한 뒤에는 탈출 키를 뗐다가 다시 눌러야 한다.
@@ -57,8 +56,7 @@ namespace EscapeFromSpace
 
         private void Start()
         {
-            // 2곳 중 1곳만 작동한다.
-            _activePod = _pods[Random.Range(0, _pods.Length)];
+            // 2026-11-18 사용자 결정: 포드는 모두 작동한다. 레버가 필요한 포드는 레버를 당긴 뒤에 열린다.
             _playerHealth.Died += OnPlayerDied;
             _playerHealth.Damaged += OnPlayerDamaged;
         }
@@ -78,15 +76,22 @@ namespace EscapeFromSpace
 
             ElapsedTime += Time.deltaTime;
 
-            bool open = _config.PodsAlwaysOpen || ElapsedTime >= _config.PodOpenDelay;
-            if (open != _activePod.IsOpen)
+            bool timeOpen = _config.PodsAlwaysOpen || ElapsedTime >= _config.PodOpenDelay;
+            bool opened = false;
+            foreach (EscapePod pod in _pods)
             {
-                _activePod.SetOpen(open);
-                if (open)
+                bool open = timeOpen && pod.IsUnlocked;
+                if (open != pod.IsOpen)
                 {
-                    // 어느 포드인지 소리로 알 수 없게 위치 없이 낸다.
-                    Sfx.Play(SfxId.PodOpen);
+                    pod.SetOpen(open);
+                    opened |= open;
                 }
+            }
+
+            if (opened)
+            {
+                // 어느 포드인지 소리로 알 수 없게 위치 없이 낸다.
+                Sfx.Play(SfxId.PodOpen);
             }
 
             UpdateEscape();
@@ -96,8 +101,16 @@ namespace EscapeFromSpace
         // 키를 떼거나 포드 밖으로 나가거나 맞으면 처음부터, 사격하거나 구르면 취소된다. 누르는 동안에는 걷지 못한다.
         private void UpdateEscape()
         {
-            bool inPod = _activePod.IsOpen && _activePod.Contains(_playerHealth.transform.position);
-            ReachablePod = inPod ? _activePod : null;
+            ReachablePod = null;
+            foreach (EscapePod pod in _pods)
+            {
+                if (pod.IsOpen && pod.Contains(_playerHealth.transform.position))
+                {
+                    ReachablePod = pod;
+                }
+            }
+
+            bool inPod = ReachablePod != null;
 
             bool keyHeld = _input.EscapeHeld;
             if (!keyHeld)
@@ -149,6 +162,12 @@ namespace EscapeFromSpace
             _controller.IsMovementLocked = false;
             CarriedValue = _inventory.TotalValue(outcome == RaidOutcome.Escaped);
             SecuredItem = _inventory.SecureBox.Items.Count > 0 ? _inventory.SecureBox.Items[0] : null;
+
+            // 탈출하면 탈출·방문 퀘스트를 센다 (기획서 14.3). 저장하기 전에 한다.
+            if (outcome == RaidOutcome.Escaped && QuestLog.Current != null)
+            {
+                QuestLog.Current.OnEscaped();
+            }
 
             // 탈출하면 경험치를 더 받는다. 죽어도 로봇을 부숴 얻은 경험치는 남는다.
             PlayerProgress progress = PlayerProgress.Current;

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7ec21d21555a604181a764eb6ee5f31, type: 3}
+  m_Name: LongPod
+  m_EditorClassIdentifier: 
+  _id: LongPod
+  _displayName: "\uC7A5\uAC70\uB9AC \uD0C8\uCD9C \uD3EC\uB4DC"
+  _title: "\uC218\uB9AC"
+  _greeting: "\uACA9\uB0A9\uACE0 \uD55C\uAC00\uC6B4\uB370 \uB193\uC778 \uC7A5\uAC70\uB9AC
+    \uD0C8\uCD9C \uD3EC\uB4DC.\n\n\uBD80\uD488 \uC5EC\uC12F \uC885\uC744 \uBAA8\uB450
+    \uC124\uCE58\uD558\uBA74 \uC774 \uC815\uAC70\uC7A5\uC744 \uB5A0\uB0A0 \uC218
+    \uC788\uB2E4."
+  _tint: {r: 1, g: 1, b: 1, a: 1}
+  _offers: []
+  _recipes: []
+  _buysItems: 0
+  _equipmentSellRate: 0.5
+  _priceSources: []

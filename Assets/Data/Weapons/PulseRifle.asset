@@ -27,7 +27,9 @@ MonoBehaviour:
   _recoilRecovery: 4
   _maxRecoil: 10
   _weight: 3.5
-  _sprite: {fileID: 21300000, guid: cdad4b1893c786143b2f65dcf0cbc89a, type: 3}
+  _highAmmoItem: {fileID: 11400000, guid: 6f7c147c7433db548adc49b8c0ff3040, type: 2}
+  _acceptsAttachments: 1
+  _sprite: {fileID: 21300000, guid: 0ccc07d3f595fb546bc084e453cb8fd1, type: 3}
   _visualLength: 0.7
   _fireSound:
     _clips:

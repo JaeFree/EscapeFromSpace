@@ -181,6 +181,40 @@ namespace EscapeFromSpace
             return Mathf.RoundToInt(total);
         }
 
+        // 가방에 넣는다. 같은 종류 묶음에 먼저 채우고 남는 것은 빈자리에 놓는다. 다 못 넣으면 아무것도 바꾸지 않는다.
+        public bool TryAddToBag(ItemData item, int count)
+        {
+            var topUps = new System.Collections.Generic.List<(ItemStack stack, int add)>();
+            int left = count;
+            foreach (ItemStack stack in Bag.Items)
+            {
+                if (left > 0 && stack.Data == item && stack.Count < item.MaxStack)
+                {
+                    int add = Mathf.Min(left, item.MaxStack - stack.Count);
+                    topUps.Add((stack, add));
+                    left -= add;
+                }
+            }
+
+            ItemStack rest = null;
+            if (left > 0)
+            {
+                rest = new ItemStack(item, left);
+                if (!Bag.TryAdd(rest))
+                {
+                    return false;
+                }
+            }
+
+            foreach ((ItemStack stack, int add) in topUps)
+            {
+                stack.Count += add;
+            }
+
+            NotifyChanged();
+            return true;
+        }
+
         // 가방과 보관함에 있는 그 탄약의 합계. 재장전의 예비탄으로 쓴다.
         public int CountAmmo(ItemData ammo)
         {
@@ -247,12 +281,30 @@ namespace EscapeFromSpace
         // 탄약의 무게와 가치는 기본 수량 한 묶음 기준이라 발 수에 비례한다. 탄창에 든 탄은 세지 않는다.
         private static float WeightOf(ItemStack stack)
         {
-            return stack == null ? 0f : stack.Data.Weight * StackScale(stack);
+            return stack == null ? 0f : stack.Data.Weight * StackScale(stack) + AttachmentSum(stack, a => a.Weight);
         }
 
         public static float ValueOf(ItemStack stack)
         {
-            return stack == null ? 0f : stack.Data.Value * StackScale(stack);
+            return stack == null ? 0f : stack.Data.Value * StackScale(stack) + AttachmentSum(stack, a => a.Value);
+        }
+
+        // 무기에 단 부착물도 무게와 가치에 들어간다 (기획서 17장).
+        private static float AttachmentSum(ItemStack stack, System.Func<ItemData, float> value)
+        {
+            float total = 0f;
+            if (stack.Attachments != null)
+            {
+                foreach (ItemData attachment in stack.Attachments)
+                {
+                    if (attachment != null)
+                    {
+                        total += value(attachment);
+                    }
+                }
+            }
+
+            return total;
         }
 
         private static float StackScale(ItemStack stack)

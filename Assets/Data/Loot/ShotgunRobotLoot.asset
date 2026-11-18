@@ -24,3 +24,23 @@ MonoBehaviour:
     _weight: 40
   - _item: {fileID: 11400000, guid: 38a41ba3a7a88964db4ab33444f057e5, type: 2}
     _weight: 20
+  - _item: {fileID: 11400000, guid: 734dd1a9ba0c36440a6ed0085f5c671d, type: 2}
+    _weight: 0.5
+  - _item: {fileID: 11400000, guid: 39ad522873c58a04d8596f58a8a784d5, type: 2}
+    _weight: 0.5
+  - _item: {fileID: 11400000, guid: 15efea2f5dcc02040aff12772888376a, type: 2}
+    _weight: 0.5
+  - _item: {fileID: 11400000, guid: 6feaef9dd688ed94dac3948cf7a4ddc9, type: 2}
+    _weight: 0.5
+  - _item: {fileID: 11400000, guid: 16ca8c68fea19364d82e9b063c8e8d08, type: 2}
+    _weight: 0.5
+  - _item: {fileID: 11400000, guid: f52a16b36e81ddb489957fba6d8a26d0, type: 2}
+    _weight: 0.5
+  - _item: {fileID: 11400000, guid: 51750420729f92649b4851ec612af7f9, type: 2}
+    _weight: 0.5
+  - _item: {fileID: 11400000, guid: 7e7ce5738d53ea0498db1b25dc3b8317, type: 2}
+    _weight: 0.5
+  - _item: {fileID: 11400000, guid: 80af7a39295645044bec7bc6acd4dcf2, type: 2}
+    _weight: 0.5
+  - _item: {fileID: 11400000, guid: 3807ef63bfd293a45a8ae4198a222bbf, type: 2}
+    _weight: 0.5

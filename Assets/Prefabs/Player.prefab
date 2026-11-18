@@ -394,6 +394,7 @@ GameObject:
   - component: {fileID: 6630869076064193616}
   - component: {fileID: 4589062689406364107}
   - component: {fileID: 7745152265639516529}
+  - component: {fileID: 8266867704533150531}
   m_Layer: 6
   m_Name: Player
   m_TagString: Untagged
@@ -729,6 +730,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _tree: {fileID: 11400000, guid: 4e025a21f1f491e428ff04649118c6db, type: 2}
+--- !u!114 &8266867704533150531
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6849949938922056842}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8eb9a986674b5cc4ea085f88934350ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _shooter: {fileID: 6759398714086557480}
+  _controller: {fileID: 3746254566514887690}
+  _roll: {fileID: 1751094079760387129}
+  _hitMask:
+    serializedVersion: 2
+    m_Bits: 384
+  _material: {fileID: 2100000, guid: 32d287b070148d5438cbc046cc28b5de, type: 2}
+  _color: {r: 1, g: 0.15, b: 0.12, a: 0.55}
+  _width: 0.035
+  _maxLength: 25
 --- !u!1 &7698571191336183577
 GameObject:
   m_ObjectHideFlags: 0

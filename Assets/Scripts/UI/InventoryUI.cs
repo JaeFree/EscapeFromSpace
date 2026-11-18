@@ -7,7 +7,7 @@ namespace EscapeFromSpace
 {
     // 가방 화면과 루팅 칸 (기획서 6.1, 6.2). 칸과 아이템은 실행 중에 코드로 그린다.
     // 마우스 판정은 직접 계산한다. 좌클릭과 R이 사격·재장전과 같은 입력이라 PlayerInputReader 하나로 읽기 위해서다.
-    public class InventoryUI : MonoBehaviour
+    public partial class InventoryUI : MonoBehaviour
     {
         private const float CellGap = 6f;
         private const float Padding = 18f;
@@ -40,6 +40,9 @@ namespace EscapeFromSpace
             Outside,
             Grid,
             Equip,
+
+            // 부착물 창의 부위 칸. 칸 번호는 X에 둔다.
+            Attachment,
         }
 
         private struct DropTarget
@@ -139,7 +142,7 @@ namespace EscapeFromSpace
         public bool IsDragging => _held != null;
 
         // 수량 창이 떠 있거나 나눈 묶음을 들고 있으면 Esc는 그것을 취소하는 데 쓰인다.
-        public bool IsHandlingEscape => _splitSource != null || _carried;
+        public bool IsHandlingEscape => _splitSource != null || _carried || IsAttachOpen;
 
         // 설정 메뉴가 열릴 때 가방과 루팅 칸을 닫는다.
         public void Close()
@@ -273,6 +276,7 @@ namespace EscapeFromSpace
             }
 
             CancelDrag();
+            CloseAttachments();
             _interactor.Close();
             _shownLootable = null;
             _lootView.Grid = null;
@@ -347,11 +351,26 @@ namespace EscapeFromSpace
             if (_held == null)
             {
                 _highlight.gameObject.SetActive(false);
+
+                // 부착물 창은 Esc나 우클릭(창 밖)으로도 닫는다.
+                if (IsAttachOpen && keyboard != null && keyboard.escapeKey.wasPressedThisFrame)
+                {
+                    Sfx.Play(SfxId.UiCancel);
+                    CloseAttachments();
+                    return;
+                }
+
                 if (rightClicked)
                 {
-                    TryOpenSplit(FindTarget(mouse), mouse);
+                    // 무기는 부착물 창, 쌓인 묶음은 수량 창을 연다.
+                    DropTarget clicked = FindTarget(mouse);
+                    CloseAttachments();
+                    if (!TryOpenAttachments(clicked, mouse))
+                    {
+                        TryOpenSplit(clicked, mouse);
+                    }
                 }
-                else if (_input.FirePressedThisFrame)
+                else if (_input.FirePressedThisFrame && !HandleAttachClick(mouse))
                 {
                     TryPickUp(FindTarget(mouse));
                 }
@@ -360,6 +379,12 @@ namespace EscapeFromSpace
             }
 
             MoveToScreenPoint(_heldView, mouse);
+
+            // 부착물 창의 무기를 집어 들면 창을 닫는다 (버리거나 팔면 창이 엉뚱한 무기를 고치게 된다).
+            if (_held == _attachWeapon)
+            {
+                CloseAttachments();
+            }
 
             // 나눈 것을 들고 있을 때 우클릭이나 Esc는 취소다. 원래 묶음에 도로 합친다.
             if (_carried && (rightClicked || (keyboard != null && keyboard.escapeKey.wasPressedThisFrame)))
@@ -633,6 +658,9 @@ namespace EscapeFromSpace
                     ItemStack old = _inventory.GetEquipped(target.Slot);
                     return old == null || (!_originIsEquip && _originView.Grid.CanPlace(old, _originX, _originY));
 
+                case TargetKind.Attachment:
+                    return CanAttach(target.X);
+
                 default:
                     return false;
             }
@@ -689,6 +717,10 @@ namespace EscapeFromSpace
                         _originView.Grid.Place(old, _originX, _originY);
                     }
 
+                    break;
+
+                case TargetKind.Attachment:
+                    Attach(target.X);
                     break;
             }
 
@@ -769,6 +801,10 @@ namespace EscapeFromSpace
         private DropTarget FindTarget(Vector2 mouse)
         {
             var target = new DropTarget { Kind = TargetKind.None };
+            if (TryFindAttachSlot(mouse, ref target))
+            {
+                return target;
+            }
 
             for (int i = 0; i < _equipCells.Length; i++)
             {
@@ -821,7 +857,7 @@ namespace EscapeFromSpace
 
         private void ShowHighlight(DropTarget target)
         {
-            if (target.Kind != TargetKind.Grid && target.Kind != TargetKind.Equip)
+            if (target.Kind != TargetKind.Grid && target.Kind != TargetKind.Equip && target.Kind != TargetKind.Attachment)
             {
                 _highlight.gameObject.SetActive(false);
                 return;
@@ -830,7 +866,13 @@ namespace EscapeFromSpace
             _highlight.gameObject.SetActive(true);
             _highlight.GetComponent<Image>().color = CanDrop(target) ? CanDropColor : CannotDropColor;
 
-            if (target.Kind == TargetKind.Equip)
+            if (target.Kind == TargetKind.Attachment)
+            {
+                _highlight.SetParent(_attachCells[target.X], false);
+                _highlight.anchoredPosition = Vector2.zero;
+                _highlight.sizeDelta = new Vector2(_cellSize, _cellSize);
+            }
+            else if (target.Kind == TargetKind.Equip)
             {
                 _highlight.SetParent(_equipCells[(int)target.Slot], false);
                 _highlight.anchoredPosition = Vector2.zero;
@@ -888,8 +930,8 @@ namespace EscapeFromSpace
             };
 
             // 보관함 아래의 빈 자리에 조작 안내를 둔다.
-            Text help = CreateText("우클릭\n묶음 나누기", _bagPanel, new Vector2(Padding + CellPitch * 3f + 12f, y - CellPitch - 4f),
-                new Vector2(_cellSize, 60f), 18, TextAnchor.UpperCenter);
+            Text help = CreateText("우클릭\n묶음 나누기\n무기 부착물", _bagPanel, new Vector2(Padding + CellPitch * 3f + 12f, y - CellPitch - 4f),
+                new Vector2(_cellSize, 90f), 18, TextAnchor.UpperCenter);
             help.color = UiTheme.TextDim;
 
             // 루팅 칸: 대상의 위쪽에 뜬다. 크기는 열 때 대상에 맞춘다.
@@ -924,6 +966,7 @@ namespace EscapeFromSpace
             _heldView.gameObject.SetActive(false);
 
             BuildSplitPanel(root);
+            BuildAttachPanel(root);
 
             _bagPanel.gameObject.SetActive(false);
             _lootPanel.gameObject.SetActive(false);

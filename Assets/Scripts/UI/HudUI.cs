@@ -204,7 +204,9 @@ namespace EscapeFromSpace
             }
             else
             {
-                _ammoText.text = $"{_shooter.AmmoInMagazine} / {_shooter.ReserveAmmo}";
+                // 고출력 탄약이 든 탄창은 탄 수를 주황으로 보여 준다 (기획서 16장).
+                string magazine = _shooter.LoadedAmmo != null ? $"<color=#FFA028>{_shooter.AmmoInMagazine}</color>" : _shooter.AmmoInMagazine.ToString();
+                _ammoText.text = $"{magazine} / {_shooter.ReserveAmmo}";
             }
         }
 

@@ -36,6 +36,7 @@ namespace EscapeFromSpace
         private InventoryUI _inventory;
         private MapUI _map;
         private TechTreeUI _techTree;
+        private MerchantUI _merchant;
         private ResultUI _result;
         private LobbyManager _lobby;
         private PlayerInputReader _input;
@@ -77,6 +78,7 @@ namespace EscapeFromSpace
             _inventory = GetComponent<InventoryUI>();
             _map = GetComponent<MapUI>();
             _techTree = GetComponent<TechTreeUI>();
+            _merchant = GetComponent<MerchantUI>();
             _result = GetComponent<ResultUI>();
             _lobby = FindFirstObjectByType<LobbyManager>();
             _input = FindFirstObjectByType<PlayerInputReader>();
@@ -171,7 +173,9 @@ namespace EscapeFromSpace
         // 스스로 Esc를 읽는 창(강화 트리, 출격 확인, 결과 화면, 수량 창)이 떠 있으면 설정은 끼어들지 않는다.
         private bool IsBlockedByOtherWindow()
         {
-            return (_techTree != null && _techTree.IsOpen)
+            return StoryScreenUI.IsShowing
+                || (_techTree != null && _techTree.IsOpen)
+                || (_merchant != null && _merchant.IsOpen)
                 || (_result != null && _result.IsShown)
                 || (_lobby != null && _lobby.IsConfirming)
                 || (_inventory != null && _inventory.IsHandlingEscape)

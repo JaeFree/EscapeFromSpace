@@ -1,0 +1,12 @@
+Map tiles and props cropped from CC0 (public domain) packs on OpenGameArt:
+
+- Floor and wall tiles, vending machine, pipe column: "Space Sci-Fi RPG Tiles 48x48" by Hyptosis, CC0
+  https://opengameart.org/content/space-scifi-rpg-tiles-48x48
+- Crates, consoles, generators: "Sci-fi Object Set" by Jannax, CC0
+  https://opengameart.org/content/sci-fi-object-set
+- Server rack and olive locker: "Warped Top-Down Tech Lab 2" by ansimuz, CC0
+  https://opengameart.org/content/warped-top-down-tech-lab-2
+
+Prop_Bunk, Prop_MedBed and Prop_MedBedProp are drawn by the project's editor script (no source pack).
+
+CC0 1.0 Universal: https://creativecommons.org/publicdomain/zero/1.0/

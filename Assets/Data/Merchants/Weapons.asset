@@ -1,0 +1,104 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7ec21d21555a604181a764eb6ee5f31, type: 3}
+  m_Name: Weapons
+  m_EditorClassIdentifier: 
+  _id: Weapons
+  _displayName: "\uBCFC\uD2B8"
+  _title: "\uBB34\uAE30\uC0C1"
+  _greeting: "\uC815\uAC70\uC7A5 \uBCF4\uC548 \uCC45\uC784\uC790\uC600\uC9C0. \uC9C0\uAE08\uC740
+    \uB0B4\uAC00 \uB9CC\uB4E0 \uB85C\uBD07\uB4E4\uD55C\uD14C \uCAD3\uAE30\uB294 \uC2E0\uC138\uACE0.\n\n\uB140\uC11D\uB4E4\uC740
+    \uC7AC\uC7A5\uC804\uD560 \uB54C\uC640 \uC5F0\uC0AC \uC0AC\uC774\uAC00 \uBE44\uC5B4.
+    \uADF8 \uD2C8\uC744 \uB178\uB824.\n\n\uC0B4 \uAC8C \uC788\uC73C\uBA74 \uACE8\uB77C
+    \uBD10. \uC678\uC0C1\uC740 \uC5C6\uC5B4."
+  _tint: {r: 1, g: 0.72, b: 0.45, a: 1}
+  _offers:
+  - _item: {fileID: 11400000, guid: 0cc70c040a8f9c14fb714389accccf78, type: 2}
+    _count: 0
+    _price: 100
+    _unlockQuest: 
+  - _item: {fileID: 11400000, guid: a0adc17852cd0be42a89e58a66133e6a, type: 2}
+    _count: 0
+    _price: 150
+    _unlockQuest: 
+  - _item: {fileID: 11400000, guid: 296d337187f381342931362034901347, type: 2}
+    _count: 0
+    _price: 20
+    _unlockQuest: 
+  - _item: {fileID: 11400000, guid: 4f92090567f8b794a926dca12908ae29, type: 2}
+    _count: 0
+    _price: 600
+    _unlockQuest: Q02
+  - _item: {fileID: 11400000, guid: a438c3bbca2766a40a9470f6fcf58342, type: 2}
+    _count: 0
+    _price: 40
+    _unlockQuest: Q02
+  - _item: {fileID: 11400000, guid: 37f129a85fec79244b5a073d7e2aaea7, type: 2}
+    _count: 0
+    _price: 700
+    _unlockQuest: Q08
+  - _item: {fileID: 11400000, guid: 5b4b042c7b4f0b949bdd0ec14ffff1d3, type: 2}
+    _count: 0
+    _price: 40
+    _unlockQuest: Q08
+  - _item: {fileID: 11400000, guid: 29e4757e85932b64a90c85e1c53ad18c, type: 2}
+    _count: 0
+    _price: 900
+    _unlockQuest: Q15
+  - _item: {fileID: 11400000, guid: e54c8ecf001367d4780e628a40d06503, type: 2}
+    _count: 0
+    _price: 50
+    _unlockQuest: Q15
+  - _item: {fileID: 11400000, guid: 734dd1a9ba0c36440a6ed0085f5c671d, type: 2}
+    _count: 0
+    _price: 200
+    _unlockQuest: Q07
+  - _item: {fileID: 11400000, guid: 39ad522873c58a04d8596f58a8a784d5, type: 2}
+    _count: 0
+    _price: 500
+    _unlockQuest: Q15
+  - _item: {fileID: 11400000, guid: 15efea2f5dcc02040aff12772888376a, type: 2}
+    _count: 0
+    _price: 150
+    _unlockQuest: Q07
+  - _item: {fileID: 11400000, guid: 6feaef9dd688ed94dac3948cf7a4ddc9, type: 2}
+    _count: 0
+    _price: 400
+    _unlockQuest: Q15
+  - _item: {fileID: 11400000, guid: 16ca8c68fea19364d82e9b063c8e8d08, type: 2}
+    _count: 0
+    _price: 250
+    _unlockQuest: Q07
+  - _item: {fileID: 11400000, guid: f52a16b36e81ddb489957fba6d8a26d0, type: 2}
+    _count: 0
+    _price: 600
+    _unlockQuest: Q15
+  - _item: {fileID: 11400000, guid: 51750420729f92649b4851ec612af7f9, type: 2}
+    _count: 0
+    _price: 200
+    _unlockQuest: Q07
+  - _item: {fileID: 11400000, guid: 7e7ce5738d53ea0498db1b25dc3b8317, type: 2}
+    _count: 0
+    _price: 500
+    _unlockQuest: Q15
+  - _item: {fileID: 11400000, guid: 80af7a39295645044bec7bc6acd4dcf2, type: 2}
+    _count: 0
+    _price: 150
+    _unlockQuest: Q07
+  - _item: {fileID: 11400000, guid: 3807ef63bfd293a45a8ae4198a222bbf, type: 2}
+    _count: 0
+    _price: 400
+    _unlockQuest: Q15
+  _recipes: []
+  _buysItems: 0
+  _equipmentSellRate: 0.5
+  _priceSources: []

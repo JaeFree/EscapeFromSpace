@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7ec21d21555a604181a764eb6ee5f31, type: 3}
+  m_Name: Armor
+  m_EditorClassIdentifier: 
+  _id: Armor
+  _displayName: "\uD55C"
+  _title: "\uBC29\uC5B4\uAD6C\uC0C1"
+  _greeting: "\uD654\uBB3C\uCE78\uC5D0\uC11C \uC77C\uD558\uB358 \uAE30\uC220\uC790\uC57C.
+    \uC6B0\uC8FC\uBCF5\uC774\uB77C\uBA74 \uB208 \uAC10\uACE0\uB3C4 \uACE0\uCCD0.\n\n\uAD6C\uBA4D
+    \uB09C \uAC78 \uC785\uACE0 \uB098\uAC00\uBA74 \uC0B0\uC18C\uBD80\uD130 \uC0C8.
+    \uC81C\uB300\uB85C \uB41C \uAC78 \uC0AC \uAC00."
+  _tint: {r: 0.6, g: 0.85, b: 1, a: 1}
+  _offers:
+  - _item: {fileID: 11400000, guid: f98ef2293040e5b43a52aa161396baec, type: 2}
+    _count: 0
+    _price: 200
+    _unlockQuest: 
+  - _item: {fileID: 11400000, guid: 1e16ed1506f679848ab2590cb6d708c9, type: 2}
+    _count: 0
+    _price: 150
+    _unlockQuest: Q04
+  - _item: {fileID: 11400000, guid: 2c1935c8344f6f343a0deed4ad806992, type: 2}
+    _count: 0
+    _price: 500
+    _unlockQuest: Q09
+  - _item: {fileID: 11400000, guid: 330a71de2c60e6b48a2a56e47e29f060, type: 2}
+    _count: 0
+    _price: 400
+    _unlockQuest: Q09
+  - _item: {fileID: 11400000, guid: 114128d991039354e9bab1bc0ed8c137, type: 2}
+    _count: 0
+    _price: 1000
+    _unlockQuest: Q16
+  - _item: {fileID: 11400000, guid: 8785da8d9f7225c4fba0d8ea0654fcc0, type: 2}
+    _count: 0
+    _price: 800
+    _unlockQuest: Q16
+  _recipes: []
+  _buysItems: 0
+  _equipmentSellRate: 0.5
+  _priceSources: []
