@@ -52,6 +52,15 @@ namespace EscapeFromSpace
                 _fixedObjects.Add(lever.transform.position);
             }
 
+            // 컨테이너가 아닌 고정 루팅 오브젝트 (부서진 로봇 개, 함선 단말기) 둘레도 비워 둔다.
+            foreach (Lootable lootable in FindObjectsByType<Lootable>(FindObjectsSortMode.None))
+            {
+                if (_containers == null || !lootable.transform.IsChildOf(_containers))
+                {
+                    _fixedObjects.Add(lootable.transform.position);
+                }
+            }
+
             // ZoneArea는 OnEnable에서 목록에 오르는데, 이 Awake가 그보다 먼저일 수 있어 직접 찾는다.
             foreach (ZoneArea zone in FindObjectsByType<ZoneArea>(FindObjectsSortMode.None))
             {

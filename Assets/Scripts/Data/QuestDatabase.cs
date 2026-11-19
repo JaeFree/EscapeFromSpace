@@ -58,6 +58,8 @@ namespace EscapeFromSpace
             [SerializeField] private int _credits;
             [SerializeField] private List<TechTree.Cost> _rewardItems = new List<TechTree.Cost>();
             [SerializeField, Tooltip("보상 설명에 덧붙이는 말 (상점 해금 등)")] private string _rewardNote;
+            [SerializeField, Tooltip("완료하면 보관함을 이 크기로 늘린다. 0이면 그대로 (기획서 19.5)")] private Vector2Int _secureBoxSize;
+            [SerializeField, Tooltip("완료하면 로봇 개가 합류한다 (기획서 19.5)")] private bool _unlocksDog;
 
             public string Id => _id;
             public string Title => _title;
@@ -74,6 +76,8 @@ namespace EscapeFromSpace
             public IReadOnlyList<TechTree.Cost> Deliver => _deliver;
             public int Credits => _credits;
             public IReadOnlyList<TechTree.Cost> RewardItems => _rewardItems;
+            public Vector2Int SecureBoxSize => _secureBoxSize;
+            public bool UnlocksDog => _unlocksDog;
             public string RewardNote => _rewardNote;
         }
 

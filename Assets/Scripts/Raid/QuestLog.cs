@@ -300,6 +300,18 @@ namespace EscapeFromSpace
 
             Complete(quest.Id);
             State.Credits += quest.Credits;
+
+            // 보관함 확장과 로봇 개 (기획서 19.5)
+            if (quest.SecureBoxSize.x > 0 && quest.SecureBoxSize.y > 0)
+            {
+                stock.Inventory.ResizeSecureBox(quest.SecureBoxSize.x, quest.SecureBoxSize.y);
+            }
+
+            if (quest.UnlocksDog)
+            {
+                stock.Inventory.EnableDog();
+            }
+
             message = quest.DoneLine;
             return true;
         }

@@ -630,6 +630,7 @@ MonoBehaviour:
     _count: 24
   - _item: {fileID: 11400000, guid: a0adc17852cd0be42a89e58a66133e6a, type: 2}
     _count: 1
+  _dogSprite: {fileID: 21300000, guid: 58c5df0eb4772a945b838d936283c534, type: 3}
 --- !u!114 &5527545856864171532
 MonoBehaviour:
   m_ObjectHideFlags: 0

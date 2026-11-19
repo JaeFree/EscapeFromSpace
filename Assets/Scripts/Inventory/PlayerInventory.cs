@@ -42,6 +42,17 @@ namespace EscapeFromSpace
         // 여기 넣은 아이템은 죽어도 잃지 않는다.
         public InventoryGrid SecureBox { get; private set; }
 
+        // 로봇 개의 가방 (기획서 19.5). 개가 없으면 null. 무게에 들지 않고 죽어도 남는다.
+        public InventoryGrid DogBag { get; private set; }
+
+        public bool HasDog => DogBag != null;
+
+        [SerializeField, Tooltip("로봇 개 그림 (위에서 본 모습, 앞이 아래)")] private Sprite _dogSprite;
+
+        // 개 가방의 크기. 최대 3칸이고 늘지 않는다 (2026-11-19 사용자 결정: 죽었을 때 손실 부담이 남아야 한다).
+        private const int DogBagWidth = 3;
+        private const int DogBagHeight = 1;
+
         // 무엇이든 바뀌면 알린다. 화면이 다시 그리는 데 쓴다.
         public event Action Changed;
 
@@ -80,7 +91,8 @@ namespace EscapeFromSpace
         {
             // 이쪽 Awake가 먼저 돌았으면 테스트용 장비가 이미 들어 있다. 비우고 저장된 것만 넣는다.
             Bag = new InventoryGrid(BagWidth, BaseBagHeight);
-            SecureBox = new InventoryGrid(1, 1);
+            SecureBox = new InventoryGrid(Mathf.Max(1, data.SecureWidth), Mathf.Max(1, data.SecureHeight));
+            DogBag = data.HasDog ? new InventoryGrid(DogBagWidth, DogBagHeight) : null;
             Array.Clear(_equipped, 0, _equipped.Length);
             _restored = true;
 
@@ -97,7 +109,51 @@ namespace EscapeFromSpace
             ApplyEquipment();
             SaveConverter.Fill(Bag, data.Bag, items);
             SaveConverter.Fill(SecureBox, data.Secure, items);
+            if (DogBag != null)
+            {
+                SaveConverter.Fill(DogBag, data.DogBag, items);
+                RobotDog.Ensure(transform, _dogSprite);
+            }
+
             NotifyChanged();
+        }
+
+        // 퀘스트 보상으로 보관함을 키운다. 들어 있던 것은 새 칸에 다시 놓는다.
+        public void ResizeSecureBox(int width, int height)
+        {
+            if (width <= SecureBox.Width && height <= SecureBox.Height)
+            {
+                return;
+            }
+
+            var bigger = new InventoryGrid(Mathf.Max(width, SecureBox.Width), Mathf.Max(height, SecureBox.Height));
+            foreach (ItemStack stack in new System.Collections.Generic.List<ItemStack>(SecureBox.Items))
+            {
+                (int x, int y) = SecureBox.PositionOf(stack);
+                SecureBox.Remove(stack);
+                if (bigger.CanPlace(stack, x, y))
+                {
+                    bigger.Place(stack, x, y);
+                }
+                else
+                {
+                    bigger.TryAdd(stack);
+                }
+            }
+
+            SecureBox = bigger;
+            NotifyChanged();
+        }
+
+        // 로봇 개가 합류한다 (퀘스트 21).
+        public void EnableDog()
+        {
+            if (DogBag == null)
+            {
+                DogBag = new InventoryGrid(DogBagWidth, DogBagHeight);
+                RobotDog.Ensure(transform, _dogSprite);
+                NotifyChanged();
+            }
         }
 
         // 지금 가진 것을 저장 내용에 담는다.
@@ -114,6 +170,13 @@ namespace EscapeFromSpace
 
             SaveConverter.Capture(Bag, data.Bag);
             SaveConverter.Capture(SecureBox, data.Secure);
+            data.SecureWidth = SecureBox.Width;
+            data.SecureHeight = SecureBox.Height;
+            data.HasDog = DogBag != null;
+            if (DogBag != null)
+            {
+                SaveConverter.Capture(DogBag, data.DogBag);
+            }
         }
 
         public ItemStack GetEquipped(EquipSlot slot)
@@ -169,10 +232,10 @@ namespace EscapeFromSpace
             }
         }
 
-        // 가진 것의 가치 합계. 죽으면 보관함은 남으므로 잃은 가치를 셀 때는 뺀다.
+        // 가진 것의 가치 합계. 죽으면 보관함과 개 가방은 남으므로 잃은 가치를 셀 때는 뺀다.
         public int TotalValue(bool includeSecureBox)
         {
-            float total = ValueIn(Bag) + (includeSecureBox ? ValueIn(SecureBox) : 0f);
+            float total = ValueIn(Bag) + (includeSecureBox ? ValueIn(SecureBox) + (DogBag != null ? ValueIn(DogBag) : 0f) : 0f);
             foreach (ItemStack stack in _equipped)
             {
                 total += ValueOf(stack);

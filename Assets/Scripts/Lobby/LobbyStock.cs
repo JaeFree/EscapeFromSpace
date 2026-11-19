@@ -18,11 +18,17 @@ namespace EscapeFromSpace
 
         public InventoryGrid Storage => _storage;
 
+        public PlayerInventory Inventory => _inventory;
+
         private IEnumerable<InventoryGrid> Grids()
         {
             yield return _storage;
             yield return _inventory.Bag;
             yield return _inventory.SecureBox;
+            if (_inventory.DogBag != null)
+            {
+                yield return _inventory.DogBag;
+            }
         }
 
         public int Count(ItemData item)

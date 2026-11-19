@@ -61,6 +61,7 @@ namespace EscapeFromSpace
             public RectTransform Root;
             public Color CellTint;
             public int BuiltHeight = -1;
+            public int BuiltWidth = -1;
             public Lootable Owner;
         }
 
@@ -76,6 +77,13 @@ namespace EscapeFromSpace
         private Image _hintFill;
         private GridView _bagView;
         private GridView _secureView;
+
+        // 로봇 개 가방 (기획서 19.5). 보관함 아래에 둔다. 개가 없으면 숨긴다.
+        private GridView _dogView;
+        private Text _secureLabel;
+        private Text _dogLabel;
+        private Text _sideHelp;
+        private float _sideTop;
         private GridView _lootView;
         private readonly RectTransform[] _equipCells = new RectTransform[3];
         private readonly List<GameObject> _itemViews = new List<GameObject>();
@@ -820,7 +828,7 @@ namespace EscapeFromSpace
                 }
             }
 
-            if (TryFindCell(_bagView, mouse, ref target) || TryFindCell(_secureView, mouse, ref target)
+            if (TryFindCell(_bagView, mouse, ref target) || TryFindCell(_secureView, mouse, ref target) || TryFindCell(_dogView, mouse, ref target)
                 || TryFindCell(_lootView, mouse, ref target))
             {
                 return target;
@@ -917,9 +925,10 @@ namespace EscapeFromSpace
 
             y -= LabelHeight + CellPitch + 20f;
             CreateText("가방", _bagPanel, new Vector2(Padding, y), new Vector2(CellPitch * 3f, LabelHeight), _labelFontSize, TextAnchor.MiddleLeft);
-            CreateText("보관함", _bagPanel, new Vector2(Padding + CellPitch * 3f + 12f, y), new Vector2(_cellSize, LabelHeight),
+            _secureLabel = CreateText("보관함", _bagPanel, new Vector2(Padding + CellPitch * 3f + 12f, y), new Vector2(_cellSize, LabelHeight),
                 _labelFontSize, TextAnchor.MiddleCenter);
             y -= LabelHeight;
+            _sideTop = y;
 
             _bagView = new GridView
             {
@@ -933,10 +942,17 @@ namespace EscapeFromSpace
                     new Vector2(Padding + CellPitch * 3f + 12f, y), Vector2.zero),
             };
 
+            _dogLabel = CreateText("로봇 개", _bagPanel, Vector2.zero, new Vector2(CellPitch * 3f, LabelHeight), _labelFontSize, TextAnchor.MiddleCenter);
+            _dogView = new GridView
+            {
+                CellTint = new Color(0.45f, 0.36f, 0.2f, 1f),
+                Root = CreateRect("DogGrid", _bagPanel, new Vector2(0f, 1f), new Vector2(0f, 1f), Vector2.zero, Vector2.zero),
+            };
+
             // 보관함 아래의 빈 자리에 조작 안내를 둔다.
-            Text help = CreateText("우클릭\n묶음 나누기\n무기 부착물", _bagPanel, new Vector2(Padding + CellPitch * 3f + 12f, y - CellPitch - 4f),
+            _sideHelp = CreateText("우클릭\n묶음 나누기\n무기 부착물", _bagPanel, new Vector2(Padding + CellPitch * 3f + 12f, y - CellPitch - 4f),
                 new Vector2(_cellSize, 90f), 18, TextAnchor.UpperCenter);
-            help.color = UiTheme.TextDim;
+            _sideHelp.color = UiTheme.TextDim;
 
             // 루팅 칸: 대상의 위쪽에 뜬다. 크기는 열 때 대상에 맞춘다.
             _lootPanel = CreateRect("LootPanel", root, Vector2.zero, new Vector2(0.5f, 0f), Vector2.zero, Vector2.zero);
@@ -1016,10 +1032,20 @@ namespace EscapeFromSpace
 
             _itemViews.Clear();
 
+            // 보관함은 퀘스트로 커지고 개 가방은 퀘스트로 생긴다 (기획서 19.5). 그때마다 오른쪽 칸을 다시 놓는다.
+            _secureView.Grid = _inventory.SecureBox;
+            _dogView.Grid = _inventory.DogBag;
+            LayoutSideColumn();
+
             BuildCells(_bagView);
             BuildCells(_secureView);
             DrawItems(_bagView);
             DrawItems(_secureView);
+            if (_dogView.Grid != null)
+            {
+                BuildCells(_dogView);
+                DrawItems(_dogView);
+            }
 
             if (_lootView.Grid != null)
             {
@@ -1043,7 +1069,7 @@ namespace EscapeFromSpace
         // 칸 배경. 줄 수가 바뀌었을 때만(방탄복) 다시 만든다.
         private void BuildCells(GridView view)
         {
-            if (view.BuiltHeight == view.Grid.Height)
+            if (view.BuiltHeight == view.Grid.Height && view.BuiltWidth == view.Grid.Width)
             {
                 return;
             }
@@ -1068,6 +1094,35 @@ namespace EscapeFromSpace
             }
 
             view.BuiltHeight = view.Grid.Height;
+            view.BuiltWidth = view.Grid.Width;
+        }
+
+        // 가방 오른쪽 칸: 보관함, 그 아래 로봇 개 가방, 그 아래 조작 안내. 칸 수에 맞춰 창의 너비도 바꾼다.
+        private void LayoutSideColumn()
+        {
+            bool dog = _dogView.Grid != null;
+            int columns = Mathf.Max(1, _secureView.Grid.Width, dog ? _dogView.Grid.Width : 0);
+            float x = Padding + CellPitch * 3f + 12f;
+            float columnWidth = CellPitch * columns - CellGap;
+
+            _bagPanel.sizeDelta = new Vector2(Padding * 2f + CellPitch * (3 + columns) + 12f, _bagPanel.sizeDelta.y);
+            _secureLabel.rectTransform.sizeDelta = new Vector2(columnWidth, LabelHeight);
+            _secureView.Root.anchoredPosition = new Vector2(x, _sideTop);
+
+            float y = _sideTop - CellPitch * _secureView.Grid.Height - 8f;
+            _dogLabel.gameObject.SetActive(dog);
+            _dogView.Root.gameObject.SetActive(dog);
+            if (dog)
+            {
+                _dogLabel.rectTransform.anchoredPosition = new Vector2(x, y);
+                _dogLabel.rectTransform.sizeDelta = new Vector2(columnWidth, LabelHeight);
+                y -= LabelHeight;
+                _dogView.Root.anchoredPosition = new Vector2(x, y);
+                y -= CellPitch * _dogView.Grid.Height;
+            }
+
+            _sideHelp.rectTransform.anchoredPosition = new Vector2(x, y - 4f);
+            _sideHelp.rectTransform.sizeDelta = new Vector2(columnWidth, 90f);
         }
 
         private void DrawItems(GridView view)

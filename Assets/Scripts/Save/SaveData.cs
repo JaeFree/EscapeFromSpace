@@ -58,6 +58,14 @@ namespace EscapeFromSpace
         // 장거리 탈출 포드에 설치한 부품 (한 개마다 한 줄, 기획서 14.5)
         public List<string> InstalledParts = new List<string>();
 
+        // 보관함 크기 (기획서 19.5). 한의 퀘스트를 끝낼 때마다 커진다. 죽어도 남는다.
+        public int SecureWidth = 1;
+        public int SecureHeight = 1;
+
+        // 로봇 개 (기획서 19.5). 개 가방의 물건은 죽어도 남는다.
+        public bool HasDog;
+        public List<SavedItem> DogBag = new List<SavedItem>();
+
         public bool SeenPrologue;
         public bool SeenEnding;
     }
