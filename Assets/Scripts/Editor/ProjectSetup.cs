@@ -1421,6 +1421,7 @@ namespace EscapeFromSpace.EditorTools
             EnsureRaidQuests(player, GameObject.Find("UI"));
             EnsureStationArt();
             ApplyWreckFieldStation();
+            EnsureRaidLayout();
 
             // 탈출 포드는 착륙장 모양. 열림·닫힘 색은 EscapePod가 그 위에 칠한다.
             var placeholder = AssetDatabase.LoadAssetAtPath<Sprite>(SquarePath);

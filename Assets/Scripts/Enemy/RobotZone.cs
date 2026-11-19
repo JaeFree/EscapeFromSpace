@@ -26,6 +26,10 @@ namespace EscapeFromSpace
         [SerializeField] private ZoneArea _zone;
         [SerializeField, Tooltip("켜면 첫 번째 로봇이 우두머리이고 나머지는 그 둘레를 따라다닌다")] private bool _escortsFollowFirst;
 
+        // 판마다 위치를 섞는 RaidLayoutRandomizer가 읽고 웨이포인트를 옮긴다 (기획서 19.2).
+        public Spawn[] Spawns => _spawns;
+        public bool EscortsFollowFirst => _escortsFollowFirst;
+
         // WallGrid가 Awake에서 벽을 읽은 뒤에 로봇을 만든다.
         private void Start()
         {
