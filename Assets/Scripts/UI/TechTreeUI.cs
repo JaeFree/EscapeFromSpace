@@ -441,6 +441,10 @@ namespace EscapeFromSpace
             _window = UiBuilder.Rect("Window", _root, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, windowSize);
             UiBuilder.Window(_window);
 
+            // 은신 갈래(기획서 19.3)가 붙어 줄이 늘면 높이 1080 화면을 넘는다. 넘으면 창을 통째로 줄인다.
+            float fit = Mathf.Min(1f, 1030f / windowSize.y, 1880f / windowSize.x);
+            _window.localScale = new Vector3(fit, fit, 1f);
+
             BuildHeader(windowSize.x, Padding);
 
             // 트리: 왼쪽 위가 원점이고 아래로 갈수록 줄 번호가 커진다. 선을 먼저 그려 노드 아래에 깔리게 한다.

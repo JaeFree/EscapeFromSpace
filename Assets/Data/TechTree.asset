@@ -292,3 +292,85 @@ MonoBehaviour:
     _costs:
     - _item: {fileID: 11400000, guid: 38a41ba3a7a88964db4ab33444f057e5, type: 2}
       _count: 3
+  - _id: sneak1
+    _displayName: "\uC870\uC6A9\uD55C \uBC1C I"
+    _stat: 9
+    _amount: 15
+    _column: 0
+    _row: 10
+    _requires: []
+    _requiredLevel: 2
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
+      _count: 1
+  - _id: shadow1
+    _displayName: "\uADF8\uB9BC\uC790 I"
+    _stat: 10
+    _amount: 15
+    _column: 1
+    _row: 9
+    _requires:
+    - sneak1
+    _requiredLevel: 3
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+      _count: 2
+    - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
+      _count: 1
+  - _id: sneak2
+    _displayName: "\uC870\uC6A9\uD55C \uBC1C II"
+    _stat: 9
+    _amount: 15
+    _column: 1
+    _row: 10
+    _requires:
+    - sneak1
+    _requiredLevel: 5
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
+      _count: 3
+  - _id: assassin
+    _displayName: "\uC554\uC0B4\uC790"
+    _stat: 12
+    _amount: 1
+    _column: 1
+    _row: 11
+    _requires:
+    - sneak1
+    _requiredLevel: 4
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+      _count: 3
+  - _id: camo
+    _displayName: "\uC704\uC7A5\uB9C9"
+    _stat: 11
+    _amount: 25
+    _column: 2
+    _row: 9
+    _requires:
+    - shadow1
+    _requiredLevel: 6
+    _pointCost: 1
+    _costs:
+    - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
+      _count: 2
+    - _item: {fileID: 11400000, guid: 38a41ba3a7a88964db4ab33444f057e5, type: 2}
+      _count: 1
+  - _id: ghost
+    _displayName: "\uC720\uB839"
+    _stat: 10
+    _amount: 25
+    _column: 3
+    _row: 10
+    _requires:
+    - camo
+    - sneak2
+    _requiredLevel: 10
+    _pointCost: 2
+    _costs:
+    - _item: {fileID: 11400000, guid: 38a41ba3a7a88964db4ab33444f057e5, type: 2}
+      _count: 3

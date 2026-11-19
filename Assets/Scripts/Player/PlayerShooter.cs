@@ -42,6 +42,18 @@ namespace EscapeFromSpace
             ? Mathf.Clamp01(1f - _reloadTimeLeft / _reloadDuration) : 0f;
         // 한 발의 피해. 무기의 피해에 강화한 비율을 더한다.
         // 고출력 탄약이 든 탄창이면 그 배율도 곱한다 (기획서 16장).
+        // 총소리가 들리는 반경. 소음기를 달면 줄어든다 (기획서 19.3).
+        private float NoiseRadius
+        {
+            get
+            {
+                float radius = _ownHealth != null && _ownHealth.Config != null ? _ownHealth.Config.GunNoiseRadius : 8f;
+                return _equipped != null && _equipped.NoiseRadius > 0f ? Mathf.Min(radius, _equipped.NoiseRadius) : radius;
+            }
+        }
+
+        private Health _ownHealth;
+
         private float Damage => _weapon.Damage * (1f + _progress.Bonus(TechStat.Damage) / 100f)
             * (_equipped != null && _equipped.LoadedAmmo != null ? _equipped.LoadedAmmo.AmmoDamageMultiplier : 1f);
 
@@ -89,6 +101,7 @@ namespace EscapeFromSpace
             // 카메라는 씬에 있어서 프리팹에서 연결할 수 없다.
             _cameraShake = Camera.main.GetComponent<CameraShake>();
             _currentRecoil = 0f;
+            _ownHealth = GetComponent<Health>();
         }
 
         private void Update()
@@ -274,8 +287,20 @@ namespace EscapeFromSpace
 
                 _swingHits.Add(health);
                 Instantiate(_hitMarkerPrefab, hitPoint, Quaternion.identity);
-                health.TakeDamage(Damage, hitPoint);
+                health.TakeDamage(Damage * BackstabScale(health), hitPoint);
             }
+        }
+
+        // 아직 알아채지 못한 로봇을 베면 피해가 몇 배가 된다 (기획서 19.3 뒤에서 베기). 암살자 강화로 더 커진다.
+        private float BackstabScale(Health target)
+        {
+            var robot = target.GetComponent<Robot>();
+            if (robot == null || !robot.IsUnaware || _ownHealth == null || _ownHealth.Config == null)
+            {
+                return 1f;
+            }
+
+            return _ownHealth.Config.BackstabMultiplier + _progress.Bonus(TechStat.BackstabBonus);
         }
 
         private bool IsInSwing(Vector2 center, Vector2 aim, float halfAngle, Vector2 point)
@@ -310,7 +335,7 @@ namespace EscapeFromSpace
             }
 
             // 총소리. 벽에 막혀 탄이 못 나간 경우와 광선검은 소리를 내지 않는다.
-            GunNoise.Emit(center);
+            GunNoise.Emit(center, NoiseRadius);
             Sfx.PlayAt(_weapon.FireSound, muzzle);
             if (_muzzleFlashPrefab != null)
             {

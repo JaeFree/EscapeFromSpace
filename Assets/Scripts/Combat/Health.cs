@@ -16,6 +16,9 @@ namespace EscapeFromSpace
         // HUD가 생기기 전까지 Inspector에서 현재 HP를 보려고 노출한다.
         [SerializeField] private float _currentHp;
 
+        // 은신 수치(발견 게이지, 엄폐)도 이 설정에 있다. 로봇과 플레이어가 같은 에셋을 쓴다.
+        public CombatConfig Config => _config;
+
         public float MaxHp { get; private set; }
         public float CurrentHp => _currentHp;
         public bool IsDead { get; private set; }

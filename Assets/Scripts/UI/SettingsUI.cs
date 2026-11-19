@@ -21,6 +21,7 @@ namespace EscapeFromSpace
         private const string HelpText =
             "목표: 우주선 무덤의 배들에서 물자를 챙겨 귀환 비콘으로 살아 나오고, 부품을 모아 도약 엔진을 고친다.\n\n" +
             "이동  WASD          구르기  Space\n" +
+            "살금 걷기  Ctrl (느리고 발소리 없음)\n" +
             "조준  마우스        사격  좌클릭 (저격총은 우클릭 조준)\n" +
             "재장전  R           도구칸 사용  1, 2, 3\n" +
             "가방  Tab           가방에서 아이템 회전  R\n" +

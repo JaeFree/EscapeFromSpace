@@ -49,6 +49,23 @@ namespace EscapeFromSpace
             }
         }
 
+        // 소음기가 줄인 총소리 반경 (칸). 0이면 소음기가 없다 (기획서 19.3).
+        public float NoiseRadius
+        {
+            get
+            {
+                float radius = 0f;
+                ForEachAttachment(a =>
+                {
+                    if (a.NoiseRadius > 0f)
+                    {
+                        radius = radius > 0f ? Mathf.Min(radius, a.NoiseRadius) : a.NoiseRadius;
+                    }
+                });
+                return radius;
+            }
+        }
+
         public bool HasLaserSight
         {
             get

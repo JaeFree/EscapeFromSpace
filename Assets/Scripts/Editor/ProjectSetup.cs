@@ -132,6 +132,8 @@ namespace EscapeFromSpace.EditorTools
             EnsureEffects(circle);
             EnsureSounds();
             EnsureProgression();
+            EnsureStealthBranch();
+            EnsureStealthConfig(combatConfig);
             EnsurePixelItemArt();
             EnsureMerchants();
             EnsureAttachments();

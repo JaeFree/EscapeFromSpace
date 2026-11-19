@@ -15,6 +15,12 @@ namespace EscapeFromSpace
         RollCooldown,
         LootSpeed,
         Armor,
+
+        // 은신 갈래 (기획서 19.3, 2026-11-19 추가). 순서 번호가 저장되므로 뒤에 붙인다.
+        SneakSpeed,
+        DetectionReduction,
+        CoverDetectionReduction,
+        BackstabBonus,
     }
 
     // 레벨과 테크 트리 (기획서 12장, 2026-11-17 사용자 결정). 수치는 초기값이라 에셋에 두고 Inspector에서 밸런싱한다.
@@ -108,6 +114,10 @@ namespace EscapeFromSpace
                 case TechStat.MoveSpeed: return $"이동 속도 +{amount:0.#}%";
                 case TechStat.RollCooldown: return $"구르기 쿨타임 −{amount:0.#}%";
                 case TechStat.LootSpeed: return $"뒤지는 시간 −{amount:0.#}%";
+                case TechStat.SneakSpeed: return $"살금 걷기 속도 +{amount:0.#}%";
+                case TechStat.DetectionReduction: return $"발견 게이지 −{amount:0.#}%";
+                case TechStat.CoverDetectionReduction: return $"엄폐 중 발견 게이지 −{amount:0.#}%";
+                case TechStat.BackstabBonus: return $"뒤에서 베기 피해 +{amount:0.#}배";
                 default: return $"방어력 +{amount:0.#}";
             }
         }

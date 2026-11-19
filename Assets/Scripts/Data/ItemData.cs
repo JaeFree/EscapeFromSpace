@@ -63,6 +63,7 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("이동 중 퍼짐 배율. 0이면 기본(2배) 그대로")] private float _moveSpreadScale;
         [SerializeField, Tooltip("저격총 조준 퍼짐에 곱한다")] private float _aimSpreadMultiplier = 1f;
         [SerializeField, Tooltip("켜면 총구에서 조준 레이저가 보인다")] private bool _laserSight;
+        [SerializeField, Tooltip("칸. 0보다 크면 총소리 반경이 이 값으로 줄어든다 (소음기, 기획서 19.3)")] private float _noiseRadius;
 
         [Header("사용 효과")]
         [SerializeField] private float _healAmount;
@@ -88,6 +89,7 @@ namespace EscapeFromSpace
         public float MoveSpreadScale => _moveSpreadScale;
         public float AimSpreadMultiplier => _aimSpreadMultiplier;
         public bool LaserSight => _laserSight;
+        public float NoiseRadius => _noiseRadius;
         public int Armor => _armor;
         public int ExtraBagRows => _extraBagRows;
         public float ExtraOxygenSeconds => _extraOxygenSeconds;

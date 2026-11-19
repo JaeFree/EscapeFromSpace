@@ -19,6 +19,7 @@ namespace EscapeFromSpace
         private InputAction _toggleBag;
         private InputAction _escape;
         private InputAction _toggleMap;
+        private InputAction _sneak;
         private readonly InputAction[] _tools = new InputAction[3];
 
         public Vector2 Move => _move.ReadValue<Vector2>();
@@ -33,6 +34,9 @@ namespace EscapeFromSpace
         public bool ToggleBagPressedThisFrame => _toggleBag.WasPressedThisFrame();
         public bool EscapeHeld => _escape.IsPressed();
         public bool ToggleMapPressedThisFrame => _toggleMap.WasPressedThisFrame();
+
+        // 살금 걷기 (기획서 19.3). 옛 입력 에셋에 없으면 늘 false다.
+        public bool SneakHeld => _sneak != null && _sneak.IsPressed();
 
         // 도구칸 1, 2, 3. index는 0부터.
         public bool ToolPressedThisFrame(int index)
@@ -53,6 +57,7 @@ namespace EscapeFromSpace
             _toggleBag = _playerMap.FindAction("ToggleBag", true);
             _escape = _playerMap.FindAction("Escape", true);
             _toggleMap = _playerMap.FindAction("ToggleMap", true);
+            _sneak = _playerMap.FindAction("Sneak", false);
             for (int i = 0; i < _tools.Length; i++)
             {
                 _tools[i] = _playerMap.FindAction($"Tool{i + 1}", true);

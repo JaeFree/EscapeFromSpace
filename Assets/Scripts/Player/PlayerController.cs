@@ -20,6 +20,8 @@ namespace EscapeFromSpace
         private Camera _camera;
         private float _stunTimeLeft;
         private float _aimDistance = 3f;
+        private float _footstepTime;
+        private bool _wasRolling;
 
         public Vector2 AimDirection { get; private set; } = Vector2.right;
 
@@ -42,6 +44,17 @@ namespace EscapeFromSpace
         // 대기실에서는 창고 물건을 잔뜩 들어도 다치지 않게 끈다.
         public bool TakesOverloadDamage { get; set; } = true;
 
+        // 살금 걷기 (Ctrl, 기획서 19.3): 느리게 걷고 발소리가 없다.
+        public bool IsSneaking => _input.SneakHeld;
+
+        public bool IsRolling => _roll.IsRolling;
+
+        // 은신 강화(기획서 19.3 테크 트리)로 발견 게이지가 느리게 찬다. 1이면 그대로.
+        public float DetectionMultiplier => Mathf.Max(0.05f, 1f - _progress.Bonus(TechStat.DetectionReduction) / 100f);
+
+        // 엄폐 중일 때 더 줄어드는 비율 (위장막)
+        public float CoverDetectionMultiplier => Mathf.Max(0.05f, 1f - _progress.Bonus(TechStat.CoverDetectionReduction) / 100f);
+
         // 무게 상한. 기본값에 강화한 만큼을 더한다.
         public float MaxWeight => _data.MaxWeight + _progress.Bonus(TechStat.MaxWeight);
 
@@ -50,6 +63,12 @@ namespace EscapeFromSpace
             _rigidbody = GetComponent<Rigidbody2D>();
             _camera = Camera.main;
             _health.Initialize(_data.MaxHp);
+
+            // 엄폐 표시는 그림 에셋이 없어 코드로 붙인다 (기획서 19.3).
+            if (GetComponent<PlayerCoverGlow>() == null)
+            {
+                gameObject.AddComponent<PlayerCoverGlow>();
+            }
         }
 
         // 저장 내용은 다른 오브젝트의 Awake에서 불러온다. 그 뒤에 읽으려고 Start에서 강화를 반영한다.
@@ -97,7 +116,38 @@ namespace EscapeFromSpace
                 _health.TakeRawDamage(_data.OverloadDamagePerSecond * Time.deltaTime);
             }
 
+            UpdateNoise();
             UpdateAim();
+        }
+
+        // 걷는 동안 발소리를 낸다. 살금 걷기는 소리가 없고, 구르기는 시작할 때 한 번 크게 난다 (기획서 19.3).
+        private void UpdateNoise()
+        {
+            CombatConfig config = _health.Config;
+            if (config == null)
+            {
+                return;
+            }
+
+            if (_roll.IsRolling && !_wasRolling)
+            {
+                Footsteps.Emit(transform.position, config.RollNoiseRadius);
+            }
+
+            _wasRolling = _roll.IsRolling;
+            bool walking = CanAct && !IsMovementLocked && !_roll.IsRolling && _input.Move.sqrMagnitude > 0.01f;
+            if (!walking || IsSneaking)
+            {
+                _footstepTime = 0f;
+                return;
+            }
+
+            _footstepTime -= Time.deltaTime;
+            if (_footstepTime <= 0f)
+            {
+                _footstepTime = config.FootstepInterval;
+                Footsteps.Emit(transform.position, config.WalkNoiseRadius);
+            }
         }
 
         private void FixedUpdate()
@@ -114,6 +164,11 @@ namespace EscapeFromSpace
             if (_shooter.IsReloading)
             {
                 speed *= _data.ReloadMoveSpeedMultiplier;
+            }
+
+            if (IsSneaking && _health.Config != null)
+            {
+                speed *= _health.Config.SneakSpeedRatio * (1f + _progress.Bonus(TechStat.SneakSpeed) / 100f);
             }
 
             _rigidbody.linearVelocity = CanAct && !IsMovementLocked ? _input.Move * speed : Vector2.zero;

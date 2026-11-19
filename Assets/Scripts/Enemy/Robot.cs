@@ -23,6 +23,9 @@ namespace EscapeFromSpace
             Attack,
             Chase,
             Return,
+
+            // 발견 게이지가 절반을 넘었거나 발소리를 들었다. 그곳에 가서 둘러본다 (기획서 19.3).
+            Suspicious,
         }
 
         [SerializeField] private Health _health;
@@ -58,6 +61,24 @@ namespace EscapeFromSpace
         private Vector2 _followOffset;
         private float _followRepath;
 
+        // 발견 게이지 (0~1, 기획서 19.3). 가득 차면 경계로 넘어간다.
+        private float _awareness;
+        private Vector2 _suspicionTarget;
+        private float _lookTime;
+        private AwarenessMark _mark;
+        private CombatConfig _config;
+        private PlayerController _playerController;
+
+        private static readonly System.Collections.Generic.List<Robot> AllRobots = new System.Collections.Generic.List<Robot>();
+
+        // 살아 있는 로봇 전부. 엄폐 표시가 가까운 적을 찾을 때 쓴다.
+        public static System.Collections.Generic.IReadOnlyList<Robot> All => AllRobots;
+
+        // 아직 플레이어를 알아채지 못했다. 이때 광선검으로 베면 뒤에서 베기다 (기획서 19.3).
+        public bool IsUnaware => IsCalm && _awareness < 1f;
+
+        private bool IsCalm => _state == State.Patrol || _state == State.Return || _state == State.Suspicious;
+
         private static readonly System.Collections.Generic.List<Robot> NamedRobots = new System.Collections.Generic.List<Robot>();
 
         // 네임드 로봇 목록. 이름과 HP 바를 그리는 화면이 읽는다.
@@ -73,6 +94,7 @@ namespace EscapeFromSpace
         private static void ResetStatics()
         {
             NamedRobots.Clear();
+            AllRobots.Clear();
             AnyDestroyed = null;
         }
 
@@ -113,6 +135,12 @@ namespace EscapeFromSpace
 
             _health.Initialize(data.MaxHp);
             _alertMark.SetActive(false);
+            _config = _health.Config;
+            _playerController = player != null ? player.GetComponent<PlayerController>() : null;
+            if (_mark == null)
+            {
+                _mark = AwarenessMark.Create(transform, 0.95f);
+            }
 
             // 두 번째 웨이포인트 쪽을 보고 시작한다. 움직이지 않는 로봇은 이 방향을 중심으로 훑는다.
             Vector2 facing = Vector2.right;
@@ -141,6 +169,8 @@ namespace EscapeFromSpace
             _health.Died += OnDied;
             _health.Damaged += OnDamaged;
             GunNoise.Fired += OnGunNoise;
+            Footsteps.Made += OnFootstep;
+            AllRobots.Add(this);
         }
 
         private void OnDisable()
@@ -148,7 +178,9 @@ namespace EscapeFromSpace
             _health.Died -= OnDied;
             _health.Damaged -= OnDamaged;
             GunNoise.Fired -= OnGunNoise;
+            Footsteps.Made -= OnFootstep;
             NamedRobots.Remove(this);
+            AllRobots.Remove(this);
         }
 
         private void Update()
@@ -183,6 +215,15 @@ namespace EscapeFromSpace
                 case State.Return:
                     UpdateReturn();
                     break;
+                case State.Suspicious:
+                    UpdateSuspicious();
+                    break;
+            }
+
+            // 알아챈 뒤에는 "!"가 대신하므로 게이지는 숨긴다.
+            if (_mark != null)
+            {
+                _mark.Set(IsCalm ? _awareness : 0f);
             }
         }
 
@@ -190,9 +231,14 @@ namespace EscapeFromSpace
 
         private void UpdatePatrol()
         {
-            if (CanSeePlayer(true))
+            if (Watch())
             {
-                BeginAlert();
+                return;
+            }
+
+            if (_config != null && _awareness >= _config.SuspicionThreshold)
+            {
+                BeginSuspicious(_lastSeenPosition);
                 return;
             }
 
@@ -269,6 +315,7 @@ namespace EscapeFromSpace
 
         private void BeginAlert()
         {
+            _awareness = 1f;
             RememberReturnPosition();
             SetState(State.Alert);
             _motor.Stop();
@@ -403,6 +450,7 @@ namespace EscapeFromSpace
 
         private void BeginReturn()
         {
+            _awareness = 0f;
             _attack.Cancel();
             SetState(State.Return);
             _motor.Speed = _data.PatrolSpeed;
@@ -421,9 +469,14 @@ namespace EscapeFromSpace
         // 순찰하다 벗어난 자리로 걸어서 돌아간 뒤 순찰을 다시 시작한다.
         private void UpdateReturn()
         {
-            if (CanSeePlayer(true))
+            if (Watch())
             {
-                BeginAlert();
+                return;
+            }
+
+            if (_config != null && _awareness >= _config.SuspicionThreshold)
+            {
+                BeginSuspicious(_lastSeenPosition);
                 return;
             }
 
@@ -449,7 +502,136 @@ namespace EscapeFromSpace
             }
         }
 
+        // ---------- 의심 ----------
+
+        // 본 듯한 곳이나 발소리가 난 곳으로 걸어가 둘러본다. 못 찾으면 자리로 돌아간다.
+        private void BeginSuspicious(Vector2 target)
+        {
+            if (!InZone(target))
+            {
+                return;
+            }
+
+            RememberReturnPosition();
+            if (_state != State.Suspicious)
+            {
+                SetState(State.Suspicious);
+            }
+
+            _suspicionTarget = target;
+            _lookTime = 0f;
+            _motor.Speed = _data.PatrolSpeed;
+            if (IsStationary || !_motor.MoveTo(target))
+            {
+                _motor.Stop();
+            }
+        }
+
+        private void UpdateSuspicious()
+        {
+            if (Watch())
+            {
+                return;
+            }
+
+            if (_motor.IsMoving)
+            {
+                return;
+            }
+
+            // 도착했으면 그쪽을 중심으로 좌우를 살핀다.
+            Vector2 toTarget = _suspicionTarget - Position;
+            Vector2 center = toTarget.sqrMagnitude > 0.25f ? toTarget : _motor.Facing;
+            _motor.TurnTowards(Quaternion.Euler(0f, 0f, Mathf.Sin(_lookTime * 2f) * 60f) * center);
+            _lookTime += Time.deltaTime;
+            if (_config == null || _lookTime >= _config.SuspicionLookTime)
+            {
+                BeginReturn();
+            }
+        }
+
         // ---------- 감지 ----------
+
+        // 보이면 발견 게이지를 채우고 안 보이면 줄인다. 가득 차서 경계로 넘어갔으면 true.
+        private bool Watch()
+        {
+            bool sees = CanSeePlayer(true);
+            if (_config == null)
+            {
+                if (sees)
+                {
+                    BeginAlert();
+                }
+
+                return sees;
+            }
+
+            if (sees)
+            {
+                _lastSeenPosition = PlayerPosition;
+                _awareness += Time.deltaTime / DetectTime() * DetectMultiplier();
+            }
+            else
+            {
+                _awareness -= _config.DetectDecayPerSecond * Time.deltaTime;
+            }
+
+            _awareness = Mathf.Clamp01(_awareness);
+            if (_awareness < 1f)
+            {
+                return false;
+            }
+
+            BeginAlert();
+            return true;
+        }
+
+        // 가까울수록 빨리 알아챈다. 시야 끝에서 가장 느리다.
+        private float DetectTime()
+        {
+            float distance = Vector2.Distance(Position, PlayerPosition);
+            float far = Mathf.Max(_config.DetectNearDistance + 0.01f, _data.SightDistance);
+            float t = Mathf.InverseLerp(_config.DetectNearDistance, far, distance);
+            return Mathf.Max(0.05f, Mathf.Lerp(_config.DetectNearTime, _config.DetectFarTime, t));
+        }
+
+        private float DetectMultiplier()
+        {
+            float multiplier = 1f;
+            if (_playerController != null)
+            {
+                if (_playerController.IsSneaking)
+                {
+                    multiplier *= _config.SneakDetectMultiplier;
+                }
+
+                if (_playerController.IsRolling)
+                {
+                    multiplier *= _config.RollDetectMultiplier;
+                }
+
+                multiplier *= _playerController.DetectionMultiplier;
+            }
+
+            if (Cover.IsInCover(PlayerPosition, Position, _wallMask, _config.CoverDistance))
+            {
+                multiplier *= _config.CoverDetectMultiplier * (_playerController != null ? _playerController.CoverDetectionMultiplier : 1f);
+            }
+
+            return multiplier;
+        }
+
+        // 듣는 반경은 소리 반경에 로봇 귀의 밝기(Hearing Radius ÷ 기준값)를 곱한다.
+        private bool Hears(Vector2 position, float radius)
+        {
+            if (_data == null || !InZone(position))
+            {
+                return false;
+            }
+
+            float scale = _config != null && _config.ReferenceHearing > 0f ? _data.HearingRadius / _config.ReferenceHearing : 1f;
+            return Vector2.Distance(Position, position) <= radius * scale;
+        }
 
         // 기획서 5.2: 거리, 시야각, 벽 세 조건을 모두 만족해야 보인다.
         private bool CanSeePlayer(bool checkAngle)
@@ -473,12 +655,29 @@ namespace EscapeFromSpace
             return Physics2D.Linecast(Position, PlayerPosition, _wallMask).collider == null;
         }
 
-        private void OnGunNoise(Vector2 position)
+        private void OnGunNoise(Vector2 position, float radius)
         {
-            if (_data != null && Vector2.Distance(Position, position) <= _data.HearingRadius && InZone(position))
+            if (Hears(position, radius))
             {
+                _awareness = 1f;
                 Investigate(position);
             }
+        }
+
+        // 발소리는 추격하지 않고 의심만 한다. 이미 싸우거나 쫓는 중이면 무시한다.
+        private void OnFootstep(Vector2 position, float radius)
+        {
+            if (!IsCalm || !IsPlayerAlive || !Hears(position, radius))
+            {
+                return;
+            }
+
+            if (_config != null)
+            {
+                _awareness = Mathf.Max(_awareness, _config.SuspicionThreshold);
+            }
+
+            BeginSuspicious(position);
         }
 
         private void OnDamaged(float damage, Vector2 hitPoint)
@@ -486,6 +685,7 @@ namespace EscapeFromSpace
             // 맞은 자리가 아니라 쏜 쪽(플레이어)이 있는 곳으로 간다.
             if (_data != null && IsPlayerAlive && InZone(PlayerPosition))
             {
+                _awareness = 1f;
                 Investigate(PlayerPosition);
             }
         }

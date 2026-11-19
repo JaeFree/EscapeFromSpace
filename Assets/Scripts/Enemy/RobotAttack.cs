@@ -228,7 +228,7 @@ namespace EscapeFromSpace
                     // 퍼짐 값이 부채꼴 전체 각이다. 펠릿마다 그 안에서 따로 흩어진다.
                     for (int i = 0; i < _data.PelletCount; i++)
                     {
-                        FireRay(_data.SpreadAngle * 0.5f);
+                        FireRay(_data.SpreadAngle * 0.5f * CoverSpreadScale());
                     }
 
                     break;
@@ -236,7 +236,7 @@ namespace EscapeFromSpace
                 default:
                     for (int i = 0; i < _data.PelletCount; i++)
                     {
-                        FireRay(_data.SpreadAngle);
+                        FireRay(_data.SpreadAngle * CoverSpreadScale());
                     }
 
                     break;
@@ -288,6 +288,18 @@ namespace EscapeFromSpace
             }
 
             _player.TakeDamage(_data.Damage, target);
+        }
+
+        // 엄폐 중인 플레이어를 쏘면 퍼짐이 커진다 (기획서 19.3).
+        private float CoverSpreadScale()
+        {
+            CombatConfig config = _player.Config;
+            if (config == null || !Cover.IsInCover(_player.transform.position, transform.position, _wallMask, config.CoverDistance))
+            {
+                return 1f;
+            }
+
+            return config.CoverSpreadMultiplier;
         }
 
         private Vector2 DirectionToPlayer()

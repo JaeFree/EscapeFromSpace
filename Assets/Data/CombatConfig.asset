@@ -16,3 +16,21 @@ MonoBehaviour:
   _maxArmor: 12
   _cameraShakePerRecoilDegree: 0.03
   _cameraShakeDuration: 0.1
+  _detectNearTime: 0.5
+  _detectFarTime: 2
+  _detectNearDistance: 3
+  _sneakDetectMultiplier: 0.5
+  _coverDetectMultiplier: 0.5
+  _rollDetectMultiplier: 1.5
+  _detectDecayPerSecond: 0.4
+  _suspicionThreshold: 0.5
+  _suspicionLookTime: 3
+  _sneakSpeedRatio: 0.5
+  _walkNoiseRadius: 4
+  _rollNoiseRadius: 5
+  _footstepInterval: 0.5
+  _gunNoiseRadius: 8
+  _referenceHearing: 8
+  _coverDistance: 1
+  _coverSpreadMultiplier: 3
+  _backstabMultiplier: 3
