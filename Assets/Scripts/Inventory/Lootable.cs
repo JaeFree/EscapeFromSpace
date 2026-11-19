@@ -14,6 +14,7 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("초. E를 누르고 있어야 하는 시간")] private float _openTime = 1f;
         [SerializeField, Tooltip("초. 0이 아니면 이 시간이 지나 사라진다 (바닥에 버린 아이템)")] private float _lifetime;
         [SerializeField, Tooltip("비면 사라진다 (바닥에 버린 아이템)")] private bool _destroyWhenEmpty;
+        [SerializeField, Tooltip("칸. 0보다 크면 여는 동안 1초마다 이 반경에 소리가 난다 (함선 단말기 해킹, 기획서 19.6)")] private float _hackNoiseRadius;
 
         private InventoryGrid _grid;
         private bool _filled;
@@ -33,6 +34,7 @@ namespace EscapeFromSpace
             }
         }
         public float OpenTime => _openTime;
+        public float HackNoiseRadius => _hackNoiseRadius;
 
         // 네임드 잔해처럼 프리팹과 다른 크기의 루팅 칸이 필요할 때. 처음 쓰기 전에 불러야 한다.
         public void SetSize(int width, int height)

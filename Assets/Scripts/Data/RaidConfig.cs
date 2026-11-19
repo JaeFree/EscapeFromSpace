@@ -38,6 +38,13 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("보안 경계인 배의 로봇이 듣는 반경 배율")] private float _alertHearingMultiplier = 1.5f;
         [SerializeField, Tooltip("에일리언 습격 때 일반 로봇 대신 놓는 에일리언 (차례로 번갈아)")] private RobotData[] _invaders;
 
+        [Header("데이터 칩과 설계도 (기획서 19.6)")]
+        [SerializeField] private ItemData _dataChip;
+        [SerializeField, Tooltip("데이터 칩으로 여는 설계도. 만들어지는 아이템의 에셋 이름이 설계도 Id다")] private ItemData[] _blueprints;
+
+        public ItemData DataChip => _dataChip;
+        public ItemData[] Blueprints => _blueprints;
+
         public float NoEventWeight => _noEventWeight;
         public float BlackoutWeight => _blackoutWeight;
         public float SecurityAlertWeight => _securityAlertWeight;

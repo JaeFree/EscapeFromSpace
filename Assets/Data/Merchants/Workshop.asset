@@ -28,18 +28,21 @@ MonoBehaviour:
     - _item: {fileID: 11400000, guid: c3a357234e1eff747bf6a30ca59083ee, type: 2}
       _count: 1
     _unlockQuest: 
+    _unlockBlueprint: 
   - _output: {fileID: 11400000, guid: a0adc17852cd0be42a89e58a66133e6a, type: 2}
     _count: 0
     _inputs:
     - _item: {fileID: 11400000, guid: c3a357234e1eff747bf6a30ca59083ee, type: 2}
       _count: 2
     _unlockQuest: 
+    _unlockBlueprint: 
   - _output: {fileID: 11400000, guid: 4f92090567f8b794a926dca12908ae29, type: 2}
     _count: 0
     _inputs:
     - _item: {fileID: 11400000, guid: c3a357234e1eff747bf6a30ca59083ee, type: 2}
       _count: 4
     _unlockQuest: 
+    _unlockBlueprint: 
   - _output: {fileID: 11400000, guid: 37f129a85fec79244b5a073d7e2aaea7, type: 2}
     _count: 0
     _inputs:
@@ -48,6 +51,7 @@ MonoBehaviour:
     - _item: {fileID: 11400000, guid: 90fe216fd7cb176478376393f8da71d9, type: 2}
       _count: 1
     _unlockQuest: 
+    _unlockBlueprint: 
   - _output: {fileID: 11400000, guid: 29e4757e85932b64a90c85e1c53ad18c, type: 2}
     _count: 0
     _inputs:
@@ -56,6 +60,7 @@ MonoBehaviour:
     - _item: {fileID: 11400000, guid: 90fe216fd7cb176478376393f8da71d9, type: 2}
       _count: 2
     _unlockQuest: 
+    _unlockBlueprint: 
   - _output: {fileID: 11400000, guid: 0713c958a8bce7f41821685e17cbfe43, type: 2}
     _count: 0
     _inputs:
@@ -64,6 +69,7 @@ MonoBehaviour:
     - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
       _count: 1
     _unlockQuest: Q13
+    _unlockBlueprint: 
   - _output: {fileID: 11400000, guid: 6f7c147c7433db548adc49b8c0ff3040, type: 2}
     _count: 0
     _inputs:
@@ -72,6 +78,7 @@ MonoBehaviour:
     - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
       _count: 1
     _unlockQuest: Q13
+    _unlockBlueprint: 
   - _output: {fileID: 11400000, guid: 04ceb33bae4fd1d469d4dd7c65123450, type: 2}
     _count: 0
     _inputs:
@@ -80,6 +87,7 @@ MonoBehaviour:
     - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
       _count: 1
     _unlockQuest: Q13
+    _unlockBlueprint: 
   - _output: {fileID: 11400000, guid: ee3dfbd57ba71124aa1ce8be10d5f079, type: 2}
     _count: 0
     _inputs:
@@ -88,6 +96,7 @@ MonoBehaviour:
     - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
       _count: 1
     _unlockQuest: Q13
+    _unlockBlueprint: 
   - _output: {fileID: 11400000, guid: 75a16a42af2ddc44380107c023648b92, type: 2}
     _count: 0
     _inputs:
@@ -96,6 +105,7 @@ MonoBehaviour:
     - _item: {fileID: 11400000, guid: c3a357234e1eff747bf6a30ca59083ee, type: 2}
       _count: 1
     _unlockQuest: Q05
+    _unlockBlueprint: 
   - _output: {fileID: 11400000, guid: c47c911b6dcc4744e9508b768fdcea88, type: 2}
     _count: 0
     _inputs:
@@ -106,6 +116,7 @@ MonoBehaviour:
     - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
       _count: 4
     _unlockQuest: Q06
+    _unlockBlueprint: 
   - _output: {fileID: 11400000, guid: 847464edc15e1f046bdfa2fece8ee86d, type: 2}
     _count: 0
     _inputs:
@@ -114,6 +125,61 @@ MonoBehaviour:
     - _item: {fileID: 11400000, guid: 90fe216fd7cb176478376393f8da71d9, type: 2}
       _count: 1
     _unlockQuest: Q13
+    _unlockBlueprint: 
+  - _output: {fileID: 11400000, guid: d9c1fc36e9deb6d489d9f06193760ff0, type: 2}
+    _count: 0
+    _inputs:
+    - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+      _count: 3
+    - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
+      _count: 2
+    _unlockQuest: 
+    _unlockBlueprint: Suppressor
+  - _output: {fileID: 11400000, guid: 66064a1d7eff0a44ab72d7c66a5705bd, type: 2}
+    _count: 0
+    _inputs:
+    - _item: {fileID: 11400000, guid: c3a357234e1eff747bf6a30ca59083ee, type: 2}
+      _count: 1
+    - _item: {fileID: 11400000, guid: 38a41ba3a7a88964db4ab33444f057e5, type: 2}
+      _count: 1
+    _unlockQuest: 
+    _unlockBlueprint: HoloDecoy
+  - _output: {fileID: 11400000, guid: 392303ed5f0c2814cac400bbd6247a74, type: 2}
+    _count: 0
+    _inputs:
+    - _item: {fileID: 11400000, guid: c3a357234e1eff747bf6a30ca59083ee, type: 2}
+      _count: 2
+    - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+      _count: 1
+    _unlockQuest: 
+    _unlockBlueprint: EmpGrenade
+  - _output: {fileID: 11400000, guid: 08ae728285cc65244b3219b498affdfc, type: 2}
+    _count: 0
+    _inputs:
+    - _item: {fileID: 11400000, guid: d313b27335381a0409ba768205341510, type: 2}
+      _count: 2
+    - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
+      _count: 1
+    _unlockQuest: 
+    _unlockBlueprint: MediKit
+  - _output: {fileID: 11400000, guid: 2dfa3928ef69b8f419f8859735f1a9d6, type: 2}
+    _count: 0
+    _inputs:
+    - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+      _count: 1
+    - _item: {fileID: 11400000, guid: 38a41ba3a7a88964db4ab33444f057e5, type: 2}
+      _count: 1
+    _unlockQuest: 
+    _unlockBlueprint: OxygenCan
+  - _output: {fileID: 11400000, guid: 330a71de2c60e6b48a2a56e47e29f060, type: 2}
+    _count: 0
+    _inputs:
+    - _item: {fileID: 11400000, guid: 775169d682579324aa2781d5dd5afb2f, type: 2}
+      _count: 6
+    - _item: {fileID: 11400000, guid: 7eb8636d4f7cd5346b5ad5b1ddb1df46, type: 2}
+      _count: 3
+    _unlockQuest: 
+    _unlockBlueprint: Helmet2
   _buysItems: 0
   _equipmentSellRate: 0.5
   _priceSources: []

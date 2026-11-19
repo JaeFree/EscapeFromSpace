@@ -17,6 +17,7 @@ namespace EscapeFromSpace
 
         private float _holdTime;
         private float _nextSearchSoundTime;
+        private float _nextHackNoiseTime;
 
         // 지금 열 수 있는 가장 가까운 대상. 없으면 null.
         public Lootable Target { get; private set; }
@@ -74,7 +75,15 @@ namespace EscapeFromSpace
             {
                 _holdTime = 0f;
                 _nextSearchSoundTime = 0f;
+                _nextHackNoiseTime = 0f;
                 return;
+            }
+
+            // 함선 단말기를 해킹하는 동안 1초마다 소리가 난다. 둘레의 로봇이 의심하고 다가온다 (기획서 19.6).
+            if (!Target.IsOpened && Target.HackNoiseRadius > 0f && _holdTime >= _nextHackNoiseTime)
+            {
+                _nextHackNoiseTime = _holdTime + 1f;
+                Footsteps.Emit(Target.transform.position, Target.HackNoiseRadius);
             }
 
             // 처음 여는 것은 뒤지는 동안 부스럭거리는 소리가 되풀이된다.

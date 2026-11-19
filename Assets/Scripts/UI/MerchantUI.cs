@@ -385,6 +385,12 @@ namespace EscapeFromSpace
             DrawRows();
         }
 
+        // 데이터 칩으로 등록한 설계도 (기획서 19.6)
+        public static bool HasBlueprint(string id)
+        {
+            return string.IsNullOrEmpty(id) || (Data != null && Data.Blueprints.Contains(id));
+        }
+
         public static bool IsQuestDone(string questId)
         {
             return string.IsNullOrEmpty(questId) || (Data != null && Data.CompletedQuests.Contains(questId));
@@ -441,7 +447,9 @@ namespace EscapeFromSpace
                 }
 
                 MerchantData.Recipe captured = recipe;
-                bool unlocked = IsQuestDone(recipe.UnlockQuest);
+                bool questDone = IsQuestDone(recipe.UnlockQuest);
+                bool blueprint = HasBlueprint(recipe.UnlockBlueprint);
+                bool unlocked = questDone && blueprint;
                 bool has = _stock.Has(recipe.Inputs);
                 var needs = new System.Text.StringBuilder();
                 foreach (TechTree.Cost cost in recipe.Inputs)
@@ -466,7 +474,9 @@ namespace EscapeFromSpace
                     Icon = recipe.Output.Icon,
                     IconColor = recipe.Output.Icon != null ? Color.white : recipe.Output.Color,
                     Title = recipe.Output.DisplayName + count,
-                    Detail = unlocked ? needs.ToString() : $"<color={LackColor}>잠김</color> · 퀘스트 \"{QuestTitle(recipe.UnlockQuest)}\" 완료 필요",
+                    Detail = unlocked ? needs.ToString()
+                        : !questDone ? $"<color={LackColor}>잠김</color> · 퀘스트 \"{QuestTitle(recipe.UnlockQuest)}\" 완료 필요"
+                        : $"<color={LackColor}>잠김</color> · 설계도 필요 (데이터 칩을 가지고 탈출)",
                     Price = string.Empty,
                     Button = unlocked ? "제작" : "잠김",
                     Enabled = unlocked && has,

@@ -87,7 +87,8 @@ namespace EscapeFromSpace
             {
                 _title.text = "탈출 성공";
                 _title.color = new Color(0.4f, 1f, 0.55f);
-                _body.text = $"{time}\n가지고 나온 가치  {_raid.CarriedValue}{xp}";
+                string blueprints = _raid.NewBlueprints.Count > 0 ? $"\n새 설계도  {string.Join(", ", _raid.NewBlueprints)}" : string.Empty;
+                _body.text = $"{time}\n가지고 나온 가치  {_raid.CarriedValue}{xp}{blueprints}";
             }
             else
             {

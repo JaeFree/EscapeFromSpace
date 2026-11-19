@@ -45,6 +45,9 @@ namespace EscapeFromSpace
         public int XpGained { get; private set; }
         public ItemStack SecuredItem { get; private set; }
 
+        // 이번 판에 데이터 칩으로 새로 등록한 설계도 (결과 화면에 보여 준다)
+        public readonly System.Collections.Generic.List<string> NewBlueprints = new System.Collections.Generic.List<string>();
+
         // 대기실에서 들어왔으면 거기서 고른 장비로 시작한다. 씬을 바로 Play했으면 가방의 테스트용 장비를 쓴다.
         private void Awake()
         {
@@ -152,6 +155,53 @@ namespace EscapeFromSpace
             }
         }
 
+        // 데이터 칩을 가지고 탈출하면 칩 하나마다 아직 없는 설계도 하나를 무작위로 등록하고 칩은 사라진다 (기획서 19.6).
+        // 설계도를 다 모았으면 칩은 남는다 (팔 수 있다).
+        private void RegisterBlueprints(SaveData data)
+        {
+            if (_config == null || _config.DataChip == null || _config.Blueprints == null)
+            {
+                return;
+            }
+
+            foreach (InventoryGrid grid in new[] { _inventory.Bag, _inventory.SecureBox, _inventory.DogBag })
+            {
+                if (grid == null)
+                {
+                    continue;
+                }
+
+                foreach (ItemStack stack in new System.Collections.Generic.List<ItemStack>(grid.Items))
+                {
+                    while (stack.Data == _config.DataChip && stack.Count > 0)
+                    {
+                        var missing = new System.Collections.Generic.List<ItemData>();
+                        foreach (ItemData blueprint in _config.Blueprints)
+                        {
+                            if (blueprint != null && !data.Blueprints.Contains(blueprint.name))
+                            {
+                                missing.Add(blueprint);
+                            }
+                        }
+
+                        if (missing.Count == 0)
+                        {
+                            return;
+                        }
+
+                        ItemData chosen = missing[Random.Range(0, missing.Count)];
+                        data.Blueprints.Add(chosen.name);
+                        NewBlueprints.Add(chosen.DisplayName);
+                        stack.Count--;
+                        if (stack.Count <= 0)
+                        {
+                            grid.Remove(stack);
+                        }
+                    }
+                }
+            }
+        }
+
         // 탈출하면 가진 것 전부가 가지고 나온 가치, 죽으면 보관함을 뺀 전부가 잃은 가치다.
         private void Finish(RaidOutcome outcome)
         {
@@ -184,6 +234,11 @@ namespace EscapeFromSpace
             // 대기실에서 들어온 판만 저장한다. 죽었으면 보관함만 남는다.
             if (GameSession.RaidFromLobby)
             {
+                if (outcome == RaidOutcome.Escaped)
+                {
+                    RegisterBlueprints(GameSession.Data);
+                }
+
                 _inventory.Capture(GameSession.Data);
                 if (_map != null)
                 {

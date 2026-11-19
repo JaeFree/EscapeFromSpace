@@ -66,6 +66,9 @@ namespace EscapeFromSpace
         public bool HasDog;
         public List<SavedItem> DogBag = new List<SavedItem>();
 
+        // 데이터 칩으로 등록한 설계도의 Id (기획서 19.6). 죽어도 남는다.
+        public List<string> Blueprints = new List<string>();
+
         public bool SeenPrologue;
         public bool SeenEnding;
     }

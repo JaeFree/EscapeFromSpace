@@ -38,8 +38,10 @@ namespace EscapeFromSpace
             [SerializeField, Tooltip("만들어지는 수량. 0이면 아이템의 기본 수량")] private int _count;
             [SerializeField] private List<TechTree.Cost> _inputs = new List<TechTree.Cost>();
             [SerializeField, Tooltip("이 퀘스트를 끝내야 만들 수 있다. 비우면 처음부터 만든다")] private string _unlockQuest;
+            [SerializeField, Tooltip("이 설계도(데이터 칩으로 등록, 기획서 19.6)가 있어야 만든다. 비우면 필요 없다")] private string _unlockBlueprint;
 
             public ItemData Output => _output;
+            public string UnlockBlueprint => _unlockBlueprint;
             public int Count => _count > 0 ? _count : (_output != null ? _output.DefaultCount : 1);
             public IReadOnlyList<TechTree.Cost> Inputs => _inputs;
             public string UnlockQuest => _unlockQuest;

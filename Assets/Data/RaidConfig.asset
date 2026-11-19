@@ -52,3 +52,11 @@ MonoBehaviour:
   _invaders:
   - {fileID: 11400000, guid: dba083898c90053458469c59ed36fac5, type: 2}
   - {fileID: 11400000, guid: 61ca2a65eb8e9de42ab45796d1dea886, type: 2}
+  _dataChip: {fileID: 11400000, guid: ae43444dc71bc434688acd6c80045126, type: 2}
+  _blueprints:
+  - {fileID: 11400000, guid: d9c1fc36e9deb6d489d9f06193760ff0, type: 2}
+  - {fileID: 11400000, guid: 66064a1d7eff0a44ab72d7c66a5705bd, type: 2}
+  - {fileID: 11400000, guid: 392303ed5f0c2814cac400bbd6247a74, type: 2}
+  - {fileID: 11400000, guid: 08ae728285cc65244b3219b498affdfc, type: 2}
+  - {fileID: 11400000, guid: 2dfa3928ef69b8f419f8859735f1a9d6, type: 2}
+  - {fileID: 11400000, guid: 330a71de2c60e6b48a2a56e47e29f060, type: 2}
