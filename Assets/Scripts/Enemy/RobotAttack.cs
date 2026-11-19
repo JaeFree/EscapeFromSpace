@@ -224,6 +224,10 @@ namespace EscapeFromSpace
                     Swing();
                     break;
 
+                case RobotAttackKind.Projectile:
+                    AcidSpit.Launch(origin + _aimDirection * MuzzleOffset, _aimDirection, _data, _shotMask);
+                    break;
+
                 case RobotAttackKind.Shotgun:
                     // 퍼짐 값이 부채꼴 전체 각이다. 펠릿마다 그 안에서 따로 흩어진다.
                     for (int i = 0; i < _data.PelletCount; i++)

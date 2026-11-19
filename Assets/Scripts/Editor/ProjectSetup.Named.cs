@@ -116,8 +116,7 @@ namespace EscapeFromSpace.EditorTools
             foreach ((string zone, StationLayout.Patrol[] patrols) in StationLayout.Robots)
             {
                 Transform old = robots.transform.Find(zone + "Zone");
-                if (old != null && new SerializedObject(old.GetComponent<RobotZone>()).FindProperty("_spawns").arraySize == patrols.Length
-                    && !StartsAt(old, OldPowerRifleStart))
+                if (old != null && SameRobots(old.GetComponent<RobotZone>(), patrols) && !StartsAt(old, OldPowerRifleStart))
                 {
                     continue;
                 }
@@ -146,6 +145,28 @@ namespace EscapeFromSpace.EditorTools
                     Object.DestroyImmediate(group.gameObject);
                 }
             }
+        }
+
+        // 수와 종류가 배치표와 같은지 (병원선·연구선이 에일리언으로 바뀐 것을 알아보려고)
+        private static bool SameRobots(RobotZone zone, StationLayout.Patrol[] patrols)
+        {
+            var so = new SerializedObject(zone);
+            SerializedProperty spawns = so.FindProperty("_spawns");
+            if (spawns.arraySize != patrols.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < patrols.Length; i++)
+            {
+                Object data = spawns.GetArrayElementAtIndex(i).FindPropertyRelative("_data").objectReferenceValue;
+                if (data == null || data.name != patrols[i].Robot)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         // 동력 구역 AR 로봇의 옛 시작점

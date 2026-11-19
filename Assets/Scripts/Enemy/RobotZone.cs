@@ -12,8 +12,24 @@ namespace EscapeFromSpace
             [SerializeField] private RobotData _data;
             [SerializeField, Tooltip("첫 번째가 시작 위치. 순서대로 돌며 순찰한다")] private Transform[] _waypoints;
 
+            public Spawn()
+            {
+            }
+
+            public Spawn(RobotData data, Transform[] waypoints)
+            {
+                _data = data;
+                _waypoints = waypoints;
+            }
+
             public RobotData Data => _data;
             public Transform[] Waypoints => _waypoints;
+
+            // 에일리언 습격 (기획서 19.4): 레이드를 시작할 때 일반 로봇을 에일리언으로 바꾼다.
+            public void SetData(RobotData data)
+            {
+                _data = data;
+            }
         }
 
         [SerializeField] private Robot _robotPrefab;
@@ -28,6 +44,34 @@ namespace EscapeFromSpace
 
         // 판마다 위치를 섞는 RaidLayoutRandomizer가 읽고 웨이포인트를 옮긴다 (기획서 19.2).
         public Spawn[] Spawns => _spawns;
+
+        // 보안 경계 (기획서 19.4): 같은 종류의 로봇을 더 놓는다. 자리는 첫 로봇 곁이고, 위치 섞기가 다시 정한다.
+        public void AddSpawns(RobotData data, int count)
+        {
+            if (data == null || count <= 0 || _spawns.Length == 0)
+            {
+                return;
+            }
+
+            var list = new System.Collections.Generic.List<Spawn>(_spawns);
+            Vector3 origin = _spawns[0].Waypoints[0].position;
+            for (int i = 0; i < count; i++)
+            {
+                var route = new GameObject($"Extra {data.name} {i + 1}").transform;
+                route.SetParent(transform, false);
+                var points = new Transform[2];
+                for (int j = 0; j < points.Length; j++)
+                {
+                    points[j] = new GameObject($"Waypoint {j + 1}").transform;
+                    points[j].SetParent(route, false);
+                    points[j].position = origin;
+                }
+
+                list.Add(new Spawn(data, points));
+            }
+
+            _spawns = list.ToArray();
+        }
         public bool EscortsFollowFirst => _escortsFollowFirst;
 
         // WallGrid가 Awake에서 벽을 읽은 뒤에 로봇을 만든다.

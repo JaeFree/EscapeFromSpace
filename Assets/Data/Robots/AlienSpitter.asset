@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 487827a83d89cb14c8b9086714a5435c, type: 3}
+  m_Name: AlienSpitter
+  m_EditorClassIdentifier: 
+  _displayName: "\uC2A4\uD53C\uD130"
+  _color: {r: 0.45, g: 0.8, b: 0.5, a: 1}
+  _sprite: {fileID: 21300000, guid: 6041db239bfe2ee489638208001da347, type: 3}
+  _visualSize: 1
+  _maxHp: 60
+  _lootTable: {fileID: 11400000, guid: ba6102aaa1a01eb4e9499b05fc79718e, type: 2}
+  _xpReward: 15
+  _isNamed: 0
+  _namedId: 
+  _bodyTint: {r: 1, g: 1, b: 1, a: 1}
+  _isBiological: 1
+  _wreckSize: {x: 1, y: 2}
+  _attackKind: 4
+  _damage: 12
+  _pelletCount: 1
+  _spreadAngle: 4
+  _range: 9
+  _projectileSpeed: 8
+  _windupTime: 0.6
+  _aimLockTime: 0
+  _burstCount: 1
+  _burstInterval: 0
+  _restTime: 2.5
+  _patrolSpeed: 2
+  _chaseSpeed: 3
+  _turnSpeed: 360
+  _sweepAngle: 45
+  _sweepSpeed: 30
+  _sightDistance: 8
+  _sightAngle: 90
+  _hearingRadius: 8
+  _alertDuration: 0.6
+  _chaseTimeout: 5
+  _attackSound:
+    _clips:
+    - {fileID: 8300000, guid: e8965fd73c2fe7a4f812d1aa43b09527, type: 3}
+    _volume: 0.7
+    _pitch: 1.6
+    _pitchVariation: 0.05

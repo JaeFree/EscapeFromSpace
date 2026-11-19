@@ -23,7 +23,8 @@ namespace EscapeFromSpace
         [SerializeField] private Entry[] _entries;
 
         // 뽑은 아이템을 빈자리에 놓는다. 자리가 없으면 그 아이템은 건너뛴다.
-        public void Fill(InventoryGrid grid)
+        // multiplier: 우주선 이변이 생긴 배에서 더 나오는 비율 (기획서 19.4). 개수와 확률에 곱한다.
+        public void Fill(InventoryGrid grid, float multiplier = 1f)
         {
             if (_entries == null || _entries.Length == 0)
             {
@@ -34,7 +35,7 @@ namespace EscapeFromSpace
             {
                 foreach (Entry entry in _entries)
                 {
-                    if (entry.Item != null && UnityEngine.Random.value * 100f < entry.Weight)
+                    if (entry.Item != null && UnityEngine.Random.value * 100f < entry.Weight * multiplier)
                     {
                         grid.TryAdd(new ItemStack(entry.Item));
                     }
@@ -49,7 +50,9 @@ namespace EscapeFromSpace
                 total += entry.Weight;
             }
 
-            int count = UnityEngine.Random.Range(_minCount, _maxCount + 1);
+            // 1.25배면 2개는 2.5개가 되어 반은 2개, 반은 3개다.
+            float scaled = UnityEngine.Random.Range(_minCount, _maxCount + 1) * multiplier;
+            int count = Mathf.FloorToInt(scaled) + (UnityEngine.Random.value < scaled - Mathf.Floor(scaled) ? 1 : 0);
             for (int i = 0; i < count; i++)
             {
                 float roll = UnityEngine.Random.value * total;

@@ -69,6 +69,10 @@ namespace EscapeFromSpace
         private CombatConfig _config;
         private PlayerController _playerController;
 
+        // 시작한 구역의 Id. 우주선 이변(정전, 보안 경계)을 볼 때 쓴다 (기획서 19.4).
+        private string _homeZoneId;
+        private Transform _flashlight;
+
         // EMP에 맞아 멈춰 있는 남은 시간 (기획서 19.3)
         private float _stunTimeLeft;
 
@@ -162,6 +166,13 @@ namespace EscapeFromSpace
                 _mark = AwarenessMark.Create(transform, 0.95f);
             }
 
+            ZoneArea home = ZoneArea.At(transform.position);
+            _homeZoneId = home != null ? home.Id : null;
+            if (RaidEvents.IsBlackout(_homeZoneId) && !data.IsBiological && _flashlight == null)
+            {
+                _flashlight = Flashlight.Create(transform, data.SightDistance * SightScale, data.SightAngle);
+            }
+
             // 두 번째 웨이포인트 쪽을 보고 시작한다. 움직이지 않는 로봇은 이 방향을 중심으로 훑는다.
             Vector2 facing = Vector2.right;
             if (waypoints.Length > 1)
@@ -252,6 +263,12 @@ namespace EscapeFromSpace
                 case State.Suspicious:
                     UpdateSuspicious();
                     break;
+            }
+
+            if (_flashlight != null)
+            {
+                float angle = Mathf.Atan2(_motor.Facing.y, _motor.Facing.x) * Mathf.Rad2Deg;
+                _flashlight.rotation = Quaternion.Euler(0f, 0f, angle);
             }
 
             // 알아챈 뒤에는 "!"가 대신하므로 게이지는 숨긴다.
@@ -655,6 +672,33 @@ namespace EscapeFromSpace
             return multiplier;
         }
 
+        // 정전된 배에서는 로봇의 시야가 줄어든다. 에일리언은 어둠의 영향을 받지 않는다 (기획서 19.4).
+        private float SightScale
+        {
+            get
+            {
+                if (_data.IsBiological || !RaidEvents.IsBlackout(_homeZoneId) || RaidEvents.Current == null)
+                {
+                    return 1f;
+                }
+
+                return _blackoutSightMultiplier;
+            }
+        }
+
+        private static float _blackoutSightMultiplier = 0.6f;
+        private static float _alertHearingMultiplier = 1.5f;
+
+        // RaidEventDirector가 설정 값을 넘겨준다.
+        public static void ConfigureEvents(RaidConfig config)
+        {
+            if (config != null)
+            {
+                _blackoutSightMultiplier = config.BlackoutSightMultiplier;
+                _alertHearingMultiplier = config.AlertHearingMultiplier;
+            }
+        }
+
         // 듣는 반경은 소리 반경에 로봇 귀의 밝기(Hearing Radius ÷ 기준값)를 곱한다.
         private bool Hears(Vector2 position, float radius)
         {
@@ -664,6 +708,11 @@ namespace EscapeFromSpace
             }
 
             float scale = _config != null && _config.ReferenceHearing > 0f ? _data.HearingRadius / _config.ReferenceHearing : 1f;
+            if (RaidEvents.IsAlert(_homeZoneId))
+            {
+                scale *= _alertHearingMultiplier;
+            }
+
             return Vector2.Distance(Position, position) <= radius * scale;
         }
 
@@ -676,7 +725,7 @@ namespace EscapeFromSpace
             }
 
             Vector2 toPlayer = PlayerPosition - Position;
-            if (toPlayer.magnitude > _data.SightDistance)
+            if (toPlayer.magnitude > _data.SightDistance * SightScale)
             {
                 return false;
             }
@@ -761,7 +810,7 @@ namespace EscapeFromSpace
         {
             // 쓰러진 자리에 잔해를 남긴다 (기획서 6.2). 무엇이 나오는지는 로봇 종류마다 다르다.
             Lootable wreck = Instantiate(_wreckPrefab, transform.position, Quaternion.identity);
-            wreck.name = $"{_data.DisplayName} 잔해";
+            wreck.name = _data.IsBiological ? $"{_data.DisplayName} 사체" : $"{_data.DisplayName} 잔해";
             wreck.SetSize(_data.WreckSize.x, _data.WreckSize.y);
             wreck.SetTable(_data.LootTable);
 
@@ -772,7 +821,8 @@ namespace EscapeFromSpace
                 wreckRenderer.color = Color.Lerp(_data.Color, Color.black, 0.25f);
             }
 
-            if (_explosionPrefab != null)
+            // 에일리언은 터지지 않는다 (생물이라서).
+            if (_explosionPrefab != null && !_data.IsBiological)
             {
                 Instantiate(_explosionPrefab, transform.position, Quaternion.identity);
             }

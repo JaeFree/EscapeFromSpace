@@ -28,6 +28,7 @@ namespace EscapeFromSpace
 
         [Header("포탈")]
         [SerializeField] private Transform _portal;
+        [SerializeField, Tooltip("우주선 이변을 뽑는 데 쓴다 (기획서 19.4)")] private RaidConfig _raidConfig;
         [SerializeField, Tooltip("칸. 이 크기의 구역에 들어가면 출격할지 묻는다")] private Vector2 _portalSize = new Vector2(3f, 2f);
         [SerializeField] private string _raidSceneName = "Station";
 
@@ -43,6 +44,9 @@ namespace EscapeFromSpace
 
         // 출격할지 묻는 창이 떠 있는지. 창은 LobbyUI가 그린다.
         public bool IsConfirming { get; private set; }
+
+        // 출격 창에 보여 줄 이번 판의 이변 (기획서 19.4)
+        public string PendingEventText => RaidEvents.Next != null && _raidConfig != null ? RaidEvents.Next.Describe(_raidConfig.EventLootBonus) : string.Empty;
 
         public Lootable Storage => _storage;
         public Transform Portal => _portal;
@@ -112,6 +116,12 @@ namespace EscapeFromSpace
             {
                 IsConfirming = true;
                 _controller.IsMovementLocked = true;
+
+                // 묻는 순간 이번 판의 이변을 정한다. 취소하고 다시 와도 같은 이변이다.
+                if (RaidEvents.Next == null)
+                {
+                    RaidEvents.Next = RaidEvents.Roll(_raidConfig);
+                }
                 Sfx.Play(SfxId.UiPrompt);
             }
         }

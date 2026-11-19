@@ -20,6 +20,7 @@ namespace EscapeFromSpace
         private Text _summary;
         private RectTransform _confirm;
         private RectTransform _confirmButton;
+        private Text _eventText;
         private RectTransform _cancelButton;
 
         private void Awake()
@@ -60,6 +61,10 @@ namespace EscapeFromSpace
         private void UpdateConfirm()
         {
             bool show = _lobby.IsConfirming;
+            if (show && _eventText != null)
+            {
+                _eventText.text = _lobby.PendingEventText;
+            }
             if (show && !_confirm.gameObject.activeSelf)
             {
                 _confirm.SetAsLastSibling();
@@ -112,13 +117,18 @@ namespace EscapeFromSpace
             _confirm = UiBuilder.Dim("LaunchConfirm", transform);
 
             RectTransform box = UiBuilder.Rect("Box", _confirm, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero,
-                new Vector2(640f, 300f));
+                new Vector2(760f, 360f));
             UiBuilder.Window(box);
 
             RectTransform message = UiBuilder.Rect("Message", box, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -40f),
                 new Vector2(600f, 90f));
             Text text = UiBuilder.Text("출격하시겠습니까?", message, 42, TextAnchor.MiddleCenter, UiTheme.Text);
             text.fontStyle = FontStyle.Bold;
+
+            // 이번 판의 우주선 이변 (기획서 19.4)
+            RectTransform eventLine = UiBuilder.Rect("Event", box, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -140f),
+                new Vector2(720f, 60f));
+            _eventText = UiBuilder.Text(string.Empty, eventLine, 26, TextAnchor.MiddleCenter, UiTheme.Accent);
 
             var buttonSize = new Vector2(260f, 76f);
             _confirmButton = UiBuilder.Button("확인 (Enter)", box, new Vector2(0.5f, 0f), new Vector2(-150f, 40f), buttonSize, true);

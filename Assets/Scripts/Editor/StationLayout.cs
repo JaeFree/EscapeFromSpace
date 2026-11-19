@@ -137,14 +137,15 @@ namespace EscapeFromSpace.EditorTools
                 new Patrol("MeleeRobot", V(6, 44), V(33, 44)),
                 new Patrol("PistolRobot", V(33, 36), V(33, 53)),
             }),
+            // 병원선과 연구선의 일반 적은 에일리언이다 (기획서 19.4, 2026-11-19 사용자 결정).
             ("Medbay", new[]
             {
-                new Patrol("PistolRobot", V(10, 80), V(30, 80)),
-                new Patrol("ShotgunRobot", V(30, 90), V(34, 88)),
+                new Patrol("AlienStalker", V(10, 80), V(30, 80)),
+                new Patrol("AlienSpitter", V(30, 90), V(34, 88)),
             }),
             ("Lab", new[]
             {
-                new Patrol("SniperRobot", V(91, 85), V(70, 75)),
+                new Patrol("AlienStalker", V(76, 75), V(90, 75)),
             }),
             ("Security", new[]
             {

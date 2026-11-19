@@ -12326,6 +12326,7 @@ MonoBehaviour:
   _storage: {fileID: 476182714}
   _items: {fileID: 11400000, guid: 4165a764eabe42049a63baece06f1bf1, type: 2}
   _portal: {fileID: 1131894711}
+  _raidConfig: {fileID: 11400000, guid: 35be1393733f0404aada9e05b1ea6b0f, type: 2}
   _portalSize: {x: 3, y: 2}
   _raidSceneName: Station
   _starterSet:

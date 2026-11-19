@@ -47,6 +47,9 @@ namespace EscapeFromSpace
         // 화면에서 아이템을 끌고 있는 동안에는 비어도 사라지지 않는다. 못 놓았을 때 돌아올 자리다.
         public bool KeepAlive { get; set; }
 
+        // 내용물 수 배율. 우주선 이변이 생긴 배는 1보다 크다 (기획서 19.4). Start 전에 정한다.
+        public float LootMultiplier { get; set; } = 1f;
+
         // 한 번 연 것은 다음부터 E를 누르면 바로 열린다.
         public bool IsOpened { get; set; }
 
@@ -95,7 +98,7 @@ namespace EscapeFromSpace
         {
             if (!_filled && _table != null)
             {
-                _table.Fill(Grid);
+                _table.Fill(Grid, LootMultiplier);
                 _filled = true;
             }
         }

@@ -140,6 +140,7 @@ namespace EscapeFromSpace.EditorTools
             EnsureGadgets();
             EnsureWorkshop();
             EnsureNamedRobots();
+            EnsureAliens();
             EnsurePixelTiles();
             EnsurePixelContainers();
             EnsureQuestDatabase();
@@ -1425,6 +1426,7 @@ namespace EscapeFromSpace.EditorTools
             EnsureStationArt();
             ApplyWreckFieldStation();
             EnsureRaidLayout();
+            EnsureRaidEvents(player);
 
             // 탈출 포드는 착륙장 모양. 열림·닫힘 색은 EscapePod가 그 위에 칠한다.
             var placeholder = AssetDatabase.LoadAssetAtPath<Sprite>(SquarePath);
@@ -1573,6 +1575,7 @@ namespace EscapeFromSpace.EditorTools
             SetReferenceIfEmpty(lobby, "_oxygen", player.GetComponent<PlayerOxygen>());
             SetReferenceIfEmpty(lobby, "_inventoryUi", ui);
             SetReferenceIfEmpty(lobby, "_storage", storage.GetComponent<Lootable>());
+            SetReferenceIfEmpty(lobby, "_raidConfig", AssetDatabase.LoadAssetAtPath<RaidConfig>(RaidConfigPath));
             SetReferenceIfEmpty(lobby, "_items", items);
             SetReferenceIfEmpty(lobby, "_portal", portal.transform);
 

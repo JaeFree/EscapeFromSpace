@@ -8,6 +8,9 @@ namespace EscapeFromSpace
         Gun,
         Shotgun,
         Sniper,
+
+        // 2026-11-19 에일리언 스피터 (기획서 19.4): 히트스캔이 아니라 눈에 보이게 날아가는 탄
+        Projectile,
     }
 
     // 기획서 5.3 로봇 표의 한 줄. 수치는 초기값이라 에셋에 두고 Inspector에서 밸런싱한다.
@@ -37,6 +40,7 @@ namespace EscapeFromSpace
         [SerializeField] private int _pelletCount;
         [SerializeField, Tooltip("도. 총은 ±이 값, 샷건은 부채꼴 전체 각, 근접은 공격 범위 각도")] private float _spreadAngle;
         [SerializeField, Tooltip("칸")] private float _range;
+        [SerializeField, Tooltip("칸/초. 날아가는 탄(Projectile)의 속도")] private float _projectileSpeed;
 
         [Header("사격 패턴")]
         [SerializeField, Tooltip("초. 쏘기 전에 충전하거나 조준선을 보여 주는 시간")] private float _windupTime;
@@ -97,6 +101,7 @@ namespace EscapeFromSpace
         public int PelletCount => _pelletCount;
         public float SpreadAngle => _spreadAngle;
         public float Range => _range;
+        public float ProjectileSpeed => _projectileSpeed;
         public float WindupTime => _windupTime;
         public float AimLockTime => _aimLockTime;
         public int BurstCount => _burstCount;
