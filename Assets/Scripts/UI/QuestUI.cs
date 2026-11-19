@@ -102,7 +102,7 @@ namespace EscapeFromSpace
                         ? $"<color={DoneColor}>완료 · {reward}</color>"
                         : $"<color={(complete ? OkColor : LackColor)}>{_log.Progress(quest, stock)}</color> · 보상 {reward}",
                     Price = string.Empty,
-                    Button = done ? "완료됨" : quest.Kind == QuestKind.RepairPod ? "포드에서" : "완료",
+                    Button = done ? "완료됨" : quest.Kind == QuestKind.RepairPod ? "엔진에서" : "완료",
                     Enabled = complete,
                     OnClick = () => Complete(captured),
                 });
@@ -206,7 +206,7 @@ namespace EscapeFromSpace
             rows.Add(new MerchantUI.Row
             {
                 Title = repaired ? "<color=#7CF08F>수리 완료</color>" : "출발",
-                Detail = repaired ? "모두 태우고 오르비스-9을 떠난다" : "부품을 모두 설치하면 출발할 수 있다",
+                Detail = repaired ? "모두 태우고 케르-7을 떠난다" : "부품을 모두 설치하면 출발할 수 있다",
                 Price = string.Empty,
                 Button = "출발",
                 Enabled = repaired,

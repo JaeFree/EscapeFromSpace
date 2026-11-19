@@ -8,10 +8,11 @@ using Random = System.Random;
 namespace EscapeFromSpace
 {
     // 스토리 화면과 시작 화면의 장면. 장마다 하나를 고른다.
+    // 에셋에는 순서 번호로 저장되므로 새 장면은 맨 뒤에 붙인다 (Planet은 옛 Station 자리).
     public enum StoryShot
     {
         Stars,
-        Station,
+        Planet,
         Attack,
         Shelter,
         Hangar,
@@ -19,6 +20,9 @@ namespace EscapeFromSpace
         Alarm,
         Escape,
         Farewell,
+        Graveyard,
+        Crash,
+        Liftoff,
     }
 
     // 화면에 올린 장면 하나. 배경 한 장과 그 위에서 움직이는 조각들이다.
@@ -63,7 +67,10 @@ namespace EscapeFromSpace
 
         private static readonly Dictionary<StoryShot, Sprite> Backgrounds = new Dictionary<StoryShot, Sprite>();
         private static Sprite _glow;
-        private static Sprite _pod;
+        private static Sprite _ship;
+
+        // 협곡 장면마다 잔해 위 경고등 자리. 배경을 그릴 때 정해진다.
+        private static readonly Dictionary<StoryShot, List<Vector2>> WreckLights = new Dictionary<StoryShot, List<Vector2>>();
 
         // 생존자 다섯과 플레이어의 우주복 색. 상인 색과 맞춘다.
         private static readonly Color32[] SuitColors =
@@ -76,11 +83,22 @@ namespace EscapeFromSpace
             new Color32(235, 140, 40, 255),
         };
 
-        // 정거장 그림의 가운데에서 잰 불빛 자리 (크기 1 기준): 기둥 꼭대기·아래, 전지판 끝, 고리 양 끝
-        private static readonly Vector2[] StationLights =
+        // 센티널 위성이 늘어선 자리 (2026-11-19 우주선 무덤 이야기, 기획서 19.1)
+        private static readonly Vector2[] OrbitSentinels = MakeOrbit(new Vector2(240f, 70f), 250f, 120f, 9);
+        private static readonly Vector2[] EscapeSentinels = MakeOrbit(new Vector2(60f, -40f), 260f, 220f, 8);
+        private static readonly Vector2[] FarewellSentinels = MakeOrbit(new Vector2(250f, 150f), 62f, 24f, 7);
+
+        private static Vector2[] MakeOrbit(Vector2 center, float rx, float ry, int count)
         {
-            new Vector2(0f, 64f), new Vector2(0f, -45f), new Vector2(-70f, 34f), new Vector2(70f, 34f), new Vector2(-70f, 0f), new Vector2(70f, 0f),
-        };
+            var points = new Vector2[count];
+            for (int i = 0; i < count; i++)
+            {
+                float a = Mathf.Lerp(18f, 162f, i / (float)(count - 1)) * Mathf.Deg2Rad;
+                points[i] = center + new Vector2(Mathf.Cos(a) * rx, Mathf.Sin(a) * ry);
+            }
+
+            return points;
+        }
 
         public static StoryStage Build(StoryShot shot, RectTransform parent)
         {
@@ -96,13 +114,16 @@ namespace EscapeFromSpace
 
             switch (shot)
             {
-                case StoryShot.Station:
-                case StoryShot.Farewell:
-                    AddStationLights(stage, shot == StoryShot.Station ? new Vector2(200f, 140f) : new Vector2(250f, 150f), shot == StoryShot.Station ? 1.4f : 0.35f);
+                case StoryShot.Planet:
+                    AddBlinkers(stage, OrbitSentinels, new Color(1f, 0.3f, 0.25f), 2f);
                     break;
                 case StoryShot.Attack:
-                    AddStationLights(stage, new Vector2(120f, 150f), 1f);
                     AddAttack(stage);
+                    break;
+                case StoryShot.Crash:
+                    AddBlinkers(stage, WreckLights[shot], new Color(1f, 0.55f, 0.2f), 2f);
+                    AddFire(stage, new Vector2(282f, 66f));
+                    AddSmoke(stage, new Vector2(296f, 80f));
                     break;
                 case StoryShot.Shelter:
                     AddShelter(stage);
@@ -117,9 +138,20 @@ namespace EscapeFromSpace
                     AddEngine(stage, false);
                     AddAlarm(stage);
                     break;
+                case StoryShot.Liftoff:
+                    AddBlinkers(stage, WreckLights[shot], new Color(1f, 0.55f, 0.2f), 2f);
+                    AddLiftoff(stage);
+                    break;
                 case StoryShot.Escape:
-                    AddStationLights(stage, new Vector2(130f, 150f), 0.8f);
+                    AddBlinkers(stage, EscapeSentinels, new Color(1f, 0.3f, 0.25f), 2f);
                     AddEscape(stage);
+                    break;
+                case StoryShot.Farewell:
+                    AddBlinkers(stage, FarewellSentinels, new Color(1f, 0.3f, 0.25f), 1f);
+                    break;
+                case StoryShot.Graveyard:
+                    AddBlinkers(stage, WreckLights[shot], new Color(1f, 0.55f, 0.2f), 2f);
+                    AddDust(stage);
                     break;
             }
 
@@ -141,7 +173,9 @@ namespace EscapeFromSpace
 
         private static void AddTwinkles(StoryStage stage, StoryShot shot)
         {
-            if (shot == StoryShot.Shelter || shot == StoryShot.Hangar || shot == StoryShot.Launch || shot == StoryShot.Alarm)
+            // 실내와 협곡 장면에는 반짝이는 별을 두지 않는다 (협곡 하늘의 별은 배경에 희미하게 그려 둔다).
+            if (shot == StoryShot.Shelter || shot == StoryShot.Hangar || shot == StoryShot.Launch || shot == StoryShot.Alarm
+                || shot == StoryShot.Graveyard || shot == StoryShot.Crash || shot == StoryShot.Liftoff)
             {
                 return;
             }
@@ -161,23 +195,118 @@ namespace EscapeFromSpace
             }
         }
 
-        private static void AddStationLights(StoryStage stage, Vector2 center, float scale)
+        // 깜빡이는 작은 불빛 (센티널 위성, 잔해의 경고등)
+        private static void AddBlinkers(StoryStage stage, IReadOnlyList<Vector2> points, Color color, float size)
         {
-            for (int i = 0; i < StationLights.Length; i++)
+            for (int i = 0; i < points.Count; i++)
             {
-                Vector2 at = center + StationLights[i] * scale;
-                Color color = i % 3 == 0 ? new Color(1f, 0.3f, 0.25f) : new Color(0.45f, 1f, 0.55f);
-                Image light = Piece(stage, "Light", at, Vector2.one * Mathf.Max(1f, Mathf.Round(scale * 1.5f)), color);
+                Image light = Piece(stage, "Light", points[i], Vector2.one * size, color);
                 float phase = i * 0.7f;
                 stage.Animate(t => light.enabled = Mathf.Repeat(t * 0.8f + phase, 1.6f) < 0.6f);
             }
         }
 
-        // 정거장 포문에서 회수선으로 붉은 광선이 쏟아지고 회수선이 불탄다.
+        // 협곡에 처박힌 회수선의 불길
+        private static void AddFire(StoryStage stage, Vector2 at)
+        {
+            var flames = new List<Image>();
+            for (int i = 0; i < 3; i++)
+            {
+                flames.Add(Piece(stage, "Fire", at + new Vector2(i * 9f - 9f, 0f), new Vector2(18f, 22f), new Color(1f, 0.55f, 0.15f, 0.8f), Glow));
+            }
+
+            stage.Animate(t =>
+            {
+                for (int i = 0; i < flames.Count; i++)
+                {
+                    float flicker = 0.8f + Mathf.Sin(t * (11f + i * 3f) + i) * 0.2f;
+                    flames[i].rectTransform.localScale = new Vector3(flicker, 0.8f + flicker * 0.4f, 1f);
+                    flames[i].color = new Color(1f, 0.45f + flicker * 0.2f, 0.15f, 0.7f * flicker);
+                }
+            });
+        }
+
+        // 위로 피어오르며 커지고 옅어지는 연기
+        private static void AddSmoke(StoryStage stage, Vector2 at)
+        {
+            var puffs = new List<Image>();
+            for (int i = 0; i < 8; i++)
+            {
+                puffs.Add(Piece(stage, "Smoke", at, new Vector2(26f, 26f), new Color(0.25f, 0.22f, 0.24f, 0.6f), Glow));
+            }
+
+            stage.Animate(t =>
+            {
+                for (int i = 0; i < puffs.Count; i++)
+                {
+                    float local = Mathf.Repeat(t * 0.33f + i / (float)puffs.Count, 1f);
+                    Place(puffs[i], at + new Vector2(Mathf.Sin(i * 2.1f) * 6f - local * 40f, local * 120f));
+                    puffs[i].rectTransform.localScale = Vector3.one * (0.6f + local * 2.4f);
+                    puffs[i].color = new Color(0.25f, 0.22f, 0.24f, 0.55f * (1f - local));
+                }
+            });
+        }
+
+        // 바닥을 스치는 모래 먼지
+        private static void AddDust(StoryStage stage)
+        {
+            var random = new Random(5);
+            for (int i = 0; i < 18; i++)
+            {
+                float y = 10f + (float)random.NextDouble() * 90f;
+                float speed = 12f + (float)random.NextDouble() * 18f;
+                float offset = (float)random.NextDouble() * Width;
+                Image grain = Piece(stage, "Dust", new Vector2(0f, y), new Vector2(2f, 1f), new Color(0.95f, 0.8f, 0.6f, 0.5f));
+                stage.Animate(t => Place(grain, new Vector2(Mathf.Repeat(offset + t * speed, Width), y + Mathf.Sin(t + offset) * 2f)));
+            }
+        }
+
+        // 회수선이 협곡 바닥에서 떠오른다. 아래로 불꽃을 뿜고 바닥에서 먼지가 퍼진다.
+        private static void AddLiftoff(StoryStage stage)
+        {
+            Vector2 from = new Vector2(240f, 48f);
+            Vector2 to = new Vector2(240f, 215f);
+            var dust = new List<Image>();
+            for (int i = 0; i < 6; i++)
+            {
+                dust.Add(Piece(stage, "Dust", from, new Vector2(40f, 18f), new Color(0.8f, 0.6f, 0.42f, 0.6f), Glow));
+            }
+
+            Image left = Piece(stage, "Thrust", from, new Vector2(14f, 26f), new Color(0.6f, 0.9f, 1f, 0.9f), Glow);
+            Image right = Piece(stage, "Thrust", from, new Vector2(14f, 26f), new Color(0.6f, 0.9f, 1f, 0.9f), Glow);
+            Image ship = Piece(stage, "Ship", from, new Vector2(112f, 32f), Color.white, ShipSprite);
+            RectTransform root = stage.Root;
+            stage.Animate(t =>
+            {
+                float progress = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((t - 1f) / 8f));
+                Vector2 at = Vector2.Lerp(from, to, progress);
+                float scale = Mathf.Lerp(1f, 0.55f, progress);
+                Place(ship, at);
+                ship.rectTransform.localScale = Vector3.one * scale;
+                float flicker = 0.85f + Mathf.Sin(t * 30f) * 0.15f;
+                Place(left, at + new Vector2(-30f, -16f) * scale);
+                Place(right, at + new Vector2(24f, -16f) * scale);
+                left.rectTransform.localScale = right.rectTransform.localScale = new Vector3(scale, scale * flicker * (1f + progress), 1f);
+                for (int i = 0; i < dust.Count; i++)
+                {
+                    float local = Mathf.Repeat(t * 0.5f + i / (float)dust.Count, 1f);
+                    float side = i % 2 == 0 ? -1f : 1f;
+                    Place(dust[i], from + new Vector2(side * local * 120f, -8f + local * 6f));
+                    dust[i].rectTransform.localScale = Vector3.one * (0.6f + local * 1.6f);
+                    dust[i].color = new Color(0.8f, 0.6f, 0.42f, 0.55f * (1f - local) * (1f - progress));
+                }
+
+                // 떠오르는 첫 몇 초만 화면이 흔들린다.
+                float shake = Mathf.Clamp01(1f - progress * 2f) * 1.6f;
+                root.anchoredPosition = new Vector2(Mathf.Sin(t * 47f) * shake, Mathf.Cos(t * 39f) * shake) * PixelSize;
+            });
+        }
+
+        // 센티널 위성의 포문에서 회수선으로 붉은 광선이 쏟아지고 회수선이 불탄다.
         private static void AddAttack(StoryStage stage)
         {
-            Vector2 turret = new Vector2(175f, 165f);
-            Vector2 ship = new Vector2(370f, 120f);
+            Vector2 turret = new Vector2(116f, 153f);
+            Vector2 ship = new Vector2(370f, 110f);
             Vector2 delta = ship - turret;
             float angle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg;
 
@@ -298,18 +427,18 @@ namespace EscapeFromSpace
             });
         }
 
-        // 포드가 정거장을 떠나 멀어진다. 엔진 꼬리를 남긴다.
+        // 회수선이 센티널 위성 사이를 지나 멀어진다. 엔진 꼬리를 남긴다.
         private static void AddEscape(StoryStage stage)
         {
-            Vector2 from = new Vector2(190f, 130f);
-            Vector2 to = new Vector2(420f, 170f);
+            Vector2 from = new Vector2(150f, 90f);
+            Vector2 to = new Vector2(420f, 200f);
             var trail = new List<Image>();
             for (int i = 0; i < 10; i++)
             {
                 trail.Add(Piece(stage, "Trail", from, new Vector2(8f, 8f), new Color(0.5f, 0.85f, 1f, 0.5f), Glow));
             }
 
-            Image pod = Piece(stage, "Pod", from, new Vector2(40f, 20f), Color.white, PodSprite);
+            Image pod = Piece(stage, "Ship", from, new Vector2(56f, 16f), Color.white, ShipSprite);
             Image flame = Piece(stage, "Flame", from, new Vector2(24f, 14f), new Color(0.6f, 0.9f, 1f, 0.9f), Glow);
             stage.Animate(t =>
             {
@@ -334,18 +463,19 @@ namespace EscapeFromSpace
 
         private static Sprite Glow => _glow != null ? _glow : _glow = MakeGlow();
 
-        private static Sprite PodSprite
+        // 회수선 옆모습 (떠오르는 장면과 떠나는 장면에서 움직인다)
+        private static Sprite ShipSprite
         {
             get
             {
-                if (_pod == null)
+                if (_ship == null)
                 {
-                    var p = new Painter(40, 20, new Color32(0, 0, 0, 0));
-                    DrawPod(p, 20, 10, false);
-                    _pod = p.ToSprite();
+                    var p = new Painter(112, 32, new Color32(0, 0, 0, 0));
+                    DrawShip(p, 60, 22);
+                    _ship = p.ToSprite();
                 }
 
-                return _pod;
+                return _ship;
             }
         }
 
@@ -364,15 +494,24 @@ namespace EscapeFromSpace
                     DrawSpace(p, 1);
                     DrawPlanet(p, 400, -40, 150, new Color32(120, 70, 160, 255), new Color32(230, 150, 110, 255));
                     break;
-                case StoryShot.Station:
+                case StoryShot.Planet:
                     DrawSpace(p, 2);
-                    DrawPlanet(p, 430, -60, 190, new Color32(70, 60, 140, 255), new Color32(240, 140, 90, 255));
-                    DrawStation(p, 200, 140, 1.4f);
+                    DrawPlanet(p, 240, -170, 290, PlanetDark, PlanetLight);
+                    foreach (Vector2 at in OrbitSentinels)
+                    {
+                        DrawSentinel(p, Mathf.RoundToInt(at.x), Mathf.RoundToInt(at.y), 1);
+                    }
+
                     break;
                 case StoryShot.Attack:
                     DrawSpace(p, 3);
-                    DrawStation(p, 120, 150, 1f);
-                    DrawShip(p, 370, 120);
+                    DrawPlanet(p, 300, -330, 380, PlanetDark, PlanetLight);
+                    DrawSentinel(p, 110, 172, 3);
+                    DrawShip(p, 370, 110);
+                    break;
+                case StoryShot.Crash:
+                    DrawCanyon(p, shot, 11, 3, 0.6f);
+                    DrawCrashedShip(p, 300, 58);
                     break;
                 case StoryShot.Shelter:
                     DrawShelter(p);
@@ -382,15 +521,29 @@ namespace EscapeFromSpace
                 case StoryShot.Alarm:
                     DrawHangar(p, shot == StoryShot.Hangar);
                     break;
+                case StoryShot.Liftoff:
+                    DrawCanyon(p, shot, 12, 3, 0.6f);
+                    break;
                 case StoryShot.Escape:
                     DrawSpace(p, 4);
-                    DrawPlanet(p, 60, -90, 170, new Color32(60, 90, 150, 255), new Color32(150, 200, 230, 255));
-                    DrawStation(p, 130, 150, 0.8f);
+                    DrawPlanet(p, 60, -90, 170, PlanetDark, PlanetLight);
+                    foreach (Vector2 at in EscapeSentinels)
+                    {
+                        DrawSentinel(p, Mathf.RoundToInt(at.x), Mathf.RoundToInt(at.y), 1);
+                    }
+
                     break;
                 case StoryShot.Farewell:
                     DrawSpace(p, 5);
-                    DrawPlanet(p, 120, -120, 220, new Color32(90, 60, 130, 255), new Color32(230, 150, 110, 255));
-                    DrawStation(p, 250, 150, 0.35f);
+                    DrawPlanet(p, 250, 150, 40, PlanetDark, PlanetLight);
+                    foreach (Vector2 at in FarewellSentinels)
+                    {
+                        p.Set(Mathf.RoundToInt(at.x), Mathf.RoundToInt(at.y), new Color32(170, 175, 190, 255));
+                    }
+
+                    break;
+                case StoryShot.Graveyard:
+                    DrawCanyon(p, shot, 21, 6);
                     break;
             }
 
@@ -466,113 +619,195 @@ namespace EscapeFromSpace
             }
         }
 
-        // 오르비스-9: 가운데 기둥, 바퀴 모양 고리, 태양 전지판, 고리 위의 모듈
-        private static void DrawStation(Painter p, int cx, int cy, float s)
+        // 케르-7: 먼지 낀 붉은 사막 행성
+        private static readonly Color32 PlanetDark = new Color32(110, 58, 42, 255);
+        private static readonly Color32 PlanetLight = new Color32(232, 160, 104, 255);
+
+        // 센티널 방어 위성: 네모난 몸체, 양쪽 태양 전지판, 아래로 향한 포신, 붉은 눈
+        private static void DrawSentinel(Painter p, int cx, int cy, int s)
         {
-            var hull = new Color32(150, 155, 170, 255);
-            var hullDark = new Color32(80, 84, 100, 255);
-            var hullLight = new Color32(200, 205, 215, 255);
-            var panel = new Color32(40, 70, 140, 255);
-            var panelLine = new Color32(90, 130, 200, 255);
-            var window = new Color32(255, 220, 130, 255);
-
-            int rx = Mathf.RoundToInt(70 * s);
-            int ry = Mathf.RoundToInt(22 * s);
-            int thick = Mathf.Max(1, Mathf.RoundToInt(6 * s));
-
-            // 고리의 뒤쪽 절반을 먼저 그리고 기둥, 앞쪽 절반 순서로 겹친다.
-            DrawRing(p, cx, cy, rx, ry, thick, hullDark, hull, true);
-
-            // 전지판 두 쌍
-            int armY = cy + Mathf.RoundToInt(34 * s);
-            p.Rect(cx - Mathf.RoundToInt(70 * s), armY, Mathf.RoundToInt(140 * s), Mathf.Max(1, Mathf.RoundToInt(2 * s)), hullDark);
-            foreach (int side in new[] { -1, 1 })
-            {
-                for (int k = 0; k < 2; k++)
-                {
-                    int px = cx + side * Mathf.RoundToInt((22 + k * 26) * s) - (side < 0 ? Mathf.RoundToInt(22 * s) : 0);
-                    int w = Mathf.RoundToInt(22 * s);
-                    int h = Mathf.RoundToInt(16 * s);
-                    p.Rect(px, armY - h / 2, w, h, panel);
-                    for (int gx = 0; gx < w; gx += Mathf.Max(2, Mathf.RoundToInt(4 * s)))
-                    {
-                        p.Rect(px + gx, armY - h / 2, 1, h, panelLine);
-                    }
-
-                    p.Rect(px, armY, w, 1, panelLine);
-                }
-            }
-
-            // 가운데 기둥: 왼쪽이 밝고 오른쪽이 어둡다 (햇빛이 왼쪽 위에서 온다).
-            int hw = Mathf.Max(3, Mathf.RoundToInt(9 * s));
-            int top = cy + Mathf.RoundToInt(48 * s);
-            int bottom = cy - Mathf.RoundToInt(40 * s);
-            for (int x = -hw; x <= hw; x++)
-            {
-                float shade = 1f - (x + hw) / (2f * hw);
-                Color c = Color.Lerp(hullDark, hullLight, shade);
-                p.Rect(cx + x, bottom, 1, top - bottom, c);
-            }
-
-            p.Rect(cx - hw - 2, top, 2 * hw + 5, Mathf.Max(2, Mathf.RoundToInt(4 * s)), hullLight);
-            p.Rect(cx - hw - 3, bottom - Mathf.Max(2, Mathf.RoundToInt(5 * s)), 2 * hw + 7, Mathf.Max(2, Mathf.RoundToInt(5 * s)), hullDark);
-            p.Rect(cx - 1, top + Mathf.RoundToInt(4 * s), 2, Mathf.RoundToInt(12 * s), hullDark);
-            for (int y = bottom + 3; y < top - 2; y += Mathf.Max(2, Mathf.RoundToInt(5 * s)))
-            {
-                p.Set(cx - hw / 2, y, window);
-                p.Set(cx + hw / 3, y, new Color32(200, 160, 90, 255));
-            }
-
-            // 바퀴살
-            foreach (int side in new[] { -1, 1 })
-            {
-                p.Line(cx + side * hw, cy, cx + side * (rx - thick), cy, hullDark);
-                p.Line(cx + side * hw, cy + 1, cx + side * (rx - thick), cy + 1, hull);
-            }
-
-            DrawRing(p, cx, cy, rx, ry, thick, hullDark, hull, false);
-
-            // 고리 위의 모듈과 창문
-            for (int i = 0; i < 6; i++)
-            {
-                float a = Mathf.PI * (1.15f + i * 0.14f);
-                int mx = cx + Mathf.RoundToInt(Mathf.Cos(a) * rx);
-                int my = cy + Mathf.RoundToInt(Mathf.Sin(a) * ry);
-                int size = Mathf.Max(2, Mathf.RoundToInt(6 * s));
-                p.Rect(mx - size / 2, my - size / 2, size, size, i % 2 == 0 ? hullLight : hull);
-                p.Set(mx, my, window);
-            }
-
-            for (int i = 0; i < 28; i++)
-            {
-                float a = Mathf.PI * (1.02f + i * 0.035f);
-                p.Set(cx + Mathf.RoundToInt(Mathf.Cos(a) * rx), cy + Mathf.RoundToInt(Mathf.Sin(a) * ry), i % 3 == 0 ? window : hullLight);
-            }
-
+            var body = new Color32(150, 150, 160, 255);
+            var dark = new Color32(70, 72, 84, 255);
+            var panel = new Color32(50, 60, 110, 255);
+            p.Rect(cx - 3 * s, cy - 3 * s, 6 * s, 6 * s, body);
+            p.Rect(cx - 3 * s, cy - 3 * s, 6 * s, s, dark);
+            p.Rect(cx - 9 * s, cy - s, 5 * s, 3 * s, panel);
+            p.Rect(cx + 4 * s, cy - s, 5 * s, 3 * s, panel);
+            p.Rect(cx - 4 * s, cy, s, s, dark);
+            p.Rect(cx + 3 * s, cy, s, s, dark);
+            p.Rect(cx + s, cy - 6 * s, 2 * s, 3 * s, dark);
+            p.Rect(cx - s, cy, 2 * s, 2 * s, new Color32(255, 70, 50, 255));
         }
 
-        private static void DrawRing(Painter p, int cx, int cy, int rx, int ry, int thick, Color32 dark, Color32 light, bool back)
+        private static void DrawMoon(Painter p, int cx, int cy, int radius, Color32 color)
         {
-            for (float a = 0f; a < Mathf.PI * 2f; a += 0.6f / Mathf.Max(rx, 1))
+            for (int y = -radius; y <= radius; y++)
             {
-                float sin = Mathf.Sin(a);
-                if (back != sin > 0f)
+                for (int x = -radius; x <= radius; x++)
                 {
-                    continue;
-                }
-
-                int x = cx + Mathf.RoundToInt(Mathf.Cos(a) * rx);
-                int y = cy + Mathf.RoundToInt(sin * ry);
-                for (int k = 0; k < thick; k++)
-                {
-                    Color32 c = k == 0 ? light : k == thick - 1 ? dark : Color32.Lerp(light, dark, k / (float)thick);
-                    if (back)
+                    if (x * x + y * y > radius * radius)
                     {
-                        c = Color32.Lerp(c, new Color32(20, 20, 30, 255), 0.35f);
+                        continue;
                     }
 
-                    p.Set(x, y - k, c);
+                    // 왼쪽 위가 밝고, 오른쪽 아래는 그림자에 잠긴다.
+                    float lit = Mathf.Clamp01(0.6f - (x - y) / (float)(radius * 2));
+                    p.Set(cx + x, cy + y, Dither(Color.Lerp(new Color(0.35f, 0.25f, 0.3f), color, lit), cx + x, cy + y));
                 }
+            }
+        }
+
+        // 협곡의 우주선 무덤: 노을 하늘, 먼 능선, 양쪽 절벽, 모래 바닥, 반쯤 묻힌 우주선 잔해들
+        private static void DrawCanyon(Painter p, StoryShot shot, int seed, int wrecks, float nearest = 0f)
+        {
+            const int horizon = 120;
+            var random = new Random(seed);
+            for (int y = 0; y < Height; y++)
+            {
+                for (int x = 0; x < Width; x++)
+                {
+                    Color c;
+                    if (y >= horizon)
+                    {
+                        float t = (y - horizon) / (float)(Height - horizon);
+                        c = Color.Lerp(new Color(0.78f, 0.42f, 0.28f), new Color(0.16f, 0.09f, 0.22f), Mathf.Pow(t, 0.7f));
+                    }
+                    else
+                    {
+                        float n = Noise(x * 0.05f + seed, y * 0.12f);
+                        c = Color.Lerp(SandNear, SandFar, y / (float)horizon) * (0.85f + n * 0.3f);
+                    }
+
+                    c.a = 1f;
+                    p.Set(x, y, Dither(c, x, y));
+                }
+            }
+
+            for (int i = 0; i < 70; i++)
+            {
+                p.Blend(random.Next(Width), random.Next(205, Height), new Color32(255, 230, 220, (byte)(50 + random.Next(110))));
+            }
+
+            DrawMoon(p, 372, 228, 13, new Color32(235, 215, 195, 255));
+            DrawMoon(p, 412, 204, 5, new Color32(205, 175, 165, 255));
+
+            // 먼 능선과 가까운 능선
+            for (int x = 0; x < Width; x++)
+            {
+                int far = horizon + Mathf.RoundToInt(Noise(x * 0.015f + seed, 1.3f) * 36f);
+                p.Rect(x, horizon - 4, 1, far - horizon + 4, new Color32(96, 52, 62, 255));
+                int near = horizon - 6 + Mathf.RoundToInt(Noise(x * 0.03f + seed * 2f, 4.1f) * 22f);
+                p.Rect(x, horizon - 8, 1, near - horizon + 8, new Color32(70, 38, 44, 255));
+            }
+
+            // 잔해는 먼 것부터 그려 가까운 것이 앞을 가린다. nearest가 크면 앞쪽을 비워 둔다 (주인공 배가 놓일 자리).
+            var lights = new List<Vector2>();
+            for (int i = 0; i < wrecks; i++)
+            {
+                float depth = Mathf.Lerp(1f, nearest, i / (float)Mathf.Max(1, wrecks - 1));
+                int ground = Mathf.RoundToInt(Mathf.Lerp(18f, 104f, depth));
+                int width = Mathf.RoundToInt(Mathf.Lerp(120f, 46f, depth));
+                int x = 110 + random.Next(260);
+                DrawWreck(p, x, ground, width, depth, random, lights);
+            }
+
+            WreckLights[shot] = lights;
+
+            // 양쪽 절벽: 가로 지층이 보이는 바위가 장면을 감싼다.
+            for (int y = 0; y < Height; y++)
+            {
+                int left = Mathf.RoundToInt(30f + Noise(y * 0.04f, seed) * 55f + y * 0.06f);
+                int right = Mathf.RoundToInt(Width - 30f - Noise(y * 0.04f, seed + 7f) * 55f - y * 0.06f);
+                for (int x = 0; x < left; x++)
+                {
+                    p.Set(x, y, Strata(x, y, left - x));
+                }
+
+                for (int x = right; x < Width; x++)
+                {
+                    p.Set(x, y, Strata(x, y, x - right));
+                }
+            }
+        }
+
+        private static readonly Color SandNear = new Color(0.58f, 0.4f, 0.26f);
+        private static readonly Color SandFar = new Color(0.42f, 0.26f, 0.22f);
+
+        // 절벽의 지층. 안쪽 가장자리일수록 밝게 해서 협곡 벽이 도드라진다.
+        private static Color32 Strata(int x, int y, int fromEdge)
+        {
+            int band = (y + Mathf.RoundToInt(Noise(x * 0.08f, y * 0.02f) * 8f)) / 7 % 3;
+            Color c = band == 0 ? new Color(0.47f, 0.28f, 0.2f) : band == 1 ? new Color(0.39f, 0.23f, 0.18f) : new Color(0.53f, 0.33f, 0.23f);
+            c *= fromEdge < 3 ? 1.2f : 0.9f;
+            c.a = 1f;
+            return Dither(c, x, y);
+        }
+
+        // 반쯤 묻힌 우주선 잔해 하나. 앞이 뾰족한 선체가 비스듬히 박혀 있고 골조가 드러나 있다.
+        private static void DrawWreck(Painter p, int cx, int ground, int width, float depth, Random random, List<Vector2> lights)
+        {
+            Color[] hulls = { new Color(0.6f, 0.62f, 0.68f), new Color(0.68f, 0.6f, 0.48f), new Color(0.48f, 0.56f, 0.52f), new Color(0.64f, 0.48f, 0.48f) };
+            Color hull = Color.Lerp(hulls[random.Next(hulls.Length)], new Color(0.35f, 0.2f, 0.25f), depth * 0.5f);
+            Color dark = hull * 0.55f;
+            Color light = hull * 1.2f;
+            dark.a = light.a = hull.a = 1f;
+            int height = width / 3;
+            int left = cx - width / 2;
+            float tilt = (float)(random.NextDouble() - 0.5) * 0.4f;
+            for (int dx = 0; dx < width; dx++)
+            {
+                float u = dx / (float)width;
+                int top = Mathf.Max(2, Mathf.RoundToInt(height * (u < 0.78f ? 1f : (1f - u) / 0.22f) + dx * tilt));
+                for (int dy = 0; dy < top; dy++)
+                {
+                    Color c = dy >= top - 2 ? light : dy < 3 ? dark : hull;
+                    p.Set(left + dx, ground + dy, Dither(c, left + dx, ground + dy));
+                }
+            }
+
+            // 창문 줄, 찢어진 구멍, 꼬리 쪽의 드러난 골조
+            for (int k = 0; k * 9 + 8 < width * 0.7f; k++)
+            {
+                Color32 window = random.Next(4) == 0 ? new Color32(255, 200, 120, 255) : (Color32)dark;
+                p.Rect(left + 6 + k * 9, ground + height / 2, 3, 2, window);
+            }
+
+            p.Rect(left + width / 3, ground + height / 4, Mathf.Max(3, width / 7), Mathf.Max(2, height / 3), new Color32(20, 14, 18, 255));
+            for (int k = 0; k < 4; k++)
+            {
+                int x = left + 2 + k * 4;
+                p.Line(x, ground + height, x + 2, ground + height + height / 2 + k % 2 * 3, dark);
+            }
+
+            lights.Add(new Vector2(left + width * 0.7f, ground + height + 1));
+
+            // 아래쪽은 모래에 묻혀 있다.
+            Color sand = Color.Lerp(SandNear, SandFar, ground / 120f);
+            sand.a = 1f;
+            for (int dx = -4; dx < width + 4; dx++)
+            {
+                int mound = 2 + Mathf.RoundToInt(Noise((left + dx) * 0.2f, ground) * 4f);
+                p.Rect(left + dx, ground - 1, 1, mound, Dither(sand, left + dx, ground));
+            }
+        }
+
+        // 협곡에 처박힌 회수선: 기울어진 선체, 땅을 긁은 자국, 앞이 묻힌 모래 둔덕
+        private static void DrawCrashedShip(Painter p, int cx, int cy)
+        {
+            var scorch = new Color32(60, 40, 34, 255);
+            for (int x = 120; x < cx - 40; x++)
+            {
+                int width = 2 + (x - 120) / 40;
+                p.Rect(x, cy - 6 - width / 2, 1, width, scorch);
+            }
+
+            DrawShip(p, cx, cy);
+            Color sand = SandNear;
+            sand.a = 1f;
+            for (int x = cx + 20; x < cx + 70; x++)
+            {
+                int mound = Mathf.RoundToInt(Mathf.Sin((x - cx - 20) / 50f * Mathf.PI) * 14f);
+                p.Rect(x, cy - 10, 1, mound + 4, Dither(sand * 1.05f, x, cy));
             }
         }
 
@@ -691,10 +926,24 @@ namespace EscapeFromSpace
             p.Rect(0, 70, Width, 4, new Color32(70, 66, 60, 255));
             p.Rect(0, 74, Width, 2, new Color32(220, 160, 50, 255));
 
-            // 창문 너머의 별과 행성
+            // 창문 너머: 노을 진 협곡과 멀리 보이는 다른 배의 잔해
             var window = new Painter(140, 70, new Color32(4, 4, 12, 255));
-            DrawSpace(window, 9);
-            DrawPlanet(window, 120, -10, 50, new Color32(70, 60, 140, 255), new Color32(240, 140, 90, 255));
+            for (int y = 0; y < 70; y++)
+            {
+                for (int x = 0; x < 140; x++)
+                {
+                    float ridge = 22f + Noise(x * 0.05f, 2f) * 16f;
+                    Color c = y < ridge
+                        ? new Color(0.36f, 0.2f, 0.2f) * (0.85f + Noise(x * 0.1f, y * 0.1f) * 0.3f)
+                        : Color.Lerp(new Color(0.8f, 0.45f, 0.3f), new Color(0.2f, 0.1f, 0.25f), (y - ridge) / (70f - ridge));
+                    c.a = 1f;
+                    window.Set(x, y, Dither(c, x, y));
+                }
+            }
+
+            window.Rect(84, 22, 30, 7, new Color32(70, 70, 80, 255));
+            window.Rect(92, 29, 14, 4, new Color32(70, 70, 80, 255));
+            window.Set(110, 28, new Color32(255, 150, 60, 255));
             p.Rect(168, 148, 144, 74, seam);
             p.Paste(window, 170, 150);
             p.Rect(238, 150, 3, 70, seam);

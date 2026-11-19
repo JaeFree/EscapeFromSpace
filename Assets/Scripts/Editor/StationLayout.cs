@@ -28,17 +28,18 @@ namespace EscapeFromSpace.EditorTools
             }
         }
 
-        // 구역 (네임드 로봇의 탐색 범위, 방문 퀘스트, 전체 맵의 이름에 쓴다)
+        // 구역 (네임드 로봇의 탐색 범위, 방문 퀘스트, 전체 맵의 이름에 쓴다).
+        // 2026-11-19: 구역마다 불시착한 우주선 한 척이다 (기획서 19.1). Id는 저장·퀘스트 때문에 그대로 둔다.
         public static readonly Zone[] Zones =
         {
-            new Zone("Docking", "도킹 구역", 58, 3, 81, 16),
-            new Zone("Cargo", "화물칸", 46, 27, 93, 55),
-            new Zone("Quarters", "침실", 4, 27, 37, 56),
-            new Zone("Medbay", "의무실", 4, 67, 37, 95),
-            new Zone("Lab", "연구소", 46, 67, 93, 95),
-            new Zone("Security", "보안실", 102, 67, 135, 95),
-            new Zone("Engine", "기관실", 102, 27, 127, 57),
-            new Zone("Power", "동력 구역", 100, 3, 135, 16),
+            new Zone("Docking", "추락 지점", 58, 3, 81, 16),
+            new Zone("Cargo", "화물선 잔해", 46, 27, 93, 55),
+            new Zone("Quarters", "이민선", 4, 27, 37, 56),
+            new Zone("Medbay", "병원선", 4, 67, 37, 95),
+            new Zone("Lab", "연구선", 46, 67, 93, 95),
+            new Zone("Security", "군 순찰선", 102, 67, 135, 95),
+            new Zone("Engine", "채굴선", 102, 27, 127, 57),
+            new Zone("Power", "연료 수송선", 100, 3, 135, 16),
         };
 
         // 방과 복도 (벽을 파낸다)

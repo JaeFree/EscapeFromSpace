@@ -19,7 +19,7 @@ namespace EscapeFromSpace
         private static readonly string[] ChannelNames = { "전체 음량", "음악", "효과음", "배경 소리" };
 
         private const string HelpText =
-            "목표: 정거장에서 물자를 챙겨 탈출 포드로 살아 나오고, 부품을 모아 장거리 탈출 포드를 고친다.\n\n" +
+            "목표: 우주선 무덤의 배들에서 물자를 챙겨 귀환 비콘으로 살아 나오고, 부품을 모아 도약 엔진을 고친다.\n\n" +
             "이동  WASD          구르기  Space\n" +
             "조준  마우스        사격  좌클릭 (저격총은 우클릭 조준)\n" +
             "재장전  R           도구칸 사용  1, 2, 3\n" +
@@ -27,7 +27,7 @@ namespace EscapeFromSpace
             "무기 교체  가방에서 드래그\n" +
             "묶음 나누기  가방에서 우클릭\n" +
             "열기·말 걸기  E (컨테이너는 길게)\n" +
-            "탈출  포드 안에서 X 길게\n" +
+            "탈출  귀환 비콘 안에서 X 길게\n" +
             "전체 맵  M          설정  Esc";
 
         [SerializeField, Tooltip("톱니 버튼의 크기 (화면 기준 1920×1080)")] private float _buttonSize = 72f;

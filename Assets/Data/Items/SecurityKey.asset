@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e30df89cd24d3b4080673414a123f7a, type: 3}
   m_Name: SecurityKey
   m_EditorClassIdentifier: 
-  _displayName: "\uBCF4\uC548 \uC778\uC99D \uD0A4"
+  _displayName: "\uBC29\uC5B4\uB9DD \uD574\uC81C \uCF54\uB4DC"
   _category: 8
   _color: {r: 0.75, g: 0.55, b: 0.3, a: 1}
   _icon: {fileID: 21300000, guid: 8f663a07089202740b53ef9ec7195e5c, type: 3}

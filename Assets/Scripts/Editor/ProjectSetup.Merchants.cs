@@ -18,8 +18,7 @@ namespace EscapeFromSpace.EditorTools
             Directory.CreateDirectory(MerchantFolder);
 
             EnsureMerchant("Weapons", "볼트", "무기상", new Color(1f, 0.72f, 0.45f),
-                "정거장 보안 책임자였지. 지금은 내가 만든 로봇들한테 쫓기는 신세고.\n\n" +
-                "녀석들은 재장전할 때와 연사 사이가 비어. 그 틈을 노려.\n\n살 게 있으면 골라 봐. 외상은 없어.",
+                MerchantGreetings["Weapons"],
                 so =>
                 {
                     AddOffer(so, "LaserPistolItem", 0, 100, "");
@@ -34,8 +33,7 @@ namespace EscapeFromSpace.EditorTools
                 });
 
             EnsureMerchant("Armor", "한", "방어구상", new Color(0.6f, 0.85f, 1f),
-                "화물칸에서 일하던 기술자야. 우주복이라면 눈 감고도 고쳐.\n\n" +
-                "구멍 난 걸 입고 나가면 산소부터 새. 제대로 된 걸 사 가.",
+                MerchantGreetings["Armor"],
                 so =>
                 {
                     AddOffer(so, "Vest1", 0, 200, "");
@@ -47,8 +45,7 @@ namespace EscapeFromSpace.EditorTools
                 });
 
             EnsureMerchant("Medical", "세라", "의료상", new Color(0.55f, 1f, 0.7f),
-                "의무실이 봉쇄되기 직전에 빠져나왔어요. 약품은 그때 챙긴 게 전부예요.\n\n" +
-                "다치면 아끼지 말고 쓰세요. 살아 돌아오는 게 먼저니까요.",
+                MerchantGreetings["Medical"],
                 so =>
                 {
                     AddOffer(so, "MediGel", 0, 40, "");
@@ -57,8 +54,7 @@ namespace EscapeFromSpace.EditorTools
                 });
 
             EnsureMerchant("Workshop", "오토", "제작소", new Color(1f, 0.9f, 0.4f),
-                "격납고의 장거리 탈출 포드, 봤지? 저걸 고치면 여기서 나갈 수 있어.\n\n" +
-                "재료만 가져오면 무기든 부품이든 내가 만들어 줄게.",
+                MerchantGreetings["Workshop"],
                 so =>
                 {
                     AddRecipe(so, "LaserPistolItem", 0, "", ("CircuitPart", 1));

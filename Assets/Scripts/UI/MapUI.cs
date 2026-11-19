@@ -325,7 +325,7 @@ namespace EscapeFromSpace
 
             RectTransform legend = UiBuilder.Rect("Legend", _root, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 8f),
                 new Vector2(mapSize.x, 36f));
-            Text legendText = UiBuilder.Text("<color=#4DC7FF>●</color> 나      <color=#26B352>■</color> 탈출 포드      "
+            Text legendText = UiBuilder.Text("<color=#4DC7FF>●</color> 나      <color=#26B352>■</color> 귀환 비콘      "
                 + "<color=#FFBD4D>□</color> 지금 있는 구역      <color=#2E2A44>■</color> 아직 안 가 본 곳", legend, 19,
                 TextAnchor.MiddleCenter, UiTheme.TextDim);
             legendText.supportRichText = true;

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace EscapeFromSpace
 {
-    // 게임 시작 화면: 정거장 그림 위의 제목과 메뉴 (시작, 설정, 종료).
+    // 게임 시작 화면: 우주선 무덤 그림 위의 제목과 메뉴 (시작, 설정, 종료).
     // 마우스로 누르거나 위아래 키로 고르고 Enter로 정한다. 시작하면 대기실로 간다.
     public class TitleUI : MonoBehaviour
     {
@@ -147,8 +147,8 @@ namespace EscapeFromSpace
             layer.SetAsFirstSibling();
             RectTransform back = UiBuilder.Rect("TitleBack", layer, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(4000f, 4000f));
             UiBuilder.Image(back, Color.black);
-            _stage = StoryArt.Build(StoryShot.Station, back);
-            _stage.Root.anchoredPosition = new Vector2(260f, 0f);
+            _stage = StoryArt.Build(StoryShot.Graveyard, back);
+            _stage.Root.anchoredPosition = new Vector2(220f, 0f);
 
             // 글자가 그림 위에서 읽히도록 왼쪽을 어둡게 덮는다.
             RectTransform shade = UiBuilder.Rect("Shade", layer, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), Vector2.zero, new Vector2(900f, 1200f));
@@ -165,7 +165,7 @@ namespace EscapeFromSpace
             UiBuilder.Outline(subText);
 
             RectTransform tag = UiBuilder.Rect("Tagline", layer, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(122f, 90f), new Vector2(760f, 40f));
-            UiBuilder.Text("버려진 정거장 오르비스-9에서 살아 나가라", tag, 24, TextAnchor.MiddleLeft, UiTheme.TextDim);
+            UiBuilder.Text("우주선 무덤에서 살아 나가라", tag, 24, TextAnchor.MiddleLeft, UiTheme.TextDim);
 
             // 저장이 있으면 이어서 하고, 없으면 처음부터 시작한다 (프롤로그는 대기실에서 나온다).
             bool hasSave = File.Exists(SaveSystem.FilePath);

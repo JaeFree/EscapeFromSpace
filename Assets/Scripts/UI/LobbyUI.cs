@@ -28,7 +28,7 @@ namespace EscapeFromSpace
             _camera = Camera.main;
 
             _storageLabel = CreateLabel("창고 (E)");
-            _portalLabel = CreateLabel("레이드 포탈");
+            _portalLabel = CreateLabel("출격 해치");
             _rangeLabel = CreateLabel("사격장");
 
             RectTransform summary = UiBuilder.Rect("Summary", transform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-30f, -24f),

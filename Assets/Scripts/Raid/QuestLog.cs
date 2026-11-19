@@ -206,7 +206,7 @@ namespace EscapeFromSpace
 
                     return text.ToString();
                 case QuestKind.RepairPod:
-                    return "격납고의 포드에서 출발";
+                    return "도약 엔진에서 출발";
                 case QuestKind.Visit:
                     return GetCount(quest.Id) > 0 ? "완료" : "방문 후 탈출";
                 default:

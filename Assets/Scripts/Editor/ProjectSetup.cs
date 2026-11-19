@@ -140,6 +140,7 @@ namespace EscapeFromSpace.EditorTools
             EnsurePixelTiles();
             EnsurePixelContainers();
             EnsureQuestDatabase();
+            ApplyWreckFieldTexts();
             AssetDatabase.SaveAssets();
 
             // 레이드 씬을 마지막에 열어 둔다. 메뉴를 돌린 뒤 에디터에 남는 씬이다.
@@ -1419,6 +1420,7 @@ namespace EscapeFromSpace.EditorTools
             RefreshPodLists(raid);
             EnsureRaidQuests(player, GameObject.Find("UI"));
             EnsureStationArt();
+            ApplyWreckFieldStation();
 
             // 탈출 포드는 착륙장 모양. 열림·닫힘 색은 EscapePod가 그 위에 칠한다.
             var placeholder = AssetDatabase.LoadAssetAtPath<Sprite>(SquarePath);

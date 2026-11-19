@@ -102,7 +102,7 @@ namespace EscapeFromSpace.EditorTools
                 ("Thruster", "추진 노즐", 2, 2, 6f, 500, null, ThrusterArt),
                 ("OxygenRecycler", "산소 재생기", 2, 2, 3f, 400, "OxygenRecycler", null),
                 ("NavCore", "항법 코어", 1, 1, 1f, 500, "NavCore", null),
-                ("SecurityKey", "보안 인증 키", 1, 1, 0.1f, 300, "SecurityKey", null),
+                ("SecurityKey", SecurityKeyName, 1, 1, 0.1f, 300, "SecurityKey", null),
                 ("PlasmaIgniter", "플라즈마 점화기", 1, 2, 2f, 200, "PlasmaIgniter", null),
             };
 
