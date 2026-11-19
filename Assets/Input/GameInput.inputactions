@@ -130,6 +130,24 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Tool4",
+                    "type": "Button",
+                    "id": "5b0c2f0e-6c1a-4a57-9a43-1d2e8f7a1031",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Tool5",
+                    "type": "Button",
+                    "id": "5b0c2f0e-6c1a-4a57-9a43-1d2e8f7a1032",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -328,6 +346,28 @@
                     "processors": "",
                     "groups": "KeyboardMouse",
                     "action": "Sneak",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "5b0c2f0e-6c1a-4a57-9a43-1d2e8f7a2031",
+                    "path": "<Keyboard>/4",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "KeyboardMouse",
+                    "action": "Tool4",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "5b0c2f0e-6c1a-4a57-9a43-1d2e8f7a2032",
+                    "path": "<Keyboard>/5",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "KeyboardMouse",
+                    "action": "Tool5",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

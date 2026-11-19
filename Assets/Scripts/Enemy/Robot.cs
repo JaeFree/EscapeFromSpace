@@ -69,6 +69,9 @@ namespace EscapeFromSpace
         private CombatConfig _config;
         private PlayerController _playerController;
 
+        // EMP에 맞아 멈춰 있는 남은 시간 (기획서 19.3)
+        private float _stunTimeLeft;
+
         private static readonly System.Collections.Generic.List<Robot> AllRobots = new System.Collections.Generic.List<Robot>();
 
         // 살아 있는 로봇 전부. 엄폐 표시가 가까운 적을 찾을 때 쓴다.
@@ -76,6 +79,23 @@ namespace EscapeFromSpace
 
         // 아직 플레이어를 알아채지 못했다. 이때 광선검으로 베면 뒤에서 베기다 (기획서 19.3).
         public bool IsUnaware => IsCalm && _awareness < 1f;
+
+        // EMP: 잠시 멈추고 쏘지 못한다. 에일리언(전자 장비가 없음)은 멈추지 않는다.
+        public void Stun(float seconds)
+        {
+            if (_data == null || _data.IsBiological)
+            {
+                return;
+            }
+
+            _stunTimeLeft = Mathf.Max(_stunTimeLeft, seconds);
+            _attack.Cancel();
+            _motor.Stop();
+        }
+
+        public bool IsStunned => _stunTimeLeft > 0f;
+
+        private Color BodyColor => _data.Sprite != null ? _data.BodyTint : _data.Color;
 
         private bool IsCalm => _state == State.Patrol || _state == State.Return || _state == State.Suspicious;
 
@@ -194,6 +214,20 @@ namespace EscapeFromSpace
             if (!IsPlayerAlive && _state != State.Patrol && _state != State.Return)
             {
                 BeginReturn();
+            }
+
+            if (_stunTimeLeft > 0f)
+            {
+                // 멈춘 동안에는 몸이 푸르게 깜빡이고 아무것도 하지 않는다. 맞으면 상태는 바뀌지만 움직이지 않는다.
+                _stunTimeLeft -= Time.deltaTime;
+                _motor.Stop();
+                _body.color = Color.Lerp(BodyColor, new Color(0.4f, 0.8f, 1f), Mathf.Repeat(Time.time * 6f, 1f) < 0.5f ? 0.7f : 0.2f);
+                if (_stunTimeLeft <= 0f)
+                {
+                    _body.color = BodyColor;
+                }
+
+                return;
             }
 
             _stateTime += Time.deltaTime;

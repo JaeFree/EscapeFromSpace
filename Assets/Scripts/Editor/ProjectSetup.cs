@@ -137,6 +137,7 @@ namespace EscapeFromSpace.EditorTools
             EnsurePixelItemArt();
             EnsureMerchants();
             EnsureAttachments();
+            EnsureGadgets();
             EnsureWorkshop();
             EnsureNamedRobots();
             EnsurePixelTiles();

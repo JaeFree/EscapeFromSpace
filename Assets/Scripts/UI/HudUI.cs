@@ -322,9 +322,9 @@ namespace EscapeFromSpace
             _pointText = UiBuilder.Text(string.Empty, points, _fontSize, TextAnchor.MiddleLeft, UiTheme.Accent);
             UiBuilder.Outline(_pointText);
 
-            // 가운데 아래: 무기칸 1개와 도구칸 3개
+            // 가운데 아래: 무기칸 1개와 도구칸 (2026-11-19부터 5개, 기획서 19.3)
             float gap = 10f;
-            float width = _slotSize * 4f + gap * 3f + 24f;
+            float width = _slotSize * (1 + PlayerItemUser.SlotCount) + gap * PlayerItemUser.SlotCount + 24f;
             RectTransform bar = UiBuilder.Rect("ActionBar", transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
                 new Vector2(0f, 30f), new Vector2(width, _slotSize));
             _actionRoot = bar;

@@ -65,6 +65,11 @@ namespace EscapeFromSpace
 
             _controller.TakesOverloadDamage = false;
             _roll.IsAllowed = false;
+            var itemUser = _controller.GetComponent<PlayerItemUser>();
+            if (itemUser != null)
+            {
+                itemUser.AllowGadgets = false;
+            }
             _oxygen.IsDraining = false;
         }
 

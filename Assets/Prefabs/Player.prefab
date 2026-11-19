@@ -686,6 +686,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d313b27335381a0409ba768205341510, type: 2}
   - {fileID: 11400000, guid: 08ae728285cc65244b3219b498affdfc, type: 2}
   - {fileID: 11400000, guid: 2dfa3928ef69b8f419f8859735f1a9d6, type: 2}
+  - {fileID: 11400000, guid: 66064a1d7eff0a44ab72d7c66a5705bd, type: 2}
+  - {fileID: 11400000, guid: 392303ed5f0c2814cac400bbd6247a74, type: 2}
+  _wallMask:
+    serializedVersion: 2
+    m_Bits: 128
 --- !u!114 &4589062689406364107
 MonoBehaviour:
   m_ObjectHideFlags: 0

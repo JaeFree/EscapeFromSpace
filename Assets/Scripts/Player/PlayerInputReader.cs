@@ -20,7 +20,7 @@ namespace EscapeFromSpace
         private InputAction _escape;
         private InputAction _toggleMap;
         private InputAction _sneak;
-        private readonly InputAction[] _tools = new InputAction[3];
+        private readonly InputAction[] _tools = new InputAction[PlayerItemUser.SlotCount];
 
         public Vector2 Move => _move.ReadValue<Vector2>();
         public Vector2 AimScreenPosition => _aim.ReadValue<Vector2>();
@@ -41,7 +41,7 @@ namespace EscapeFromSpace
         // 도구칸 1, 2, 3. index는 0부터.
         public bool ToolPressedThisFrame(int index)
         {
-            return _tools[index].WasPressedThisFrame();
+            return index < _tools.Length && _tools[index] != null && _tools[index].WasPressedThisFrame();
         }
 
         private void Awake()
@@ -60,7 +60,8 @@ namespace EscapeFromSpace
             _sneak = _playerMap.FindAction("Sneak", false);
             for (int i = 0; i < _tools.Length; i++)
             {
-                _tools[i] = _playerMap.FindAction($"Tool{i + 1}", true);
+                // 4, 5칸은 나중에 더한 키라 옛 입력 에셋에는 없을 수 있다.
+                _tools[i] = _playerMap.FindAction($"Tool{i + 1}", i < 3);
             }
         }
 

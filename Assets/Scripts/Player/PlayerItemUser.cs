@@ -2,10 +2,11 @@ using UnityEngine;
 
 namespace EscapeFromSpace
 {
-    // 도구칸 1, 2, 3 (기획서 9.3, 9.4). 가방과 보관함에 있는 의약품과 산소 캔을 키로 쓴다.
+    // 도구칸 1~5 (기획서 9.3, 9.4). 가방과 보관함에 있는 의약품과 산소 캔을 키로 쓴다.
+    // 2026-11-19: 4, 5칸에 은신 소모품(홀로그램 미끼, EMP 수류탄)을 둔다 (기획서 19.3).
     public class PlayerItemUser : MonoBehaviour
     {
-        public const int SlotCount = 3;
+        public const int SlotCount = 5;
 
         [SerializeField] private PlayerInputReader _input;
         [SerializeField] private PlayerController _controller;
@@ -15,6 +16,8 @@ namespace EscapeFromSpace
         [SerializeField] private Health _health;
         [SerializeField, Tooltip("도구칸 1, 2, 3에 놓는 아이템")] private ItemData[] _slots = new ItemData[SlotCount];
 
+        [SerializeField, Tooltip("미끼·EMP가 벽을 넘지 않게 막는 레이어")] private LayerMask _wallMask;
+
         private ItemData _using;
         private float _useTimeLeft;
 
@@ -22,6 +25,9 @@ namespace EscapeFromSpace
         public ItemData Using => _using;
         public float UseProgress => _using != null && _using.UseTime > 0f ? 1f - _useTimeLeft / _using.UseTime : 0f;
         public float UseTimeLeft => _using != null ? Mathf.Max(0f, _useTimeLeft) : 0f;
+
+        // 대기실이 끈다.
+        public bool AllowGadgets { get; set; } = true;
 
         public ItemData GetSlot(int index)
         {
@@ -70,6 +76,13 @@ namespace EscapeFromSpace
                 return;
             }
 
+            // 대기실에서는 미끼와 EMP를 쓰지 않는다 (아껴 두려고).
+            if (item.Gadget != GadgetKind.None && !AllowGadgets)
+            {
+                Sfx.Play(SfxId.ItemRefuse);
+                return;
+            }
+
             if (item.UseTime <= 0f)
             {
                 Apply(item);
@@ -112,6 +125,11 @@ namespace EscapeFromSpace
             {
                 _oxygen.Add(item.OxygenSeconds);
                 Sfx.PlayAt(SfxId.OxygenCan, transform.position);
+            }
+
+            if (item.Gadget != GadgetKind.None)
+            {
+                PlayerGadgets.Use(item, transform, _controller.AimPoint, _wallMask);
             }
 
             _inventory.ConsumeAmmo(item, 1);

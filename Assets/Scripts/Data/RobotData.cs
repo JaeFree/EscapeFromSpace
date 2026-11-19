@@ -28,6 +28,7 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("켜면 머리 위에 이름과 HP 바가 늘 보이고, 퀘스트의 네임드 처치로 센다")] private bool _isNamed;
         [SerializeField, Tooltip("퀘스트·저장에서 이 네임드를 가리키는 이름. 정한 뒤에는 바꾸지 않는다")] private string _namedId;
         [SerializeField, Tooltip("그림에 곱하는 색. 네임드는 금빛")] private Color _bodyTint = Color.white;
+        [SerializeField, Tooltip("켜면 에일리언(생물)이다. EMP가 듣지 않고 어둠의 영향도 받지 않는다 (기획서 19.4)")] private bool _isBiological;
         [SerializeField, Tooltip("잔해의 루팅 칸 크기. 0이면 잔해 프리팹 그대로 (3×1)")] private Vector2Int _wreckSize;
 
         [Header("공격")]
@@ -67,6 +68,8 @@ namespace EscapeFromSpace
         public bool IsNamed => _isNamed;
         public string NamedId => _namedId;
         public Vector2Int WreckSize => _wreckSize;
+        public Color BodyTint => _bodyTint;
+        public bool IsBiological => _isBiological;
         public string DisplayName => _displayName;
         public Color Color => _color;
         public Sprite Sprite => _sprite;

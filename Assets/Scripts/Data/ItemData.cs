@@ -17,6 +17,14 @@ namespace EscapeFromSpace
         PodPart,
     }
 
+    // 도구칸에서 쓰는 은신 소모품의 종류 (기획서 19.3).
+    public enum GadgetKind
+    {
+        None,
+        Decoy,
+        Emp,
+    }
+
     // 총기 부착물의 부위 (기획서 17장). 무기 하나에 부위마다 하나씩 단다. 저장 파일의 순서이므로 끝에만 덧붙인다.
     public enum AttachmentSlot
     {
@@ -65,6 +73,13 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("켜면 총구에서 조준 레이저가 보인다")] private bool _laserSight;
         [SerializeField, Tooltip("칸. 0보다 크면 총소리 반경이 이 값으로 줄어든다 (소음기, 기획서 19.3)")] private float _noiseRadius;
 
+        [Header("은신 소모품 (기획서 19.3)")]
+        [SerializeField] private GadgetKind _gadget;
+        [SerializeField, Tooltip("칸. 커서 쪽으로 이 거리까지 놓거나 던진다")] private float _gadgetRange;
+        [SerializeField, Tooltip("칸. 미끼는 소리가 들리는 반경, EMP는 터지는 반경")] private float _gadgetRadius;
+        [SerializeField, Tooltip("초. 미끼가 떠 있는 시간, EMP가 로봇을 멈추는 시간")] private float _gadgetDuration;
+        [SerializeField, Tooltip("초. 던지고 터질 때까지 (EMP)")] private float _gadgetDelay;
+
         [Header("사용 효과")]
         [SerializeField] private float _healAmount;
         [SerializeField, Tooltip("초")] private float _useTime;
@@ -90,6 +105,11 @@ namespace EscapeFromSpace
         public float AimSpreadMultiplier => _aimSpreadMultiplier;
         public bool LaserSight => _laserSight;
         public float NoiseRadius => _noiseRadius;
+        public GadgetKind Gadget => _gadget;
+        public float GadgetRange => _gadgetRange;
+        public float GadgetRadius => _gadgetRadius;
+        public float GadgetDuration => _gadgetDuration;
+        public float GadgetDelay => _gadgetDelay;
         public int Armor => _armor;
         public int ExtraBagRows => _extraBagRows;
         public float ExtraOxygenSeconds => _extraOxygenSeconds;
