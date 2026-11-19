@@ -122,58 +122,43 @@ namespace EscapeFromSpace.EditorTools
         }
 
         // 구역별 일반 로봇. 저격 로봇은 움직이지 않고, 두 번째 점은 훑는 방향의 중심만 정한다.
+        // 2026-11-19 사용자 결정: 구역마다 로봇 5기(네임드 무리 포함). 네임드와 호위(15.2)는 그대로 두고 일반 로봇을 줄였다.
+        // 호위가 3기인 연구소·보안실은 1기, 나머지는 2기다.
         public static readonly (string zone, Patrol[] robots)[] Robots =
         {
             ("Cargo", new[]
             {
                 new Patrol("MeleeRobot", V(50, 40), V(64, 36), V(64, 50)),
                 new Patrol("PistolRobot", V(78, 40), V(90, 40), V(90, 50)),
-                new Patrol("MeleeRobot", V(56, 53), V(75, 54)),
-                new Patrol("PistolRobot", V(70, 30), V(86, 30)),
             }),
             ("Quarters", new[]
             {
-                new Patrol("PistolRobot", V(17, 30), V(17, 53)),
                 new Patrol("MeleeRobot", V(6, 44), V(33, 44)),
                 new Patrol("PistolRobot", V(33, 36), V(33, 53)),
-                new Patrol("MeleeRobot", V(22, 36), V(22, 52)),
             }),
             ("Medbay", new[]
             {
                 new Patrol("PistolRobot", V(10, 80), V(30, 80)),
-                new Patrol("ShotgunRobot", V(20, 70), V(20, 90)),
-                new Patrol("PistolRobot", V(6, 90), V(17, 90)),
                 new Patrol("ShotgunRobot", V(30, 90), V(34, 88)),
             }),
             ("Lab", new[]
             {
-                new Patrol("RifleRobot", V(50, 75), V(62, 75), V(62, 69)),
-                new Patrol("ShotgunRobot", V(76, 75), V(90, 75)),
                 new Patrol("SniperRobot", V(91, 85), V(70, 75)),
-                new Patrol("RifleRobot", V(62, 85), V(84, 85)),
-                new Patrol("ShotgunRobot", V(51, 88), V(55, 92)),
             }),
             ("Security", new[]
             {
-                new Patrol("RifleRobot", V(105, 78), V(121, 78)),
-                new Patrol("SniperRobot", V(133, 93), V(110, 75)),
                 new Patrol("RifleRobot", V(112, 90), V(122, 90)),
-                new Patrol("SniperRobot", V(103, 69), V(120, 85)),
-                new Patrol("RifleRobot", V(128, 70), V(132, 78)),
             }),
             ("Engine", new[]
             {
                 new Patrol("MeleeRobot", V(105, 30), V(105, 54)),
                 new Patrol("RifleRobot", V(115, 30), V(115, 54)),
-                new Patrol("MeleeRobot", V(125, 30), V(125, 54)),
-                new Patrol("RifleRobot", V(104, 44), V(126, 44)),
             }),
             ("Power", new[]
             {
-                new Patrol("RifleRobot", V(102, 12), V(128, 12)),
+                // 2026-11-19: 북쪽 출입구 앞(y 12)을 지나면 들어오자마자 맞아서 서쪽 벽을 따라 돌게 했다.
+                new Patrol("RifleRobot", V(102, 4), V(102, 14)),
                 new Patrol("ShotgunRobot", V(110, 4), V(120, 4)),
-                new Patrol("RifleRobot", V(118, 13), V(134, 14)),
-                new Patrol("ShotgunRobot", V(102, 4), V(108, 13)),
             }),
         };
 

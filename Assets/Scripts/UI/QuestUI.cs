@@ -28,7 +28,7 @@ namespace EscapeFromSpace
             // 처음 시작하면 프롤로그를 보여 준다 (기획서 14.1).
             if (Data != null && !Data.SeenPrologue)
             {
-                _story.Show(Database.Prologue, null, () =>
+                _story.Show(Database.Prologue, null, Database.PrologueShots, () =>
                 {
                     Data.SeenPrologue = true;
                     _merchant.Inventory.NotifyChanged();
@@ -245,7 +245,7 @@ namespace EscapeFromSpace
             Data.SeenEnding = true;
             _merchant.Inventory.NotifyChanged();
             _merchant.CloseWindow();
-            _story.Show(Database.Ending, Database.CreditsText, null);
+            _story.Show(Database.Ending, Database.CreditsText, Database.EndingShots, null);
         }
     }
 }

@@ -130,7 +130,7 @@ namespace EscapeFromSpace
 
         private void Update()
         {
-            if (StoryScreenUI.IsShowing)
+            if (StoryScreenUI.IsBlocking)
             {
                 _hint.gameObject.SetActive(false);
                 return;

@@ -1,24 +1,38 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace EscapeFromSpace
 {
-    // M키 전체 맵 (기획서 9.2). 가 본 곳만 보이고, 내 위치와 탈출 포드(비상구 표시)를 그린다.
+    // M키 전체 맵 (기획서 9.2). 가 본 곳만 보이고, 내 위치, 탈출 포드(비상구 표시), 구역 이름을 그린다.
+    // 2026-11-19 사용자 요청: 화면 안에 다 들어오게 줄이고, 지금 있는 구역 이름을 보여 주고, 포드는 안 가 봤어도 보인다.
     public class MapUI : MonoBehaviour
     {
-        // 맵 한 칸을 가로세로 이만큼의 점으로 그린다. 칸 안에 테두리와 무늬를 넣으려면 점이 여러 개 필요하다.
-        private const int CellTexels = 8;
+        // 화면 기준 높이 1080에서 위의 제목 줄과 아래 범례 줄이 차지하는 높이. 나머지에 맵이 들어간다.
+        private const float HeaderHeight = 78f;
+        private const float FooterHeight = 52f;
+        private const float ScreenMargin = 40f;
 
-        // 벽은 게임 화면의 벽과 같은 청록, 바닥과 안 가 본 곳은 창의 남보라에 맞춘다.
-        private static readonly Color32 UnknownColor = new Color32(12, 10, 20, 255);
-        private static readonly Color32 UnknownDotColor = new Color32(30, 26, 46, 255);
-        private static readonly Color32 FloorColor = new Color32(44, 40, 62, 255);
-        private static readonly Color32 FloorLineColor = new Color32(33, 30, 49, 255);
-        private static readonly Color32 WallColor = new Color32(52, 142, 140, 255);
-        private static readonly Color32 WallLightColor = new Color32(130, 226, 214, 255);
-        private static readonly Color32 WallDarkColor = new Color32(26, 84, 90, 255);
-        private static readonly Color ExitColor = new Color(0.15f, 0.65f, 0.3f, 1f);
-        private static readonly Color PlayerColor = new Color(0.3f, 0.75f, 1f, 1f);
+        // 칸 하나를 점 하나로 그리고 Point 필터로 늘린다. 칸이 화면에서 10픽셀 안팎이라 선이나 무늬를 넣으면 오히려 뭉개진다.
+        private static readonly Color32 UnknownColor = new Color32(9, 8, 16, 255);
+        private static readonly Color32 CorridorColor = new Color32(62, 60, 80, 255);
+        private static readonly Color32 WallEdgeColor = new Color32(120, 222, 206, 255);
+        private static readonly Color32 WallInnerColor = new Color32(30, 70, 76, 255);
+        private static readonly Color ExitColor = new Color(0.15f, 0.7f, 0.32f, 1f);
+        private static readonly Color PlayerColor = new Color(0.3f, 0.78f, 1f, 1f);
+
+        // 구역마다 바닥 색을 달리해서 경계가 한눈에 보이게 한다. 벽(청록)과 겹치지 않는 차분한 색이다.
+        private static readonly Color32[] ZoneColors =
+        {
+            new Color32(92, 74, 120, 255),
+            new Color32(116, 84, 62, 255),
+            new Color32(62, 92, 120, 255),
+            new Color32(110, 70, 90, 255),
+            new Color32(76, 104, 72, 255),
+            new Color32(120, 104, 60, 255),
+            new Color32(70, 80, 126, 255),
+            new Color32(118, 66, 66, 255),
+        };
 
         [SerializeField] private MapExplorer _map;
         [SerializeField] private RaidManager _raid;
@@ -28,15 +42,23 @@ namespace EscapeFromSpace
         [SerializeField] private Sprite _circleSprite;
 
         // 크기는 1920×1080 화면 기준의 픽셀이다. Play를 다시 시작하면 반영된다.
-        [SerializeField, Tooltip("맵 한 칸의 한 변")] private float _cellPixels = 22f;
+        [SerializeField, Tooltip("맵 한 칸의 한 변의 최대 길이. 맵이 화면보다 크면 화면에 맞춰 이보다 작게 그린다")] private float _cellPixels = 22f;
 
+        private readonly List<ZoneArea> _zones = new List<ZoneArea>();
+        private readonly List<Text> _zoneLabels = new List<Text>();
         private RectTransform _root;
         private RectTransform _mapRect;
         private RectTransform _playerMark;
         private RectTransform _playerRing;
+        private RectTransform _zoneFrame;
+        private Image _zoneFrameBorder;
+        private Text _whereText;
         private RectTransform[] _podIcons;
         private Texture2D _texture;
         private Color32[] _pixels;
+        private int[] _cellZone;
+        private bool[] _zoneKnown;
+        private ZoneArea _currentZone;
         private int _drawnVersion = -1;
         private bool _isOpen;
 
@@ -85,21 +107,56 @@ namespace EscapeFromSpace
                 Redraw();
             }
 
-            Place(_playerMark, _controller.transform.position);
+            Vector2 playerPosition = _controller.transform.position;
+            Place(_playerMark, playerPosition);
 
             // 내 위치는 고리가 커졌다 작아져서 넓은 맵에서도 바로 찾을 수 있다.
-            float ring = 1f + 0.2f * Mathf.Sin(Time.unscaledTime * 5f);
+            float ring = 1f + 0.25f * Mathf.Sin(Time.unscaledTime * 5f);
             _playerRing.localScale = new Vector3(ring, ring, 1f);
 
-            // 탈출 포드도 가 본 곳에 있을 때만 보인다. 어느 쪽이 작동하는지는 맵에서 알 수 없다.
+            UpdateCurrentZone(ZoneArea.At(playerPosition));
+            Color border = UiTheme.Accent;
+            border.a = 0.65f + 0.35f * Mathf.Sin(Time.unscaledTime * 3f);
+            _zoneFrameBorder.color = border;
+
+            // 2026-11-19 사용자 결정: 포드는 가 보지 않았어도 늘 보인다. 열렸는지는 맵에서 알 수 없다.
             for (int i = 0; i < _pods.Length; i++)
             {
-                bool known = _map.IsExploredAt(_pods[i].transform.position);
-                _podIcons[i].gameObject.SetActive(known);
-                if (known)
-                {
-                    Place(_podIcons[i], _pods[i].transform.position);
-                }
+                Place(_podIcons[i], _pods[i].transform.position);
+            }
+        }
+
+        private void UpdateCurrentZone(ZoneArea zone)
+        {
+            if (zone == _currentZone && _whereText.text.Length > 0)
+            {
+                return;
+            }
+
+            _currentZone = zone;
+            _whereText.text = "현재 위치  <color=#FFBD4D><b>" + (zone != null ? zone.DisplayName : "복도") + "</b></color>";
+            _zoneFrame.gameObject.SetActive(zone != null);
+            if (zone != null)
+            {
+                Vector2 min = _map.Normalize(zone.Area.min);
+                Vector2 max = _map.Normalize(zone.Area.max);
+                Vector2 size = _mapRect.sizeDelta;
+                _zoneFrame.anchoredPosition = new Vector2(min.x * size.x, min.y * size.y) - new Vector2(4f, 4f);
+                _zoneFrame.sizeDelta = new Vector2((max.x - min.x) * size.x, (max.y - min.y) * size.y) + new Vector2(8f, 8f);
+            }
+
+            RefreshLabels();
+        }
+
+        // 구역 이름은 그 구역을 조금이라도 가 봤으면 보인다. 지금 있는 구역은 밝게 쓴다.
+        private void RefreshLabels()
+        {
+            for (int i = 0; i < _zones.Count; i++)
+            {
+                bool current = _zones[i] == _currentZone;
+                _zoneLabels[i].enabled = _zoneKnown[i] || current;
+                _zoneLabels[i].color = current ? UiTheme.Accent : UiTheme.Text;
+                _zoneLabels[i].fontSize = current ? 26 : 21;
             }
         }
 
@@ -116,128 +173,145 @@ namespace EscapeFromSpace
             {
                 for (int x = 0; x < _map.Width; x++)
                 {
+                    Color32 color;
                     if (!_map.IsExplored(x, y))
                     {
-                        DrawUnknown(x, y);
+                        color = UnknownColor;
                     }
                     else if (_map.IsWall(x, y))
                     {
-                        DrawWall(x, y);
+                        // 바닥과 맞닿은 벽만 밝게 그린다. 벽 속까지 밝으면 큰 청록 덩어리가 길을 가린다.
+                        color = TouchesKnownFloor(x, y) ? WallEdgeColor : WallInnerColor;
                     }
                     else
                     {
-                        DrawFloor(x, y);
+                        int zone = _cellZone[y * _map.Width + x];
+                        color = zone >= 0 ? ZoneColors[zone % ZoneColors.Length] : CorridorColor;
+                        if (zone >= 0)
+                        {
+                            _zoneKnown[zone] = true;
+                        }
                     }
+
+                    _pixels[y * _map.Width + x] = color;
                 }
             }
 
             _texture.SetPixels32(_pixels);
             _texture.Apply();
+            RefreshLabels();
         }
 
-        // 안 가 본 곳: 어두운 바탕에 점 하나. 빈 화면이 아니라 "아직 모르는 칸"으로 보인다.
-        private void DrawUnknown(int x, int y)
+        private bool TouchesKnownFloor(int x, int y)
         {
-            int middle = CellTexels / 2;
-            for (int v = 0; v < CellTexels; v++)
+            for (int dy = -1; dy <= 1; dy++)
             {
-                for (int u = 0; u < CellTexels; u++)
+                for (int dx = -1; dx <= 1; dx++)
                 {
-                    bool dot = (u == middle - 1 || u == middle) && (v == middle - 1 || v == middle);
-                    SetTexel(x, y, u, v, dot ? UnknownDotColor : UnknownColor);
-                }
-            }
-        }
-
-        // 바닥: 왼쪽과 아래에 옅은 선을 넣어 타일처럼 칸이 보이게 한다.
-        private void DrawFloor(int x, int y)
-        {
-            for (int v = 0; v < CellTexels; v++)
-            {
-                for (int u = 0; u < CellTexels; u++)
-                {
-                    SetTexel(x, y, u, v, u == 0 || v == 0 ? FloorLineColor : FloorColor);
-                }
-            }
-        }
-
-        // 벽: 바닥과 맞닿은 쪽에만 테두리를 그린다. 위와 왼쪽은 밝게, 아래와 오른쪽은 어둡게 해서 도드라져 보인다.
-        // 이어진 벽 사이에는 선이 없어서 한 덩어리로 보인다.
-        private void DrawWall(int x, int y)
-        {
-            bool left = IsKnownFloor(x - 1, y);
-            bool right = IsKnownFloor(x + 1, y);
-            bool down = IsKnownFloor(x, y - 1);
-            bool up = IsKnownFloor(x, y + 1);
-            int last = CellTexels - 1;
-
-            for (int v = 0; v < CellTexels; v++)
-            {
-                for (int u = 0; u < CellTexels; u++)
-                {
-                    Color32 color = WallColor;
-                    if ((up && v == last) || (left && u == 0))
+                    int nx = x + dx;
+                    int ny = y + dy;
+                    if (nx >= 0 && ny >= 0 && nx < _map.Width && ny < _map.Height && _map.IsExplored(nx, ny) && !_map.IsWall(nx, ny))
                     {
-                        color = WallLightColor;
+                        return true;
                     }
-                    else if ((down && v == 0) || (right && u == last))
-                    {
-                        color = WallDarkColor;
-                    }
+                }
+            }
 
-                    SetTexel(x, y, u, v, color);
+            return false;
+        }
+
+        // 칸마다 어느 구역인지 한 번만 정해 둔다. 구역의 순서는 이름(Id) 순이라 판마다 색이 같다.
+        private void CacheZones()
+        {
+            _zones.AddRange(ZoneArea.Zones);
+            _zones.Sort((a, b) => string.CompareOrdinal(a.Id, b.Id));
+            _zoneKnown = new bool[_zones.Count];
+            _cellZone = new int[_map.Width * _map.Height];
+            for (int y = 0; y < _map.Height; y++)
+            {
+                for (int x = 0; x < _map.Width; x++)
+                {
+                    Vector2 center = _map.CellCenter(x, y);
+                    _cellZone[y * _map.Width + x] = _zones.FindIndex(zone => zone.Contains(center));
                 }
             }
         }
 
-        private bool IsKnownFloor(int x, int y)
+        // 맵 전체가 화면 높이 1080 안에 들어가는 칸 크기. 화면이 좁으면 너비에도 맞춘다.
+        private float FitCellPixels()
         {
-            return x >= 0 && y >= 0 && x < _map.Width && y < _map.Height && _map.IsExplored(x, y) && !_map.IsWall(x, y);
-        }
-
-        private void SetTexel(int x, int y, int u, int v, Color32 color)
-        {
-            _pixels[(y * CellTexels + v) * _map.Width * CellTexels + x * CellTexels + u] = color;
+            // 캔버스는 높이 1080에 맞춰 늘어나므로(Match = 높이) 너비만 화면 비율로 바뀐다.
+            const float canvasHeight = 1080f;
+            float canvasWidth = canvasHeight * Screen.width / Mathf.Max(1f, Screen.height);
+            float byHeight = (canvasHeight - HeaderHeight - FooterHeight - ScreenMargin * 2f) / _map.Height;
+            float byWidth = (canvasWidth - ScreenMargin * 2f - 40f) / _map.Width;
+            return Mathf.Min(_cellPixels, byHeight, byWidth);
         }
 
         private void Build()
         {
-            var mapSize = new Vector2(_map.Width * _cellPixels, _map.Height * _cellPixels);
+            CacheZones();
+            float cell = FitCellPixels();
+            var mapSize = new Vector2(_map.Width * cell, _map.Height * cell);
 
             _root = UiBuilder.Rect("MapScreen", transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero,
-                mapSize + new Vector2(40f, 90f));
+                mapSize + new Vector2(40f, HeaderHeight + FooterHeight));
             UiBuilder.Window(_root);
 
-            RectTransform title = UiBuilder.Rect("Title", _root, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -8f),
-                new Vector2(mapSize.x, 46f));
-            Text titleText = UiBuilder.Text("전체 맵 (M)", title, 26, TextAnchor.MiddleCenter, UiTheme.Accent);
+            // 제목 줄: 왼쪽은 창 이름, 오른쪽은 지금 있는 구역
+            RectTransform title = UiBuilder.Rect("Title", _root, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -12f),
+                new Vector2(mapSize.x, 54f));
+            Text titleText = UiBuilder.Text("전체 맵 (M)", title, 26, TextAnchor.MiddleLeft, UiTheme.Accent);
             titleText.fontStyle = FontStyle.Bold;
+            RectTransform where = UiBuilder.Rect("Where", _root, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -12f),
+                new Vector2(mapSize.x, 54f));
+            _whereText = UiBuilder.Text(string.Empty, where, 30, TextAnchor.MiddleRight, UiTheme.Text);
+            _whereText.supportRichText = true;
 
-            _texture = new Texture2D(_map.Width * CellTexels, _map.Height * CellTexels, TextureFormat.RGBA32, false)
+            _texture = new Texture2D(_map.Width, _map.Height, TextureFormat.RGBA32, false)
             {
-                // 화면의 칸 크기가 점의 정수배가 아니어도 선 굵기가 들쭉날쭉하지 않게 부드럽게 늘린다.
-                filterMode = FilterMode.Bilinear,
+                // 칸 경계가 번지지 않게 점을 그대로 늘린다.
+                filterMode = FilterMode.Point,
                 wrapMode = TextureWrapMode.Clamp,
             };
             _pixels = new Color32[_texture.width * _texture.height];
 
-            RectTransform frame = UiBuilder.Rect("MapFrame", _root, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 17f),
+            RectTransform frame = UiBuilder.Rect("MapFrame", _root, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, FooterHeight - 3f),
                 mapSize + new Vector2(6f, 6f));
             UiBuilder.Image(frame, UiTheme.SlotBorder);
 
-            _mapRect = UiBuilder.Rect("Map", _root, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 20f), mapSize);
+            _mapRect = UiBuilder.Rect("Map", _root, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, FooterHeight), mapSize);
             var image = _mapRect.gameObject.AddComponent<RawImage>();
             image.texture = _texture;
             image.raycastTarget = false;
+
+            // 지금 있는 구역의 테두리
+            _zoneFrame = UiBuilder.Rect("CurrentZone", _mapRect, Vector2.zero, Vector2.zero, Vector2.zero, Vector2.one);
+            _zoneFrameBorder = UiBuilder.Image(_zoneFrame, UiTheme.Accent);
+            _zoneFrameBorder.type = Image.Type.Sliced;
+            _zoneFrameBorder.sprite = UiBuilder.BorderSprite;
+
+            // 구역 이름은 구역 가운데에 쓴다. 바닥 그림 위에서도 읽히게 외곽선을 두른다.
+            foreach (ZoneArea zone in _zones)
+            {
+                RectTransform label = UiBuilder.Rect("Label " + zone.Id, _mapRect, Vector2.zero, new Vector2(0.5f, 0.5f), Vector2.zero,
+                    new Vector2(220f, 40f));
+                Place(label, zone.Area.center);
+                Text text = UiBuilder.Text(zone.DisplayName, label, 21, TextAnchor.MiddleCenter, UiTheme.Text);
+                text.fontStyle = FontStyle.Bold;
+                UiBuilder.Outline(text);
+                text.enabled = false;
+                _zoneLabels.Add(text);
+            }
 
             _podIcons = new RectTransform[_pods.Length];
             for (int i = 0; i < _pods.Length; i++)
             {
                 // 비상구 표시
                 _podIcons[i] = UiBuilder.Rect("ExitIcon", _mapRect, Vector2.zero, new Vector2(0.5f, 0.5f), Vector2.zero,
-                    new Vector2(64f, 34f));
+                    new Vector2(54f, 28f));
                 UiBuilder.Panel(_podIcons[i], ExitColor, Color.white);
-                Text label = UiBuilder.Text("EXIT", _podIcons[i], 20, TextAnchor.MiddleCenter, Color.white);
+                Text label = UiBuilder.Text("EXIT", _podIcons[i], 17, TextAnchor.MiddleCenter, Color.white);
                 label.fontStyle = FontStyle.Bold;
             }
 
@@ -246,8 +320,15 @@ namespace EscapeFromSpace
             UiBuilder.Image(_playerMark, PlayerColor, _circleSprite);
 
             _playerRing = UiBuilder.Rect("Ring", _playerMark, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero,
-                new Vector2(34f, 34f));
+                new Vector2(38f, 38f));
             UiBuilder.Image(_playerRing, PlayerColor, UiBuilder.RingSprite);
+
+            RectTransform legend = UiBuilder.Rect("Legend", _root, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 8f),
+                new Vector2(mapSize.x, 36f));
+            Text legendText = UiBuilder.Text("<color=#4DC7FF>●</color> 나      <color=#26B352>■</color> 탈출 포드      "
+                + "<color=#FFBD4D>□</color> 지금 있는 구역      <color=#2E2A44>■</color> 아직 안 가 본 곳", legend, 19,
+                TextAnchor.MiddleCenter, UiTheme.TextDim);
+            legendText.supportRichText = true;
 
             _root.gameObject.SetActive(false);
         }

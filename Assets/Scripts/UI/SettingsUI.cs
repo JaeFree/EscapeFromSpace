@@ -173,7 +173,7 @@ namespace EscapeFromSpace
         // 스스로 Esc를 읽는 창(강화 트리, 출격 확인, 결과 화면, 수량 창)이 떠 있으면 설정은 끼어들지 않는다.
         private bool IsBlockedByOtherWindow()
         {
-            return StoryScreenUI.IsShowing
+            return StoryScreenUI.IsBlocking
                 || (_techTree != null && _techTree.IsOpen)
                 || (_merchant != null && _merchant.IsOpen)
                 || (_result != null && _result.IsShown)
@@ -255,7 +255,7 @@ namespace EscapeFromSpace
             }
         }
 
-        private void Open()
+        public void Open()
         {
             if (_inventory != null && _inventory.IsOpen)
             {

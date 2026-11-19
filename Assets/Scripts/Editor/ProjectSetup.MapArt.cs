@@ -447,7 +447,7 @@ namespace EscapeFromSpace.EditorTools
         {
             ReplacePrefabSprite(ContainerPrefabPath, "crate_gray", "Prop_Crate", 0.9f);
             ReplacePrefabSprite(ResearchContainerPrefabPath, "crate_red", "Prop_Server", 0.95f);
-            ReplacePrefabSprite(StoragePrefabPath, "locker_gray", "Prop_Locker", 1.9f);
+            ReplacePrefabSprite(StoragePrefabPath, "locker_gray", "Prop_Locker", 1.1f);
         }
 
         // 프리팹의 크기(충돌체)는 그대로 두고 그림만 바꾼다. 소품 그림을 복사해 이 프리팹에 맞는 크기(칸)로 읽힌다.

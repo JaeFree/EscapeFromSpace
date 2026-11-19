@@ -372,7 +372,11 @@ namespace EscapeFromSpace
                 }
                 else if (_input.FirePressedThisFrame && !HandleAttachClick(mouse))
                 {
-                    TryPickUp(FindTarget(mouse));
+                    DropTarget clicked = FindTarget(mouse);
+                    if (!TryQuickMove(clicked))
+                    {
+                        TryPickUp(clicked);
+                    }
                 }
 
                 return;

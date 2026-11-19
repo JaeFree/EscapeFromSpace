@@ -16,7 +16,7 @@ MonoBehaviour:
   _color: {r: 0.7, g: 0.2, b: 0.2, a: 1}
   _sprite: {fileID: 21300000, guid: 9010af70c6fa8044091817ed23689cf6, type: 3}
   _visualSize: 1
-  _maxHp: 110
+  _maxHp: 88
   _lootTable: {fileID: 11400000, guid: 30700c7174237d84aa11dd2fe4ea74f3, type: 2}
   _xpReward: 20
   _attackKind: 2
@@ -28,7 +28,7 @@ MonoBehaviour:
   _aimLockTime: 0.5
   _burstCount: 1
   _burstInterval: 0
-  _restTime: 1
+  _restTime: 2
   _patrolSpeed: 2
   _chaseSpeed: 3.5
   _turnSpeed: 360

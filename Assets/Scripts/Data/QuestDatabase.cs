@@ -83,6 +83,10 @@ namespace EscapeFromSpace
         [SerializeField, TextArea(4, 12), Tooltip("처음 시작할 때 보여 주는 글. 빈 줄로 장을 나눈다")] private string _prologue;
         [SerializeField, TextArea(4, 12), Tooltip("포드를 고쳐 떠날 때 보여 주는 글. 빈 줄로 장을 나눈다")] private string _ending;
         [SerializeField, TextArea(4, 12)] private string _credits;
+        [SerializeField, Tooltip("프롤로그 장마다 보여 줄 그림. 장보다 적으면 나머지는 별 하늘")]
+        private StoryShot[] _prologueShots = { StoryShot.Station, StoryShot.Attack, StoryShot.Shelter, StoryShot.Hangar };
+        [SerializeField, Tooltip("엔딩 장마다 보여 줄 그림. 만든 사람 장은 별 하늘")]
+        private StoryShot[] _endingShots = { StoryShot.Launch, StoryShot.Alarm, StoryShot.Escape, StoryShot.Farewell };
 
         public IReadOnlyList<Quest> Quests => _quests;
         public IReadOnlyList<string> AllNamed => _allNamed;
@@ -90,6 +94,8 @@ namespace EscapeFromSpace
         public string Prologue => _prologue;
         public string Ending => _ending;
         public string CreditsText => _credits;
+        public IReadOnlyList<StoryShot> PrologueShots => _prologueShots;
+        public IReadOnlyList<StoryShot> EndingShots => _endingShots;
 
         public Quest Find(string id)
         {

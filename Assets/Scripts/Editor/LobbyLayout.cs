@@ -11,8 +11,8 @@ namespace EscapeFromSpace.EditorTools
         public const float SpawnY = 7f;
 
         // 왼쪽 위 구석
-        public const float StorageX = 1.8f;
-        public const float StorageY = 12.2f;
+        public const float StorageX = 2f;
+        public const float StorageY = 12f;
 
         // 위쪽 벽 가운데에 붙인다
         public const float PortalX = 12f;

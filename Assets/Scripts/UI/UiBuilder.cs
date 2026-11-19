@@ -226,7 +226,7 @@ namespace EscapeFromSpace
 
         // ---------- 틀 그림 ----------
 
-        private static RectTransform Stretch(string name, RectTransform parent)
+        public static RectTransform Stretch(string name, RectTransform parent)
         {
             var rect = new GameObject(name, typeof(RectTransform)).GetComponent<RectTransform>();
             rect.SetParent(parent, false);

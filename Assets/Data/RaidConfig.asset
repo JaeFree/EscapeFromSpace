@@ -17,4 +17,4 @@ MonoBehaviour:
   _oxygenWarningSeconds: 60
   _escapeCountdown: 5
   _podOpenDelay: 60
-  _podsAlwaysOpen: 1
+  _podsAlwaysOpen: 0

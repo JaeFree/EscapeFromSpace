@@ -143,6 +143,7 @@ namespace EscapeFromSpace.EditorTools
             AssetDatabase.SaveAssets();
 
             // 레이드 씬을 마지막에 열어 둔다. 메뉴를 돌린 뒤 에디터에 남는 씬이다.
+            EnsureTitleScene();
             EnsureLobbyScene(wallLayer);
             EnsureScene(wallLayer);
             EnsureBuildScenes();
@@ -1387,6 +1388,7 @@ namespace EscapeFromSpace.EditorTools
             EnsureWallColliders();
             EnsureZones();
             EnsureRobotZones(wallLayer);
+            ApplyFiveRobotsPerZone();
             EnsureNamedGroups();
 
             // 사격 확인용 표적은 로봇으로 대체했다. 예전에 만든 씬에 남아 있으면 지운다.
@@ -2017,25 +2019,26 @@ namespace EscapeFromSpace.EditorTools
             return true;
         }
 
-        // 게임은 대기실에서 시작하므로 빌드 목록의 맨 앞이 대기실, 그다음이 레이드 씬이어야 한다.
+        // 게임은 시작 화면에서 시작하므로 빌드 목록은 시작 화면, 대기실, 레이드 씬 순서여야 한다.
         // 나머지 씬은 있던 순서대로 뒤에 둔다.
         private static void EnsureBuildScenes()
         {
             EditorBuildSettingsScene[] scenes = EditorBuildSettings.scenes;
-            if (scenes.Length >= 2 && scenes[0].path == LobbyScenePath && scenes[1].path == ScenePath)
+            if (scenes.Length >= 3 && scenes[0].path == TitleScenePath && scenes[1].path == LobbyScenePath && scenes[2].path == ScenePath)
             {
                 return;
             }
 
             var updated = new List<EditorBuildSettingsScene>
             {
+                new EditorBuildSettingsScene(TitleScenePath, true),
                 new EditorBuildSettingsScene(LobbyScenePath, true),
                 new EditorBuildSettingsScene(ScenePath, true),
             };
 
             foreach (EditorBuildSettingsScene buildScene in scenes)
             {
-                if (buildScene.path != LobbyScenePath && buildScene.path != ScenePath)
+                if (buildScene.path != TitleScenePath && buildScene.path != LobbyScenePath && buildScene.path != ScenePath)
                 {
                     updated.Add(buildScene);
                 }

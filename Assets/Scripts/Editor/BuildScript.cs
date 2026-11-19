@@ -15,7 +15,7 @@ namespace EscapeFromSpace.EditorTools
             var options = new BuildPlayerOptions
             {
                 // 대기실에서 시작한다. 템플릿의 SampleScene은 쓰지 않으므로 넣지 않는다.
-                scenes = new[] { "Assets/Scenes/Lobby.unity", "Assets/Scenes/Station.unity" },
+                scenes = new[] { "Assets/Scenes/Title.unity", "Assets/Scenes/Lobby.unity", "Assets/Scenes/Station.unity" },
                 locationPathName = OutputPath,
                 target = BuildTarget.StandaloneWindows64,
                 options = BuildOptions.None,

@@ -16,10 +16,10 @@ MonoBehaviour:
   _reloadMoveSpeedMultiplier: 0.7
   _maxWeight: 20
   _slowStartRatio: 0.5
-  _slowAtStart: 0.2
+  _slowAtStart: 0.15
   _slowStepRatio: 0.1
-  _slowPerStep: 0.1
-  _minSpeedRatio: 0.2
+  _slowPerStep: 0.07
+  _minSpeedRatio: 0.3
   _overloadRatio: 1.5
   _overloadDamagePerSecond: 0.5
   _maxHp: 100

@@ -21,8 +21,9 @@ namespace EscapeFromSpace.EditorTools
         {
             new NamedSpec { Id = "K7", Name = "짐꾼 K-7", Base = "MeleeRobot", Zone = "Cargo",
                 Route = new[] { C(58, 52), C(82, 43), C(58, 36) }, Escorts = new[] { "MeleeRobot", "PistolRobot" } },
+            // 2026-11-19: 남쪽 출입구 바로 안쪽에서 시작하면 들어오자마자 무리 전체에 맞아서 침실 안쪽으로 옮겼다.
             new NamedSpec { Id = "N3", Name = "야간 경비 N-3", Base = "PistolRobot", Zone = "Quarters",
-                Route = new[] { C(20, 29), C(20, 54) }, Escorts = new[] { "PistolRobot", "PistolRobot" } },
+                Route = new[] { C(20, 45), C(20, 54) }, Escorts = new[] { "PistolRobot", "PistolRobot" } },
             new NamedSpec { Id = "M1", Name = "소독기 M-1", Base = "ShotgunRobot", Zone = "Medbay",
                 Route = new[] { C(12, 84), C(24, 80) }, Escorts = new[] { "PistolRobot", "PistolRobot" } },
             new NamedSpec { Id = "R9", Name = "감시자 R-9", Base = "RifleRobot", Zone = "Lab",
@@ -32,8 +33,9 @@ namespace EscapeFromSpace.EditorTools
             new NamedSpec { Id = "E5", Name = "용접공 E-5", Base = "MeleeRobot", Zone = "Engine",
                 Route = new[] { C(105, 38), C(125, 52) }, Escorts = new[] { "MeleeRobot", "MeleeRobot" },
                 Special = new[] { ("PlasmaIgniter", 30f) } },
+            // 2026-11-19: 북쪽 출입구 앞을 지나는 경로였다. 발전기 뒤 동쪽 끝으로 옮겼다.
             new NamedSpec { Id = "PX", Name = "과부하 P-X", Base = "RifleRobot", Zone = "Power",
-                Route = new[] { C(110, 13), C(128, 4) }, Escorts = new[] { "ShotgunRobot", "RifleRobot" },
+                Route = new[] { C(127, 4), C(134, 13) }, Escorts = new[] { "ShotgunRobot", "RifleRobot" },
                 Special = new[] { ("PowerCell", 50f) } },
         };
 
@@ -97,6 +99,67 @@ namespace EscapeFromSpace.EditorTools
             }
 
             EnsureLootTable("NamedLoot" + spec.Id, true, 0, 0, entries.ToArray());
+        }
+
+        // 2026-11-19 사용자 결정: 구역마다 로봇 5기, N-3과 동력 구역 로봇은 출입구에서 먼 안쪽에서 시작.
+        // 옛 배치로 만든 씬이면 일반 로봇 구역과 N-3 무리를 지운다. 지운 것은 "없으면 만들기"가 새 배치로 다시 만든다.
+        // 수가 이미 맞는 구역은 건드리지 않는다 (Scene 뷰에서 옮긴 경로를 두려고).
+        private static void ApplyFiveRobotsPerZone()
+        {
+            GameObject robots = GameObject.Find("Robots");
+            WallGrid grid = Object.FindFirstObjectByType<WallGrid>();
+            if (robots == null || grid == null)
+            {
+                return;
+            }
+
+            foreach ((string zone, StationLayout.Patrol[] patrols) in StationLayout.Robots)
+            {
+                Transform old = robots.transform.Find(zone + "Zone");
+                if (old != null && new SerializedObject(old.GetComponent<RobotZone>()).FindProperty("_spawns").arraySize == patrols.Length
+                    && !StartsAt(old, OldPowerRifleStart))
+                {
+                    continue;
+                }
+
+                if (old != null)
+                {
+                    Object.DestroyImmediate(old.gameObject);
+                }
+
+                var list = new (string dataName, Vector2[] waypoints)[patrols.Length];
+                for (int i = 0; i < patrols.Length; i++)
+                {
+                    list[i] = (patrols[i].Robot, patrols[i].Points);
+                }
+
+                BuildRobotZone(robots.transform, zone + "Zone", grid, list);
+            }
+
+            // 입구 앞에서 시작하던 네임드 무리 (옛 시작점)
+            foreach ((string id, Vector2 oldStart) in new[] { ("N3", C(20, 29)), ("PX", C(110, 13)) })
+            {
+                NamedSpec spec = System.Array.Find(NamedRobots, named => named.Id == id);
+                Transform group = robots.transform.Find($"Named{id}_{spec.Zone}");
+                if (group != null && StartsAt(group, oldStart))
+                {
+                    Object.DestroyImmediate(group.gameObject);
+                }
+            }
+        }
+
+        // 동력 구역 AR 로봇의 옛 시작점
+        private static readonly Vector2 OldPowerRifleStart = C(102, 12);
+
+        // 그 무리의 첫 로봇이 이 점에서 시작하는지 (첫 자식의 첫 웨이포인트)
+        private static bool StartsAt(Transform group, Vector2 point)
+        {
+            if (group.childCount == 0 || group.GetChild(0).childCount == 0)
+            {
+                return false;
+            }
+
+            return ((Vector2)group.GetChild(0).GetChild(0).position - point).sqrMagnitude < 0.01f;
         }
 
         // 구역마다 네임드 무리를 하나씩 둔다. 이미 있으면 그대로 둔다 (Scene 뷰에서 옮긴 경로를 두려고).

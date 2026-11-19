@@ -42,6 +42,12 @@ namespace EscapeFromSpace
             return new Vector2(Mathf.InverseLerp(min.x, max.x, world.x), Mathf.InverseLerp(min.y, max.y, world.y));
         }
 
+        // 칸 (x, y)의 가운데 월드 좌표. 전체 맵이 칸마다 어느 구역인지 정할 때 쓴다.
+        public Vector2 CellCenter(int x, int y)
+        {
+            return _walls.GetCellCenterWorld(new Vector3Int(_bounds.xMin + x, _bounds.yMin + y, 0));
+        }
+
         public bool IsExploredAt(Vector2 world)
         {
             Vector3Int cell = _walls.WorldToCell(world);
