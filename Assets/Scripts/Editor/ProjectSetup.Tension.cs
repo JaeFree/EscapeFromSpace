@@ -18,11 +18,11 @@ namespace EscapeFromSpace.EditorTools
                 SerializedProperty grades = so.FindProperty("_grades");
                 (string name, int min, Color color)[] rows =
                 {
-                    ("일반", 0, new Color(0.62f, 0.62f, 0.66f)),
+                    ("일반", 0, new Color(0.95f, 0.95f, 0.95f)),
                     ("고급", 30, new Color(0.35f, 0.85f, 0.4f)),
                     ("희귀", 80, new Color(0.3f, 0.6f, 1f)),
-                    ("영웅", 200, new Color(0.75f, 0.4f, 1f)),
-                    ("전설", 500, new Color(1f, 0.78f, 0.2f)),
+                    ("영웅", 200, new Color(1f, 0.85f, 0.2f)),
+                    ("전설", 500, new Color(1f, 0.25f, 0.25f)),
                 };
                 grades.arraySize = rows.Length;
                 for (int i = 0; i < rows.Length; i++)
