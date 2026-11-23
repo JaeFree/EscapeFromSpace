@@ -52,6 +52,17 @@ MonoBehaviour:
   _invaders:
   - {fileID: 11400000, guid: dba083898c90053458469c59ed36fac5, type: 2}
   - {fileID: 11400000, guid: 61ca2a65eb8e9de42ab45796d1dea886, type: 2}
+  _brokenPodCount: 1
+  _brokenPodHintDistance: 3
+  _sentinelStartSeconds: 240
+  _sentinelInterval: 60
+  _sentinelRobotsPerWave: 2
+  _sentinelMaxRobots: 6
+  _sentinelMinDistance: 12
+  _sentinelMaxDistance: 22
+  _sentinelRobots:
+  - {fileID: 11400000, guid: 544cb95e66c156e448add63114743b61, type: 2}
+  - {fileID: 11400000, guid: 64f7dbceefb9afa42a5044f6f24bcd44, type: 2}
   _dataChip: {fileID: 11400000, guid: ae43444dc71bc434688acd6c80045126, type: 2}
   _blueprints:
   - {fileID: 11400000, guid: d9c1fc36e9deb6d489d9f06193760ff0, type: 2}

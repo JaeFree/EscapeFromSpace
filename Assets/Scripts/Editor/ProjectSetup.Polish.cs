@@ -542,14 +542,14 @@ namespace EscapeFromSpace.EditorTools
             SetCue(library, "_mapClose", 0.5f, 1f, 0f, InterfaceAudio, "minimize_008");
             SetCue(library, "_portalLaunch", 0.8f, 1f, 0f, SciFiAudio, "forceField_000");
 
-            // 무기마다 다른 발사음: 권총은 가볍게, 소총은 짧게 끊어서, 저격은 굵게, 샷건은 터지듯이, 광선검은 가르는 소리.
-            SetCue(AssetDatabase.LoadAssetAtPath<WeaponData>(LaserPistolPath), "_fireSound", 0.55f, 1f, 0.06f, SciFiAudio,
+            // 무기마다 다른 발사음 (2026-11-23 사용자 의견: 총소리가 작다 → 0.2씩 올림): 권총은 가볍게, 소총은 짧게 끊어서, 저격은 굵게, 샷건은 터지듯이, 광선검은 가르는 소리.
+            SetCue(AssetDatabase.LoadAssetAtPath<WeaponData>(LaserPistolPath), "_fireSound", 0.75f, 1f, 0.06f, SciFiAudio,
                 "laserSmall_000", "laserSmall_001", "laserSmall_002");
-            SetCue(AssetDatabase.LoadAssetAtPath<WeaponData>(PulseRiflePath), "_fireSound", 0.45f, 1f, 0.06f, SciFiAudio,
+            SetCue(AssetDatabase.LoadAssetAtPath<WeaponData>(PulseRiflePath), "_fireSound", 0.65f, 1f, 0.06f, SciFiAudio,
                 "laserRetro_000", "laserRetro_001", "laserRetro_002");
-            SetCue(AssetDatabase.LoadAssetAtPath<WeaponData>(Nebula7Path), "_fireSound", 0.8f, 0.85f, 0.04f, SciFiAudio,
+            SetCue(AssetDatabase.LoadAssetAtPath<WeaponData>(Nebula7Path), "_fireSound", 1f, 0.85f, 0.04f, SciFiAudio,
                 "laserLarge_000", "laserLarge_001");
-            SetCue(AssetDatabase.LoadAssetAtPath<WeaponData>(PlasmaScatterPath), "_fireSound", 0.75f, 1.15f, 0.05f, SciFiAudio,
+            SetCue(AssetDatabase.LoadAssetAtPath<WeaponData>(PlasmaScatterPath), "_fireSound", 0.95f, 1.15f, 0.05f, SciFiAudio,
                 "explosionCrunch_000");
             SetCue(AssetDatabase.LoadAssetAtPath<WeaponData>(LightSaberPath), "_fireSound", 0.5f, 1f, 0.1f, DigitalAudio,
                 "phaserDown2");

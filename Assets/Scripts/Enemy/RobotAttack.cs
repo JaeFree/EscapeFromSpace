@@ -28,6 +28,7 @@ namespace EscapeFromSpace
         private bool _lockAnnounced;
 
         private RobotData _data;
+        private Rigidbody2D _playerBody;
         private Health _player;
         private Phase _phase;
         private float _timer;
@@ -240,7 +241,7 @@ namespace EscapeFromSpace
                 default:
                     for (int i = 0; i < _data.PelletCount; i++)
                     {
-                        FireRay(_data.SpreadAngle * CoverSpreadScale());
+                        FireRay(_data.SpreadAngle * CoverSpreadScale() * MovingSpreadScale());
                     }
 
                     break;
@@ -304,6 +305,24 @@ namespace EscapeFromSpace
             }
 
             return config.CoverSpreadMultiplier;
+        }
+
+        // 움직이는 플레이어는 덜 맞는다 (기획서 20.3). 서서 쏠지 움직일지를 고르게 하려는 것이다.
+        private float MovingSpreadScale()
+        {
+            CombatConfig config = _player.Config;
+            if (config == null)
+            {
+                return 1f;
+            }
+
+            if (_playerBody == null)
+            {
+                _playerBody = _player.GetComponent<Rigidbody2D>();
+            }
+
+            bool moving = _playerBody != null && _playerBody.linearVelocity.sqrMagnitude > config.MovingTargetSpeed * config.MovingTargetSpeed;
+            return moving ? Mathf.Max(1f, config.MovingTargetSpreadMultiplier) : 1f;
         }
 
         private Vector2 DirectionToPlayer()

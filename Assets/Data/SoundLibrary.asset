@@ -225,3 +225,21 @@ MonoBehaviour:
     _volume: 0.7
     _pitch: 1.25
     _pitchVariation: 0
+  _heartbeat:
+    _clips:
+    - {fileID: 8300000, guid: 3f0ff23886787f3499da49afce047e51, type: 3}
+    _volume: 0.75
+    _pitch: 0.6
+    _pitchVariation: 0
+  _killConfirm:
+    _clips:
+    - {fileID: 8300000, guid: cfd80f4d3094d2a4eb42aaed07b7ca8d, type: 3}
+    _volume: 0.5
+    _pitch: 1.6
+    _pitchVariation: 0.03
+  _sentinelAlarm:
+    _clips:
+    - {fileID: 8300000, guid: eeec656176aae1f429330ec08621402b, type: 3}
+    _volume: 0.8
+    _pitch: 1.25
+    _pitchVariation: 0

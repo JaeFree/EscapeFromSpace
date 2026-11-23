@@ -12576,6 +12576,7 @@ GameObject:
   - component: {fileID: 1354815792}
   - component: {fileID: 1354815794}
   - component: {fileID: 1354815793}
+  - component: {fileID: 1354815795}
   m_Layer: 0
   m_Name: UI
   m_TagString: Untagged
@@ -12599,6 +12600,7 @@ MonoBehaviour:
   _interactor: {fileID: 840651484}
   _input: {fileID: 840651483}
   _controller: {fileID: 840651485}
+  _grades: {fileID: 11400000, guid: 05017f6dd2200974c822b119a88a5d85, type: 2}
   _lootPanelOffset: 0.9
   _canDropToWorld: 0
   _cellSize: 108
@@ -12715,6 +12717,7 @@ MonoBehaviour:
   _hitFlashDuration: 0.45
   _lowHpRatio: 0.3
   _warningAlpha: 0.18
+  _heartbeatInterval: 1
 --- !u!114 &1354815790
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12797,6 +12800,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _typeSpeed: 30
   _fadeTime: 0.6
+--- !u!114 &1354815795
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1354815783}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b914e339e5f57f4eb037c4f9a866bbc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _inventory: {fileID: 840651487}
+  _raid: {fileID: 0}
+  _questId: Q01
+  _recommendedZoneId: Cargo
+  _questGiverName: "\uC81C\uC791\uC18C\uC758 \uC624\uD1A0"
+  _fontSize: 24
 --- !u!1 &1433245704
 GameObject:
   m_ObjectHideFlags: 0

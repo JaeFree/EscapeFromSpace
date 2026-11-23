@@ -35,6 +35,9 @@ namespace EscapeFromSpace
         // 플레이어가 서 있는 열린 포드. 여기서만 탈출 키가 듣는다. 없으면 null.
         public EscapePod ReachablePod { get; private set; }
 
+        // 플레이어가 가까이 있는 고장 난 비콘. 화면이 그 위에 '고장'을 띄운다. 없으면 null.
+        public EscapePod NearBrokenPod { get; private set; }
+
         // 탈출 키를 누르고 있는 진행도 0~1
         public float EscapeProgress => _config.EscapeHoldTime > 0f ? Mathf.Clamp01(_holdTime / _config.EscapeHoldTime) : 0f;
 
@@ -62,6 +65,40 @@ namespace EscapeFromSpace
             // 2026-11-18 사용자 결정: 포드는 모두 작동한다. 레버가 필요한 포드는 레버를 당긴 뒤에 열린다.
             _playerHealth.Died += OnPlayerDied;
             _playerHealth.Damaged += OnPlayerDamaged;
+            BreakPods();
+        }
+
+        // 판마다 비콘 몇 곳을 고장 낸다 (기획서 20.4). 탈출 경로를 그때그때 판단하게 하려는 것이다.
+        // 레버가 필요 없는 비콘이 모두 고장 나면 시작 장비로는 나갈 길이 막히므로 하나는 남긴다.
+        private void BreakPods()
+        {
+            if (_config == null || _pods == null)
+            {
+                return;
+            }
+
+            var candidates = new System.Collections.Generic.List<EscapePod>(_pods);
+            int broken = 0;
+            while (broken < _config.BrokenPodCount && candidates.Count > 1)
+            {
+                EscapePod pod = candidates[Random.Range(0, candidates.Count)];
+                candidates.Remove(pod);
+
+                bool leverFreeLeft = false;
+                foreach (EscapePod other in candidates)
+                {
+                    leverFreeLeft |= !other.RequiresLever;
+                }
+
+                if (!pod.RequiresLever && !leverFreeLeft)
+                {
+                    continue;
+                }
+
+                pod.IsBroken = true;
+                broken++;
+                Debug.Log($"[RaidManager] 고장 난 비콘: {pod.name}");
+            }
         }
 
         private void OnDestroy()
@@ -83,7 +120,7 @@ namespace EscapeFromSpace
             bool opened = false;
             foreach (EscapePod pod in _pods)
             {
-                bool open = timeOpen && pod.IsUnlocked;
+                bool open = timeOpen && pod.IsUnlocked && !pod.IsBroken;
                 if (open != pod.IsOpen)
                 {
                     pod.SetOpen(open);
@@ -105,8 +142,14 @@ namespace EscapeFromSpace
         private void UpdateEscape()
         {
             ReachablePod = null;
+            NearBrokenPod = null;
             foreach (EscapePod pod in _pods)
             {
+                if (pod.IsBroken && Vector2.Distance(pod.transform.position, _playerHealth.transform.position) <= _config.BrokenPodHintDistance)
+                {
+                    NearBrokenPod = pod;
+                }
+
                 if (pod.IsOpen && pod.Contains(_playerHealth.transform.position))
                 {
                     ReachablePod = pod;

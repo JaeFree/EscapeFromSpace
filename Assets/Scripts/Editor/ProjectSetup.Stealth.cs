@@ -92,6 +92,11 @@ namespace EscapeFromSpace.EditorTools
             SetFloatIfZero(config, "_coverDistance", 1f);
             SetFloatIfZero(config, "_coverSpreadMultiplier", 3f);
             SetFloatIfZero(config, "_backstabMultiplier", 3f);
+
+            // 기획서 20장 (2026-11-23)
+            SetFloatIfZero(config, "_movingTargetSpreadMultiplier", 2f);
+            SetFloatIfZero(config, "_movingTargetSpeed", 0.5f);
+            SetFloatIfZero(config, "_killHitStop", 0.06f);
             EditorUtility.SetDirty(config);
         }
     }

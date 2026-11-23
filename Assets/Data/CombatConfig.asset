@@ -34,3 +34,6 @@ MonoBehaviour:
   _coverDistance: 1
   _coverSpreadMultiplier: 3
   _backstabMultiplier: 3
+  _movingTargetSpreadMultiplier: 2
+  _movingTargetSpeed: 0.5
+  _killHitStop: 0.06

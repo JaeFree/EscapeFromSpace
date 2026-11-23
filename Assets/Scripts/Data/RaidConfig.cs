@@ -38,6 +38,29 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("보안 경계인 배의 로봇이 듣는 반경 배율")] private float _alertHearingMultiplier = 1.5f;
         [SerializeField, Tooltip("에일리언 습격 때 일반 로봇 대신 놓는 에일리언 (차례로 번갈아)")] private RobotData[] _invaders;
 
+        [Header("귀환 비콘 고장 (기획서 20.4)")]
+        [SerializeField, Tooltip("판마다 고장 나는 비콘 수. 레버가 필요 없는 비콘이 적어도 하나는 남는다")] private int _brokenPodCount = 1;
+        [SerializeField, Tooltip("칸. 고장 난 비콘에 이만큼 다가가면 '고장'을 띄운다")] private float _brokenPodHintDistance = 3f;
+
+        [Header("센티널 수색 (기획서 20.1)")]
+        [SerializeField, Tooltip("초. 레이드를 시작하고 이 시간이 지나면 수색이 시작된다")] private float _sentinelStartSeconds = 240f;
+        [SerializeField, Tooltip("초. 증원이 내려오는 간격")] private float _sentinelInterval = 60f;
+        [SerializeField, Tooltip("한 번에 내려오는 로봇 수")] private int _sentinelRobotsPerWave = 2;
+        [SerializeField, Tooltip("한 판에 내려오는 로봇의 최대 수")] private int _sentinelMaxRobots = 6;
+        [SerializeField, Tooltip("칸. 플레이어에게서 이 거리 이상 떨어진 곳에 내려온다")] private float _sentinelMinDistance = 12f;
+        [SerializeField, Tooltip("칸. 플레이어에게서 이 거리 안에 내려온다")] private float _sentinelMaxDistance = 22f;
+        [SerializeField, Tooltip("내려오는 로봇 종류 (무작위)")] private RobotData[] _sentinelRobots;
+
+        public int BrokenPodCount => _brokenPodCount;
+        public float BrokenPodHintDistance => _brokenPodHintDistance;
+        public float SentinelStartSeconds => _sentinelStartSeconds;
+        public float SentinelInterval => _sentinelInterval;
+        public int SentinelRobotsPerWave => _sentinelRobotsPerWave;
+        public int SentinelMaxRobots => _sentinelMaxRobots;
+        public float SentinelMinDistance => _sentinelMinDistance;
+        public float SentinelMaxDistance => _sentinelMaxDistance;
+        public RobotData[] SentinelRobots => _sentinelRobots;
+
         [Header("데이터 칩과 설계도 (기획서 19.6)")]
         [SerializeField] private ItemData _dataChip;
         [SerializeField, Tooltip("데이터 칩으로 여는 설계도. 만들어지는 아이템의 에셋 이름이 설계도 Id다")] private ItemData[] _blueprints;

@@ -153839,6 +153839,60 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &662605436
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 662605438}
+  - component: {fileID: 662605437}
+  m_Layer: 0
+  m_Name: Sentinel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &662605437
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 662605436}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4edc14603c1a81048a5167147943707a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _config: {fileID: 11400000, guid: 35be1393733f0404aada9e05b1ea6b0f, type: 2}
+  _raid: {fileID: 1989797258}
+  _player: {fileID: 772505395}
+  _grid: {fileID: 530211472}
+  _robotPrefab: {fileID: 435776616749761742, guid: 55d14b3e013df5f4e929fc8f34382ead, type: 3}
+  _canvas: {fileID: 760178478}
+  _wallMask:
+    serializedVersion: 2
+    m_Bits: 128
+  _bannerTime: 3.5
+--- !u!4 &662605438
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 662605436}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &662694429
 GameObject:
   m_ObjectHideFlags: 0
@@ -155152,6 +155206,7 @@ GameObject:
   - component: {fileID: 760178483}
   - component: {fileID: 760178484}
   - component: {fileID: 760178485}
+  - component: {fileID: 760178486}
   m_Layer: 0
   m_Name: UI
   m_TagString: Untagged
@@ -155175,6 +155230,7 @@ MonoBehaviour:
   _interactor: {fileID: 772505398}
   _input: {fileID: 772505397}
   _controller: {fileID: 772505396}
+  _grades: {fileID: 11400000, guid: 05017f6dd2200974c822b119a88a5d85, type: 2}
   _lootPanelOffset: 0.9
   _canDropToWorld: 1
   _cellSize: 108
@@ -155289,6 +155345,7 @@ MonoBehaviour:
   _hitFlashDuration: 0.45
   _lowHpRatio: 0.3
   _warningAlpha: 0.18
+  _heartbeatInterval: 1
 --- !u!114 &760178482
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -155349,6 +155406,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ba6e46e8c96c76f4599fb804efd3697a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &760178486
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 760178475}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b914e339e5f57f4eb037c4f9a866bbc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _inventory: {fileID: 772505399}
+  _raid: {fileID: 1989797258}
+  _questId: Q01
+  _recommendedZoneId: Cargo
+  _questGiverName: "\uC81C\uC791\uC18C\uC758 \uC624\uD1A0"
+  _fontSize: 24
 --- !u!1 &764053209
 GameObject:
   m_ObjectHideFlags: 0
@@ -237411,3 +237486,4 @@ SceneRoots:
   - {fileID: 1955844075}
   - {fileID: 266120690}
   - {fileID: 1602570215}
+  - {fileID: 662605438}

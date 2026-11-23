@@ -38,6 +38,11 @@ namespace EscapeFromSpace
         MapClose,
         PortalLaunch,
         LevelUp,
+
+        // 기획서 20장 (2026-11-23)
+        Heartbeat,
+        KillConfirm,
+        SentinelAlarm,
     }
 
     // 역할별 효과음 목록 (2026-11-17 사용자 결정: 역할에 맞는 사운드를 넣는다).
@@ -91,6 +96,11 @@ namespace EscapeFromSpace
         [SerializeField] private SoundCue _portalLaunch = new SoundCue();
         [SerializeField] private SoundCue _levelUp = new SoundCue();
 
+        [Header("긴장과 손맛 (기획서 20장)")]
+        [SerializeField, Tooltip("HP가 낮을 때 되풀이되는 심장 소리")] private SoundCue _heartbeat = new SoundCue();
+        [SerializeField, Tooltip("플레이어가 로봇을 부순 순간의 확인음 (폭발음과 따로)")] private SoundCue _killConfirm = new SoundCue();
+        [SerializeField, Tooltip("센티널 수색이 시작되거나 증원이 내려올 때")] private SoundCue _sentinelAlarm = new SoundCue();
+
         public float MasterVolume => _masterVolume;
         public float FullVolumeDistance => _fullVolumeDistance;
         public float HearingDistance => _hearingDistance;
@@ -132,6 +142,9 @@ namespace EscapeFromSpace
                 case SfxId.MapClose: return _mapClose;
                 case SfxId.PortalLaunch: return _portalLaunch;
                 case SfxId.LevelUp: return _levelUp;
+                case SfxId.Heartbeat: return _heartbeat;
+                case SfxId.KillConfirm: return _killConfirm;
+                case SfxId.SentinelAlarm: return _sentinelAlarm;
                 default: return null;
             }
         }

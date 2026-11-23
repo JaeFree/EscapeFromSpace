@@ -147,6 +147,7 @@ namespace EscapeFromSpace.EditorTools
             ApplyWreckFieldTexts();
             EnsureDogAssets();
             EnsureBlueprints();
+            EnsureTensionAssets();
             AssetDatabase.SaveAssets();
 
             // 레이드 씬을 마지막에 열어 둔다. 메뉴를 돌린 뒤 에디터에 남는 씬이다.
@@ -1431,6 +1432,7 @@ namespace EscapeFromSpace.EditorTools
             EnsureDogWreck();
             EnsureRaidLayout();
             EnsureRaidEvents(player);
+            EnsureTensionStation(player, raid, wallLayer);
 
             // 탈출 포드는 착륙장 모양. 열림·닫힘 색은 EscapePod가 그 위에 칠한다.
             var placeholder = AssetDatabase.LoadAssetAtPath<Sprite>(SquarePath);
@@ -1608,6 +1610,7 @@ namespace EscapeFromSpace.EditorTools
             SetReferenceIfEmpty(hud, "_controller", player.GetComponent<PlayerController>());
             SetReferenceIfEmpty(hud, "_circleSprite", AssetDatabase.LoadAssetAtPath<Sprite>(CirclePath));
             SetReferenceIfEmpty(lobbyUi, "_shootingRange", range.transform);
+            EnsureTensionUi(canvasObject, player, null);
 
             // 포탈은 둥근 막 모양. 그림이 원이라 구역(3×2칸)을 덮도록 크기를 맞춘다. 색은 그대로 보라색을 칠한다.
             var portalRenderer = portal.GetComponent<SpriteRenderer>();

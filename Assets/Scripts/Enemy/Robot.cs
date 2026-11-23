@@ -773,6 +773,18 @@ namespace EscapeFromSpace
             }
         }
 
+        // 센티널 증원 (기획서 20.1): 내려오자마자 플레이어가 있던 곳으로 간다.
+        public void Hunt(Vector2 position)
+        {
+            if (!IsPlayerAlive)
+            {
+                return;
+            }
+
+            _awareness = 1f;
+            BeginChase(position);
+        }
+
         // 총소리를 듣거나 맞으면 그 위치로 추격한다. 이미 플레이어를 보고 싸우는 중이면 그대로 싸운다.
         private void Investigate(Vector2 position)
         {

@@ -34,6 +34,6 @@ MonoBehaviour:
   _fireSound:
     _clips:
     - {fileID: 8300000, guid: da63de47db7b12549af9f9627a8553d9, type: 3}
-    _volume: 0.75
+    _volume: 0.95
     _pitch: 1.15
     _pitchVariation: 0.05

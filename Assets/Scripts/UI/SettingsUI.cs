@@ -270,7 +270,8 @@ namespace EscapeFromSpace
 
             _isOpen = true;
             IsOpen = true;
-            _timeScaleBefore = Time.timeScale;
+            // 처치 순간의 짧은 멈춤 중에 열면 그 값이 아니라 보통 속도로 돌아가야 한다.
+            _timeScaleBefore = HitStop.IsActive ? 1f : Time.timeScale;
             Time.timeScale = 0f;
 
             // 멈춘 동안 Tab, M, E 같은 게임 입력이 들어가지 않게 플레이어 입력을 끈다.

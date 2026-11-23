@@ -32,6 +32,7 @@ namespace EscapeFromSpace
         private static Sprite _panelSprite;
         private static Sprite _borderSprite;
         private static Sprite _cellSprite;
+        private static Sprite _gradeFrameSprite;
         private static Sprite _shadowSprite;
         private static Sprite _ringSprite;
         private static Sprite _vignetteSprite;
@@ -73,6 +74,9 @@ namespace EscapeFromSpace
 
         // 칸 하나. 테두리가 안쪽보다 조금 밝아서 한 가지 색만 칠해도 칸의 경계가 보인다.
         public static Sprite CellSprite => Cached(ref _cellSprite, () => DrawFrame(4, 2, 0.62f));
+
+        // 아이템 칸 위에 겹쳐 그리는 등급 테두리 (기획서 20.2). 칸과 같은 모서리에 선만 있다.
+        public static Sprite GradeFrameSprite => Cached(ref _gradeFrameSprite, () => DrawFrame(4, 4, 1f));
 
         // 창 뒤에 깔아 맵과 떼어 놓는 부드러운 그림자
         public static Sprite ShadowSprite => Cached(ref _shadowSprite, DrawShadow);
@@ -130,6 +134,13 @@ namespace EscapeFromSpace
         public static Image Cell(RectTransform rect, Color color)
         {
             return Sliced(rect, color, CellSprite);
+        }
+
+        // 칸에 등급 색 테두리를 덧그린다.
+        public static Image GradeFrame(RectTransform rect, Color color)
+        {
+            RectTransform frame = Stretch("Grade", rect);
+            return Sliced(frame, color, GradeFrameSprite);
         }
 
         public static RectTransform Button(string label, RectTransform parent, Vector2 anchor, Vector2 position, Vector2 size, bool primary)

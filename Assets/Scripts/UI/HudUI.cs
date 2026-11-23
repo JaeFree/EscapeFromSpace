@@ -41,6 +41,7 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("초. 맞은 뒤 사라지는 시간")] private float _hitFlashDuration = 0.45f;
         [SerializeField, Range(0f, 1f), Tooltip("HP가 이 비율 아래면 가장자리가 붉게 남는다")] private float _lowHpRatio = 0.3f;
         [SerializeField, Range(0f, 1f), Tooltip("HP나 산소가 모자랄 때의 진하기")] private float _warningAlpha = 0.18f;
+        [SerializeField, Tooltip("초. HP가 낮을 때 심장 소리 간격 (기획서 20.6)")] private float _heartbeatInterval = 1f;
 
         private class Gauge
         {
@@ -69,11 +70,17 @@ namespace EscapeFromSpace
         private Image _itemBar;
         private Text _itemBarLabel;
         private RectTransform _podHint;
+        private RectTransform _brokenHint;
         private Image _escapeBar;
         private RectTransform _actionRoot;
         private InventoryUI _inventoryUi;
         private Image _vignette;
         private float _hitFlash;
+        private float _heartbeatTime;
+        private float _beat;
+
+        // 레이드에서 들고 있는 가치 (기획서 20.2). 죽으면 잃는 값이다.
+        private Text _valueText;
 
         // 게이지 위의 레벨과 경험치 바 (기획서 12장)
         private Text _levelText;
@@ -91,11 +98,23 @@ namespace EscapeFromSpace
         private void OnEnable()
         {
             _health.Damaged += OnDamaged;
+            Robot.AnyDestroyed += OnRobotDestroyed;
         }
 
         private void OnDisable()
         {
             _health.Damaged -= OnDamaged;
+            Robot.AnyDestroyed -= OnRobotDestroyed;
+        }
+
+        // 로봇은 플레이어에게만 부서진다. 처치 확인음과 짧은 멈춤으로 손맛을 준다 (기획서 20.6).
+        private void OnRobotDestroyed(RobotData data)
+        {
+            Sfx.Play(SfxId.KillConfirm);
+            if (_health.Config != null)
+            {
+                HitStop.Play(_health.Config.KillHitStop);
+            }
         }
 
         private void OnDamaged(float damage, Vector2 hitPoint)
@@ -113,13 +132,33 @@ namespace EscapeFromSpace
 
             float throb = 0.75f + 0.25f * Mathf.Sin(Time.unscaledTime * 4f);
             bool lowHp = !_health.IsDead && _health.MaxHp > 0f && _health.CurrentHp / _health.MaxHp < _lowHpRatio;
-            float hurt = Mathf.Max(_hitFlash * _hitFlashAlpha, lowHp ? _warningAlpha * throb : 0f);
+            UpdateHeartbeat(lowHp);
+            float hurt = Mathf.Max(_hitFlash * _hitFlashAlpha, lowHp ? _warningAlpha * (throb + _beat) : 0f);
             float choke = _oxygen.IsDraining && _oxygen.IsLow ? _warningAlpha * throb : 0f;
 
             Color color = hurt >= choke ? HurtColor : ChokeColor;
             color.a = Mathf.Max(hurt, choke);
             _vignette.color = color;
             _vignette.enabled = color.a > 0.005f;
+        }
+
+        // HP가 낮으면 심장 소리에 맞춰 가장자리가 한 번씩 진해진다 (기획서 20.6). 위험을 소리로도 알린다.
+        private void UpdateHeartbeat(bool lowHp)
+        {
+            _beat = Mathf.Max(0f, _beat - Time.deltaTime * 3f);
+            if (!lowHp || Time.timeScale <= 0f)
+            {
+                _heartbeatTime = 0f;
+                return;
+            }
+
+            _heartbeatTime -= Time.deltaTime;
+            if (_heartbeatTime <= 0f)
+            {
+                _heartbeatTime = Mathf.Max(0.3f, _heartbeatInterval);
+                _beat = 1f;
+                Sfx.Play(SfxId.Heartbeat);
+            }
         }
 
         private void Update()
@@ -163,6 +202,11 @@ namespace EscapeFromSpace
             _weightGauge.Fill.fillAmount = ratio;
             _weightGauge.Value.text = $"{weight:0.0}\n/ {_controller.MaxWeight:0}kg";
             _weightGauge.Fill.color = ratio > _playerData.OverloadRatio ? WarningColor : WeightColor;
+
+            if (_valueText != null)
+            {
+                _valueText.text = $"들고 있는 가치  {_inventory.TotalValue(false):N0}";
+            }
         }
 
         private void UpdateLevel()
@@ -275,6 +319,13 @@ namespace EscapeFromSpace
         // 열린 포드 안에 서 있으면 포드 위에 탈출 키와 누르고 있는 진행도를 보여 준다.
         private void UpdatePodHint()
         {
+            EscapePod broken = _raid != null ? _raid.NearBrokenPod : null;
+            _brokenHint.gameObject.SetActive(broken != null);
+            if (broken != null)
+            {
+                UiBuilder.MoveToScreenPoint(_canvas, _brokenHint, _camera.WorldToScreenPoint(broken.transform.position + Vector3.up * 1.6f));
+            }
+
             EscapePod pod = _raid != null ? _raid.ReachablePod : null;
             _podHint.gameObject.SetActive(pod != null);
             if (pod == null)
@@ -307,6 +358,7 @@ namespace EscapeFromSpace
             _oxygenGauge = CreateGauge("산소", 1, OxygenColor);
             _weightGauge = CreateGauge("무게", 2, WeightColor);
 
+
             // 게이지 이름 위: 레벨, 경험치 바, 남은 강화 포인트
             float levelY = _gaugeSize + _fontSize + 26f;
             RectTransform level = UiBuilder.Rect("Level", _gaugeRoot, Vector2.zero, Vector2.zero, new Vector2(0f, levelY), new Vector2(86f, 30f));
@@ -321,6 +373,17 @@ namespace EscapeFromSpace
                 new Vector2(180f, 30f));
             _pointText = UiBuilder.Text(string.Empty, points, _fontSize, TextAnchor.MiddleLeft, UiTheme.Accent);
             UiBuilder.Outline(_pointText);
+
+            // 레벨 줄 위: 죽으면 잃는 가치 (기획서 20.2). 대기실에는 잃을 것이 없어서 레이드에서만 보인다.
+            // 게이지 오른쪽에 두면 화면 아래 가운데의 무기칸과 겹친다.
+            if (_raid != null)
+            {
+                RectTransform value = UiBuilder.Rect("CarriedValue", _gaugeRoot, Vector2.zero, Vector2.zero, new Vector2(0f, levelY + 34f),
+                    new Vector2(360f, 30f));
+                _valueText = UiBuilder.Text(string.Empty, value, _fontSize + 2, TextAnchor.MiddleLeft, UiTheme.Accent);
+                _valueText.fontStyle = FontStyle.Bold;
+                UiBuilder.Outline(_valueText);
+            }
 
             // 가운데 아래: 무기칸 1개와 도구칸 (2026-11-19부터 5개, 기획서 19.3)
             float gap = 10f;
@@ -379,6 +442,13 @@ namespace EscapeFromSpace
             _escapeBar = UiBuilder.Bar("EscapeProgress", _podHint, new Vector2(0.5f, 0f), new Vector2(0.5f, 1f), new Vector2(0f, -6f),
                 new Vector2(160f, 20f), EscapeBarColor);
             _podHint.gameObject.SetActive(false);
+
+            // 고장 난 비콘 위 (기획서 20.4)
+            _brokenHint = UiBuilder.Rect("BrokenPodHint", transform, Vector2.zero, new Vector2(0.5f, 0f), Vector2.zero, new Vector2(300f, 52f));
+            UiBuilder.Panel(_brokenHint, UiTheme.PanelFill, WarningColor);
+            Text brokenText = UiBuilder.Text("고장 — 다른 비콘으로", _brokenHint, _fontSize + 2, TextAnchor.MiddleCenter, UiTheme.Text);
+            brokenText.fontStyle = FontStyle.Bold;
+            _brokenHint.gameObject.SetActive(false);
         }
 
         // 바 위에 겹쳐 쓰는 글자. 채워진 색 위에서도 읽히게 테두리를 준다.

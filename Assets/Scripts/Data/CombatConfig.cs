@@ -38,6 +38,17 @@ namespace EscapeFromSpace
         [SerializeField, Tooltip("엄폐 중인 플레이어를 쏘는 로봇의 퍼짐 배율")] private float _coverSpreadMultiplier = 3f;
         [SerializeField, Tooltip("알아채지 못한 적을 광선검으로 벨 때의 피해 배율")] private float _backstabMultiplier = 3f;
 
+        [Header("움직이는 대상 (기획서 20.3)")]
+        [SerializeField, Tooltip("움직이는 플레이어를 쏘는 로봇 총(권총·AR·저격)의 퍼짐 배율")] private float _movingTargetSpreadMultiplier = 2f;
+        [SerializeField, Tooltip("칸/초. 플레이어가 이보다 빠르면 움직이는 것으로 본다")] private float _movingTargetSpeed = 0.5f;
+
+        [Header("손맛 (기획서 20.6)")]
+        [SerializeField, Tooltip("초. 플레이어가 로봇을 부순 순간 멈추는 시간 (실제 시간)")] private float _killHitStop = 0.06f;
+
+        public float MovingTargetSpreadMultiplier => _movingTargetSpreadMultiplier;
+        public float MovingTargetSpeed => _movingTargetSpeed;
+        public float KillHitStop => _killHitStop;
+
         public float DetectNearTime => _detectNearTime;
         public float DetectFarTime => _detectFarTime;
         public float DetectNearDistance => _detectNearDistance;

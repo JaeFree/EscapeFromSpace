@@ -69,6 +69,39 @@ namespace EscapeFromSpace
             return true;
         }
 
+        // 놓을 자리에 걸치는 아이템이 딱 하나면 그것을 돌려준다. 없거나 둘 이상이거나 칸 밖이면 null.
+        // 맞바꾸기는 한 개와만 한다. 여러 개를 밀어내면 어디로 갔는지 알기 어렵다.
+        public ItemStack SingleOverlap(ItemStack stack, int x, int y)
+        {
+            if (x < 0 || y < 0 || x + stack.Width > Width || y + stack.Height > Height)
+            {
+                return null;
+            }
+
+            ItemStack found = null;
+            foreach (ItemStack item in _items)
+            {
+                if (item == stack)
+                {
+                    continue;
+                }
+
+                (int ix, int iy) = _positions[item];
+                bool apart = x + stack.Width <= ix || ix + item.Width <= x || y + stack.Height <= iy || iy + item.Height <= y;
+                if (!apart)
+                {
+                    if (found != null)
+                    {
+                        return null;
+                    }
+
+                    found = item;
+                }
+            }
+
+            return found;
+        }
+
         public void Place(ItemStack stack, int x, int y)
         {
             if (!_positions.ContainsKey(stack))

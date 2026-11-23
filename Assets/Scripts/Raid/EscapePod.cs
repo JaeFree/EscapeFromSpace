@@ -18,6 +18,9 @@ namespace EscapeFromSpace
         public bool IsUnlocked => !_requiresLever || _leverPulled;
         public bool RequiresLever => _requiresLever;
 
+        // 이번 판에 고장 난 비콘 (기획서 20.4). 레버를 당겨도 열리지 않는다.
+        public bool IsBroken { get; set; }
+
         private bool _leverPulled;
 
         public void Unlock()

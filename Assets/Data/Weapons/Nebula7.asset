@@ -35,6 +35,6 @@ MonoBehaviour:
     _clips:
     - {fileID: 8300000, guid: 57fbd95ace061c847bd0295d60fe7d1c, type: 3}
     - {fileID: 8300000, guid: e5b251c668903754c93c2ff3bad75c3e, type: 3}
-    _volume: 0.8
+    _volume: 1
     _pitch: 0.85
     _pitchVariation: 0.04

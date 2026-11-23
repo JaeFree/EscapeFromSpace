@@ -154,7 +154,11 @@ namespace EscapeFromSpace
             for (int i = 0; i < _zones.Count; i++)
             {
                 bool current = _zones[i] == _currentZone;
-                _zoneLabels[i].enabled = _zoneKnown[i] || current;
+
+                // 첫 출격 안내 중에는 추천 구역을 가 보지 않았어도 이름과 "추천"을 보여 준다 (기획서 20.5).
+                bool recommended = GuideUI.RecommendedZoneId != null && _zones[i].Id == GuideUI.RecommendedZoneId;
+                _zoneLabels[i].text = recommended ? _zones[i].DisplayName + "  (추천)" : _zones[i].DisplayName;
+                _zoneLabels[i].enabled = _zoneKnown[i] || current || recommended;
                 _zoneLabels[i].color = current ? UiTheme.Accent : UiTheme.Text;
                 _zoneLabels[i].fontSize = current ? 26 : 21;
             }

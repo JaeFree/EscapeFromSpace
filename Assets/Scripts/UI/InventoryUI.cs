@@ -24,6 +24,7 @@ namespace EscapeFromSpace
         [SerializeField] private PlayerInteractor _interactor;
         [SerializeField] private PlayerInputReader _input;
         [SerializeField] private PlayerController _controller;
+        [SerializeField, Tooltip("아이템 칸 테두리의 등급 색 (기획서 20.2). 비우면 테두리 없음")] private ItemGradeTable _grades;
         [SerializeField, Tooltip("칸. 루팅 칸을 대상보다 이만큼 위에 띄운다")] private float _lootPanelOffset = 0.9f;
         [SerializeField, Tooltip("가방 화면 밖에 놓으면 바닥에 버린다. 대기실에서는 끈다")] private bool _canDropToWorld = true;
 
@@ -653,7 +654,7 @@ namespace EscapeFromSpace
                         return existing.Count < existing.Data.MaxStack;
                     }
 
-                    return target.View.Grid.CanPlace(_held, target.X, target.Y);
+                    return target.View.Grid.CanPlace(_held, target.X, target.Y) || FindSwap(target) != null;
 
                 case TargetKind.Equip:
                     if (!PlayerInventory.Accepts(target.Slot, _held))
@@ -702,7 +703,7 @@ namespace EscapeFromSpace
 
                 case TargetKind.Grid:
                     ItemStack existing = target.View.Grid.GetAt(target.X, target.Y);
-                    if (existing != null)
+                    if (existing != null && existing.Data == held.Data && held.IsStackable)
                     {
                         // 같은 탄약 위에 놓으면 최대치까지 합치고, 남는 것은 원래 자리로 돌아간다.
                         int moved = Mathf.Min(existing.Data.MaxStack - existing.Count, held.Count);
@@ -714,9 +715,24 @@ namespace EscapeFromSpace
                             return;
                         }
                     }
-                    else
+                    else if (target.View.Grid.CanPlace(held, target.X, target.Y))
                     {
                         target.View.Grid.Place(held, target.X, target.Y);
+                    }
+                    else
+                    {
+                        // 다른 아이템 위에 놓았다: 자리를 맞바꾼다 (2026-11-23 사용자 요청).
+                        ItemStack other = FindSwap(target);
+                        target.View.Grid.Remove(other);
+                        target.View.Grid.Place(held, target.X, target.Y);
+                        if (_originIsEquip)
+                        {
+                            _inventory.SetEquipped(_originSlot, other);
+                        }
+                        else
+                        {
+                            _originView.Grid.Place(other, _originX, _originY);
+                        }
                     }
 
                     break;
@@ -742,6 +758,47 @@ namespace EscapeFromSpace
             }
 
             EndDrag();
+        }
+
+        // 놓을 자리의 아이템 하나와 맞바꿀 수 있으면 그 아이템을 돌려준다.
+        // 밀려난 아이템은 끌어온 자리(칸이나 장비 칸)로 간다. 돌리지 않으므로 그 자리에 그대로 들어가야 한다.
+        private ItemStack FindSwap(DropTarget target)
+        {
+            // 나눠 든 묶음은 원래 자리에 나머지가 남아 있어서 밀려난 아이템이 갈 곳이 없다.
+            if (_mergeBack != null)
+            {
+                return null;
+            }
+
+            ItemStack other = target.View.Grid.SingleOverlap(_held, target.X, target.Y);
+            if (other == null)
+            {
+                return null;
+            }
+
+            if (_originIsEquip)
+            {
+                // 방탄복은 가방 추가 줄이 함께 바뀌어서 맞바꾸지 않는다.
+                return _originSlot != EquipSlot.Vest && PlayerInventory.Accepts(_originSlot, other) ? other : null;
+            }
+
+            if (_originView.Grid == null || !_originView.Grid.CanPlace(other, _originX, _originY))
+            {
+                return null;
+            }
+
+            // 같은 칸 안에서 바꿀 때는 새로 놓을 아이템과 밀려난 아이템이 겹치면 안 된다.
+            if (_originView.Grid == target.View.Grid)
+            {
+                bool apart = _originX + other.Width <= target.X || target.X + _held.Width <= _originX
+                    || _originY + other.Height <= target.Y || target.Y + _held.Height <= _originY;
+                if (!apart)
+                {
+                    return null;
+                }
+            }
+
+            return other;
         }
 
         private void ReturnToOrigin()
@@ -1162,6 +1219,12 @@ namespace EscapeFromSpace
             // 그림은 이름과 수량 아래에 깔린다.
             Image icon = UiBuilder.Icon(view, Mathf.Min(size.x, size.y) * 0.62f);
             UiBuilder.SetIcon(icon, stack.Data.Icon, Color.white);
+
+            ItemGradeTable.Grade grade = _grades != null ? _grades.Of(stack.Data) : null;
+            if (grade != null)
+            {
+                UiBuilder.GradeFrame(view, grade.Color);
+            }
 
             Text name = CreateText(stack.Data.DisplayName, view, new Vector2(5f, -3f), new Vector2(size.x - 10f, size.y - CountHeight), _itemFontSize,
                 TextAnchor.UpperLeft);
