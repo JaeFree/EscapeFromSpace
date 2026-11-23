@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b86865ba89fb5842a70252dee7b9f21, type: 3}
+  m_Name: BossPX
+  m_EditorClassIdentifier: 
+  _normal:
+    _displayName: "\uBC29\uC804"
+    _kind: 8
+    _cooldown: 6
+    _useDistance: 4.5
+    _windup: 1
+    _damage: 30
+    _radius: 4
+    _secondaryDamage: 0
+    _length: 0
+    _count: 1
+    _angle: 0
+    _speed: 0
+    _interval: 0
+    _duration: 0
+    _repeat: 1
+    _maxUses: 0
+  _special:
+    _displayName: "\uC804\uAE30 \uC0AC\uC2AC"
+    _kind: 9
+    _cooldown: 15
+    _useDistance: 7
+    _windup: 0.8
+    _damage: 30
+    _radius: 0.3
+    _secondaryDamage: 0
+    _length: 7
+    _count: 4
+    _angle: 0
+    _speed: 45
+    _interval: 0
+    _duration: 3
+    _repeat: 1
+    _maxUses: 0
+  _minGap: 2.5
+  _firstNormalDelay: 2
+  _firstSpecialDelay: 7
+  _hasLastStand: 1
+  _lastStandHpRatio: 0.3
+  _lastStandSources:
+  - {fileID: 11400000, guid: 0af22cd25cfc24b4c84e4bf2ed97c209, type: 2}
+  - {fileID: 11400000, guid: 611d634e3934470499494f2ed9bf24dc, type: 2}
+  - {fileID: 11400000, guid: b2fc13a6b0335a6478c72370acd4d2b5, type: 2}
+  - {fileID: 11400000, guid: f298b6f9db1ed4b4da034d5c9d3a7373, type: 2}
+  _borrowedCooldown: 20
+  _summonPrefab: {fileID: 0}
+  _summonData: {fileID: 0}

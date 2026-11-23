@@ -148,6 +148,7 @@ namespace EscapeFromSpace.EditorTools
             EnsureDogAssets();
             EnsureBlueprints();
             EnsureTensionAssets();
+            EnsureBossAssets();
             AssetDatabase.SaveAssets();
 
             // 레이드 씬을 마지막에 열어 둔다. 메뉴를 돌린 뒤 에디터에 남는 씬이다.

@@ -24,6 +24,9 @@ namespace EscapeFromSpace
         [SerializeField, Range(0f, 1f)] private float _fanStartAlpha = 0.08f;
         [SerializeField, Range(0f, 1f)] private float _fanEndAlpha = 0.45f;
 
+        // 네임드 패턴의 예고 선이 같은 재질을 쓴다 (빌드에서 셰이더를 찾지 않아도 되게).
+        public Material LineMaterial => _line.sharedMaterial;
+
         private Mesh _fanMesh;
         private Color[] _fanColors;
         private float _fanAngle;

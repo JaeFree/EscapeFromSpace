@@ -22,6 +22,11 @@ namespace EscapeFromSpace
         public float Speed { get; set; }
         public bool IsMoving => _pathIndex < _path.Count;
 
+        // 네임드 돌진처럼 다른 스크립트가 잠깐 속도를 직접 쓸 때 켠다. 두 곳이 속도를 쓰면 한 틱이 덮이기 때문이다.
+        public bool Suspended { get; set; }
+
+        public WallGrid Grid => _grid;
+
         private void Awake()
         {
             _rigidbody = GetComponent<Rigidbody2D>();
@@ -60,6 +65,11 @@ namespace EscapeFromSpace
 
         private void FixedUpdate()
         {
+            if (Suspended)
+            {
+                return;
+            }
+
             Vector2 velocity = Vector2.zero;
 
             if (IsMoving && Speed > 0f)

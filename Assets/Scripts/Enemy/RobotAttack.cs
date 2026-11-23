@@ -35,6 +35,9 @@ namespace EscapeFromSpace
         private int _shotsLeft;
         private Vector2 _aimDirection = Vector2.right;
 
+        public LayerMask ShotMask => _shotMask;
+        public Material LineMaterial => _telegraph.LineMaterial;
+
         // 충전하거나 조준선을 보여 주는 중. 이때는 Robot이 걸음을 멈춘다.
         public bool IsWindingUp => _phase == Phase.Windup;
 

@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b86865ba89fb5842a70252dee7b9f21, type: 3}
+  m_Name: BossN3
+  m_EditorClassIdentifier: 
+  _normal:
+    _displayName: "\uBD80\uCC44\uAF34 \uC0AC\uACA9"
+    _kind: 2
+    _cooldown: 6
+    _useDistance: 12
+    _windup: 0.5
+    _damage: 12
+    _radius: 0
+    _secondaryDamage: 0
+    _length: 12
+    _count: 5
+    _angle: 50
+    _speed: 10
+    _interval: 0
+    _duration: 0
+    _repeat: 1
+    _maxUses: 0
+  _special:
+    _displayName: "\uBE44\uC0C1 \uACBD\uBCF4"
+    _kind: 3
+    _cooldown: 15
+    _useDistance: 14
+    _windup: 1
+    _damage: 0
+    _radius: 0
+    _secondaryDamage: 0
+    _length: 0
+    _count: 2
+    _angle: 0
+    _speed: 0
+    _interval: 0
+    _duration: 0
+    _repeat: 1
+    _maxUses: 2
+  _minGap: 2.5
+  _firstNormalDelay: 2
+  _firstSpecialDelay: 7
+  _hasLastStand: 0
+  _lastStandHpRatio: 0.3
+  _lastStandSources: []
+  _borrowedCooldown: 20
+  _summonPrefab: {fileID: 435776616749761742, guid: 55d14b3e013df5f4e929fc8f34382ead, type: 3}
+  _summonData: {fileID: 11400000, guid: 544cb95e66c156e448add63114743b61, type: 2}

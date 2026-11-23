@@ -76,6 +76,9 @@ namespace EscapeFromSpace
         // EMP에 맞아 멈춰 있는 남은 시간 (기획서 19.3)
         private float _stunTimeLeft;
 
+        // 네임드 패턴 (기획서 21장). 네임드가 아니면 null.
+        private BossBrain _boss;
+
         private static readonly System.Collections.Generic.List<Robot> AllRobots = new System.Collections.Generic.List<Robot>();
 
         // 살아 있는 로봇 전부. 엄폐 표시가 가까운 적을 찾을 때 쓴다.
@@ -93,6 +96,11 @@ namespace EscapeFromSpace
             }
 
             _stunTimeLeft = Mathf.Max(_stunTimeLeft, seconds);
+            if (_boss != null)
+            {
+                _boss.Abort();
+            }
+
             _attack.Cancel();
             _motor.Stop();
         }
@@ -113,6 +121,15 @@ namespace EscapeFromSpace
 
         public RobotData Data => _data;
         public Health Health => _health;
+        public RobotMotor Motor => _motor;
+        public RobotAttack Attack => _attack;
+        public LayerMask WallMask => _wallMask;
+        public GameObject ExplosionPrefab => _explosionPrefab;
+        public ZoneArea Zone => _zone;
+        public Health Player => _player;
+
+        // 마지막 발악 중 (기획서 21장). 머리 위 이름을 붉게 그린다.
+        public bool IsLastStand => _boss != null && _boss.InLastStand;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
@@ -188,6 +205,17 @@ namespace EscapeFromSpace
             _motor.Initialize(grid, data.TurnSpeed, facing);
             _motor.Speed = data.PatrolSpeed;
             _attack.Initialize(data, player);
+            if (data.Boss != null)
+            {
+                _boss = GetComponent<BossBrain>();
+                if (_boss == null)
+                {
+                    _boss = gameObject.AddComponent<BossBrain>();
+                }
+
+                _boss.Initialize(this, data.Boss);
+            }
+
             _state = State.Patrol;
             if (data.IsNamed && !NamedRobots.Contains(this))
             {
@@ -238,6 +266,12 @@ namespace EscapeFromSpace
                     _body.color = BodyColor;
                 }
 
+                return;
+            }
+
+            // 패턴을 쓰는 동안에는 BossBrain이 몸을 움직인다.
+            if (_boss != null && _boss.IsBusy)
+            {
                 return;
             }
 
@@ -414,6 +448,14 @@ namespace EscapeFromSpace
             _lastSeenPosition = PlayerPosition;
             float distance = Vector2.Distance(Position, PlayerPosition);
             bool inRange = distance <= _data.Range;
+
+            // 네임드는 기본 공격 사이사이에 패턴을 섞는다. 충전 중인 공격은 끊지 않는다.
+            if (_boss != null && !_attack.IsWindingUp && _boss.TryBegin(distance))
+            {
+                _attack.Cancel();
+                _motor.Stop();
+                return;
+            }
 
             _attack.Tick(inRange);
 

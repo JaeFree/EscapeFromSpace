@@ -22,12 +22,15 @@ MonoBehaviour:
   _isNamed: 1
   _namedId: E5
   _bodyTint: {r: 1, g: 0.85, b: 0.35, a: 1}
+  _isBiological: 0
   _wreckSize: {x: 3, y: 2}
+  _boss: {fileID: 11400000, guid: f298b6f9db1ed4b4da034d5c9d3a7373, type: 2}
   _attackKind: 0
   _damage: 20
   _pelletCount: 1
   _spreadAngle: 120
   _range: 1.8
+  _projectileSpeed: 0
   _windupTime: 0
   _aimLockTime: 0
   _burstCount: 1

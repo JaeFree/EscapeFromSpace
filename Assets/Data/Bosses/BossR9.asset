@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b86865ba89fb5842a70252dee7b9f21, type: 3}
+  m_Name: BossR9
+  m_EditorClassIdentifier: 
+  _normal:
+    _displayName: "\uD68C\uC804 \uB09C\uC0AC"
+    _kind: 10
+    _cooldown: 7
+    _useDistance: 12
+    _windup: 0.4
+    _damage: 8
+    _radius: 0
+    _secondaryDamage: 0
+    _length: 10
+    _count: 2
+    _angle: 14
+    _speed: 7
+    _interval: 0.08
+    _duration: 2
+    _repeat: 1
+    _maxUses: 0
+  _special:
+    _displayName: "\uAD00\uD1B5 \uB808\uC774\uC800"
+    _kind: 11
+    _cooldown: 15
+    _useDistance: 16
+    _windup: 1
+    _damage: 40
+    _radius: 0.4
+    _secondaryDamage: 0
+    _length: 16
+    _count: 3
+    _angle: 20
+    _speed: 0
+    _interval: 0
+    _duration: 0
+    _repeat: 1
+    _maxUses: 0
+  _minGap: 2.5
+  _firstNormalDelay: 2
+  _firstSpecialDelay: 7
+  _hasLastStand: 1
+  _lastStandHpRatio: 0.3
+  _lastStandSources:
+  - {fileID: 11400000, guid: 0af22cd25cfc24b4c84e4bf2ed97c209, type: 2}
+  - {fileID: 11400000, guid: 611d634e3934470499494f2ed9bf24dc, type: 2}
+  - {fileID: 11400000, guid: b2fc13a6b0335a6478c72370acd4d2b5, type: 2}
+  - {fileID: 11400000, guid: f298b6f9db1ed4b4da034d5c9d3a7373, type: 2}
+  _borrowedCooldown: 20
+  _summonPrefab: {fileID: 0}
+  _summonData: {fileID: 0}

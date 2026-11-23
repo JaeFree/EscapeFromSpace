@@ -7,6 +7,9 @@ namespace EscapeFromSpace
     // 네임드 로봇의 머리 위 이름과 HP 바 (기획서 15.2: 늘 보인다). 화면 안에 있을 때만 그린다.
     public class NamedRobotUI : MonoBehaviour
     {
+        private static readonly Color NameColor = new Color(1f, 0.82f, 0.35f);
+        private static readonly Color LastStandColor = new Color(1f, 0.25f, 0.2f);
+
         [SerializeField, Tooltip("칸. 로봇 중심에서 이만큼 위에 띄운다")] private float _offset = 1.25f;
 
         private class Plate
@@ -43,7 +46,8 @@ namespace EscapeFromSpace
                 if (show)
                 {
                     screen = _camera.WorldToScreenPoint(robot.transform.position + Vector3.up * _offset);
-                    show = screen.z > 0f && screen.x > -100f && screen.y > -100f && screen.x < Screen.width + 100f && screen.y < Screen.height + 100f;
+                    // 카메라가 그리는 크기로 본다 (렌더 텍스처로 그릴 때도 맞게). 보통은 화면 크기와 같다.
+                    show = screen.z > 0f && screen.x > -100f && screen.y > -100f && screen.x < _camera.pixelWidth + 100f && screen.y < _camera.pixelHeight + 100f;
                 }
 
                 plate.Root.gameObject.SetActive(show);
@@ -53,7 +57,10 @@ namespace EscapeFromSpace
                 }
 
                 UiBuilder.MoveToScreenPoint(_canvas, plate.Root, screen);
-                plate.Name.text = robot.Data.DisplayName;
+                // 마지막 발악 중에는 이름이 붉어진다 (기획서 21장).
+                bool lastStand = robot.IsLastStand;
+                plate.Name.text = lastStand ? $"{robot.Data.DisplayName} !" : robot.Data.DisplayName;
+                plate.Name.color = lastStand ? LastStandColor : NameColor;
                 plate.Fill.fillAmount = robot.Health.MaxHp > 0f ? robot.Health.CurrentHp / robot.Health.MaxHp : 0f;
             }
         }

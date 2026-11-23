@@ -16,18 +16,25 @@ namespace EscapeFromSpace
 
         public static void Launch(Vector2 from, Vector2 direction, RobotData data, LayerMask mask)
         {
+            Launch(from, direction, data.ProjectileSpeed > 0f ? data.ProjectileSpeed : 8f, data.Range, data.Damage, mask,
+                new Color(0.55f, 1f, 0.3f), 0.35f);
+        }
+
+        // 네임드 패턴의 탄도 같은 방식으로 날아간다 (기획서 21장). 보고 피할 수 있게 히트스캔이 아니다.
+        public static void Launch(Vector2 from, Vector2 direction, float speed, float range, float damage, LayerMask mask, Color color, float scale)
+        {
             var spit = new GameObject("AcidSpit");
             spit.transform.position = from;
-            spit.transform.localScale = Vector3.one * 0.35f;
+            spit.transform.localScale = Vector3.one * scale;
             var renderer = spit.AddComponent<SpriteRenderer>();
             renderer.sprite = PlayerGadgets.Circle;
-            renderer.color = new Color(0.55f, 1f, 0.3f);
+            renderer.color = color;
             renderer.sortingOrder = 30;
             var component = spit.AddComponent<AcidSpit>();
             component._direction = direction.normalized;
-            component._speed = data.ProjectileSpeed > 0f ? data.ProjectileSpeed : 8f;
-            component._range = data.Range;
-            component._damage = data.Damage;
+            component._speed = speed;
+            component._range = range;
+            component._damage = damage;
             component._mask = mask;
         }
 
